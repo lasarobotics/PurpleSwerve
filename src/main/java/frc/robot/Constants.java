@@ -55,10 +55,10 @@ public final class Constants {
     public static final PolynomialSplineFunction DRIVE_TURN_INPUT_CURVE = SPLINE_INTERPOLATOR.interpolate(DRIVE_TURN_INPUT_CURVE_X, DRIVE_TURN_INPUT_CURVE_Y);
 
     // Swerve velocity PID settings
-    private static final double DRIVE_VELOCITY_kP = 8.471e-8;
+    private static final double DRIVE_VELOCITY_kP = 0.04;
     private static final double DRIVE_VELOCITY_kI = 0.0;
     private static final double DRIVE_VELOCITY_kD = 0.0;
-    private static final double DRIVE_VELOCITY_kF = 1.271e-8;
+    private static final double DRIVE_VELOCITY_kF = 0.2;
     private static final double DRIVE_VELOCITY_TOLERANCE = 0.01;
     private static final boolean DRIVE_VELOCITY_SENSOR_PHASE = false;
     private static final boolean DRIVE_INVERT_MOTOR = false;
@@ -75,7 +75,7 @@ public final class Constants {
     );
 
     // Swerve rotate PID settings
-    private static final double DRIVE_ROTATE_kP = 10.0;
+    private static final double DRIVE_ROTATE_kP = 1.0;
     private static final double DRIVE_ROTATE_kI = 0.0;
     private static final double DRIVE_ROTATE_kD = 0.0;
     private static final double DRIVE_ROTATE_kF = 0.0;
@@ -83,7 +83,7 @@ public final class Constants {
     private static final double DRIVE_ROTATE_LOWER_LIMIT = 0.0;
     private static final double DRIVE_ROTATE_UPPER_LIMIT = 0.0;
     private static final boolean DRIVE_ROTATE_SOFT_LIMITS = false;
-    private static final boolean DRIVE_ROTATE_SENSOR_PHASE = false;
+    private static final boolean DRIVE_ROTATE_SENSOR_PHASE = true;
     private static final boolean DRIVE_ROTATE_INVERT_MOTOR = false;
 
     // Swerve rotate PID config
