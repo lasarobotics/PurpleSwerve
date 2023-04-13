@@ -24,7 +24,7 @@ import frc.robot.utils.MAXSwerveModule.ModuleLocation;
 import frc.robot.utils.TractionControlController;
 import frc.robot.utils.TurnPIDController;
 
-public class DriveSubsystem extends SubsystemBase {
+public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   public static class Hardware {
     boolean isHardwareReal;
     MAXSwerveModule lFrontModule;
@@ -48,6 +48,17 @@ public class DriveSubsystem extends SubsystemBase {
     }
   }
 
+  // Drive specs, these numbers use the motor shaft encoder
+  public static final double DRIVE_WHEELBASE = 0.6;
+  public static final double DRIVE_TRACK_WIDTH = 0.6;
+  public static final double DRIVE_WHEEL_DIAMETER_METERS = 0.0762; // 3" wheels
+  public static final double DRIVE_GEAR_RATIO = 4.71;
+  public static final double DRIVE_TICKS_PER_METER = (Constants.Global.NEO_ENCODER_TICKS_PER_ROTATION * DRIVE_GEAR_RATIO) * (1 / (DRIVE_WHEEL_DIAMETER_METERS * Math.PI));
+  public static final double DRIVE_METERS_PER_TICK = 1 / DRIVE_TICKS_PER_METER;
+  public static final double DRIVE_METERS_PER_ROTATION = DRIVE_METERS_PER_TICK * Constants.Global.NEO_ENCODER_TICKS_PER_ROTATION;
+  public static final double DRIVETRAIN_EFFICIENCY = 0.88;
+  public static final double DRIVE_MAX_LINEAR_SPEED = (Constants.Global.NEO_MAX_RPM / 60) * DRIVE_METERS_PER_ROTATION * DRIVETRAIN_EFFICIENCY;
+
   private TurnPIDController m_turnPIDController;
   private TractionControlController m_tractionControlController;
   private SwerveDriveKinematics m_kinematics;
@@ -62,17 +73,6 @@ public class DriveSubsystem extends SubsystemBase {
   private final double TOLERANCE = 0.125;
   private final double TIP_THRESHOLD = 30.0;
   private final double BALANCED_THRESHOLD = 5.0;
-
-  // Drive specs, these numbers use the motor shaft encoder
-  private static final double DRIVE_WHEELBASE = 0.6;
-  private static final double DRIVE_TRACK_WIDTH = 0.6;
-  private static final double DRIVE_WHEEL_DIAMETER_METERS = 0.0762; // 3" wheels
-  private static final double DRIVE_GEAR_RATIO = 4.71;
-  private static final double DRIVE_TICKS_PER_METER = (Constants.Global.NEO_ENCODER_TICKS_PER_ROTATION * DRIVE_GEAR_RATIO) * (1 / (DRIVE_WHEEL_DIAMETER_METERS * Math.PI));
-  private static final double DRIVE_METERS_PER_TICK = 1 / DRIVE_TICKS_PER_METER;
-  private static final double DRIVE_METERS_PER_ROTATION = DRIVE_METERS_PER_TICK * Constants.Global.NEO_ENCODER_TICKS_PER_ROTATION;
-  private static final double DRIVETRAIN_EFFICIENCY = 0.88;
-  private static final double DRIVE_MAX_LINEAR_SPEED = (Constants.Global.NEO_MAX_RPM / 60) * DRIVE_METERS_PER_ROTATION * DRIVETRAIN_EFFICIENCY;
 
   /**
    * Create an instance of DriveSubsystem
@@ -439,5 +439,14 @@ public class DriveSubsystem extends SubsystemBase {
    */
   public double getTurnRate() {
     return m_navx.getRate();
+  }
+
+  @Override
+  public void close() {
+    m_lFrontModule.close();
+    m_rFrontModule.close();
+    m_lRearModule.close();
+    m_rRearModule.close();
+    m_navx.close();
   }
 }
