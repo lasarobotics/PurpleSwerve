@@ -232,16 +232,14 @@ public class MAXSwerveModule implements AutoCloseable {
    * Lock swerve module
    */
   public void lock() {
-    m_rotateMotor.set(m_location.lockPosition - m_location.angularOffset, ControlType.kPosition);
-    m_driveMotor.stopMotor();
+    set(new SwerveModuleState(0.0, Rotation2d.fromRadians(m_location.lockPosition)));
   }
 
   /**
    * Reset swerve module to 0 degrees
    */
   public void reset() {
-    m_rotateMotor.set(0.0, ControlType.kPosition);
-    m_driveMotor.stopMotor();
+    set(new SwerveModuleState(0.0, Rotation2d.fromRadians(0.0)));
   }
 
   /**
