@@ -16,6 +16,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.utils.MAXSwerveModule;
@@ -284,6 +285,11 @@ public class DriveSubsystem extends SubsystemBase {
   public void periodic() {
     // This method will be called once per scheduler run
     updatePose();
+    smartDashboard();
+  }
+
+  public void smartDashboard() {
+    SmartDashboard.putBoolean("TC", m_tractionControlController.isEnabled());
   }
 
   /**
@@ -339,6 +345,13 @@ public class DriveSubsystem extends SubsystemBase {
     m_rFrontModule.stop();
     m_lRearModule.stop();
     m_rRearModule.stop();
+  }
+
+  /**
+   * Toggle traction control
+   */
+  public void toggleTractionControl() {
+    m_tractionControlController.toggleTractionControl();
   }
 
   /**

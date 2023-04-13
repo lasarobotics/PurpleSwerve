@@ -16,7 +16,7 @@ public class TractionControlController {
   private double m_optimalSlipRatio = 0.0;
   private double m_deadband = 0.0;
   private double m_maxLinearSpeed = 0.0;
-  private boolean m_isEnabled = false;
+  private boolean m_isEnabled = true;
 
   private HashMap<Double, Double> m_throttleInputMap = new HashMap<Double, Double>();
 
