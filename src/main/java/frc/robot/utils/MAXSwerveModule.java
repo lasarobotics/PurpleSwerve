@@ -33,22 +33,21 @@ public class MAXSwerveModule implements AutoCloseable {
   }
 
   public enum ModuleLocation {
-    LeftFront(0, -Math.PI / 2, +Math.PI / 4),
-    RightFront(1, +0.0, -Math.PI / 4),
-    LeftRear(2, +Math.PI, -Math.PI / 4),
-    RightRear(3, +Math.PI / 2, +Math.PI / 4);
+    LeftFront(0, -Math.PI / 2),
+    RightFront(1, +0.0),
+    LeftRear(2, +Math.PI),
+    RightRear(3, +Math.PI / 2);
 
     public final int value;
-    public final double angularOffset;
-    public final double lockPosition;
-    private ModuleLocation(int value, double offset, double lockPosition) {
+    public final double offset;
+    private ModuleLocation(int value, double offset) {
       this.value = value;
-      this.angularOffset = offset;
-      this.lockPosition = lockPosition;
+      this.offset = offset;
     }
   }
 
   private final double MAX_VOLTAGE = 12.0;
+  private final double LOCK_POSITION = +Math.PI / 4;
 
   private final SparkMax m_driveMotor;
   private final SparkMax m_rotateMotor;
@@ -159,7 +158,7 @@ public class MAXSwerveModule implements AutoCloseable {
     // Apply chassis angular offset to the requested state.
     SwerveModuleState desiredState = new SwerveModuleState(
       state.speedMetersPerSecond,
-      state.angle.plus(Rotation2d.fromRadians(m_location.angularOffset))
+      state.angle.plus(Rotation2d.fromRadians(m_location.offset))
     );
 
     // Optimize swerve module rotation state
@@ -196,7 +195,7 @@ public class MAXSwerveModule implements AutoCloseable {
   public SwerveModuleState getCurrentState() {
     return new SwerveModuleState(
       getDriveVelocity(),
-      Rotation2d.fromRadians(m_rotateEncoder.getPosition() - m_location.angularOffset)
+      Rotation2d.fromRadians(m_rotateEncoder.getPosition() - m_location.offset)
     );
   }
 
@@ -207,7 +206,7 @@ public class MAXSwerveModule implements AutoCloseable {
   public SwerveModulePosition getPosition() {
     return new SwerveModulePosition(
       m_driveMotor.getEncoderPosition(),
-      Rotation2d.fromRadians(m_rotateEncoder.getPosition() - m_location.angularOffset)
+      Rotation2d.fromRadians(m_rotateEncoder.getPosition() - m_location.offset)
     );
   }
 
@@ -232,7 +231,7 @@ public class MAXSwerveModule implements AutoCloseable {
    * Lock swerve module
    */
   public void lock() {
-    set(new SwerveModuleState(0.0, Rotation2d.fromRadians(m_location.lockPosition)));
+    set(new SwerveModuleState(0.0, Rotation2d.fromRadians(LOCK_POSITION)));
   }
 
   /**

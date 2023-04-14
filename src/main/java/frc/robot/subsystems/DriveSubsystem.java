@@ -111,13 +111,23 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     m_turnPIDController.setSetpoint(getAngle());
 
     // Define drivetrain kinematics
-    SwerveDriveKinematics m_kinematics = new SwerveDriveKinematics(m_lFrontModule.getModuleCoordinate(),
-                                                                   m_rFrontModule.getModuleCoordinate(),
-                                                                   m_lRearModule.getModuleCoordinate(),
-                                                                   m_rRearModule.getModuleCoordinate());
+    m_kinematics = new SwerveDriveKinematics(m_lFrontModule.getModuleCoordinate(),
+                                             m_rFrontModule.getModuleCoordinate(),
+                                             m_lRearModule.getModuleCoordinate(),
+                                             m_rRearModule.getModuleCoordinate());
 
     // Initialise pose estimator
-    m_poseEstimator = new SwerveDrivePoseEstimator(m_kinematics, Rotation2d.fromDegrees(0.0), null, new Pose2d());
+    m_poseEstimator = new SwerveDrivePoseEstimator(
+      m_kinematics,
+      Rotation2d.fromDegrees(0.0),
+      new SwerveModulePosition[] {
+        m_lFrontModule.getPosition(),
+        m_rFrontModule.getPosition(),
+        m_lRearModule.getPosition(),
+        m_rRearModule.getPosition()
+      }, 
+      new Pose2d()
+    );
   }
 
   /**
@@ -197,7 +207,11 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    */
   private void drive(double velocityX, double velocityY, double rotateRate) {
     // Convert speeds to module states
-    SwerveModuleState[] moduleStates = m_kinematics.toSwerveModuleStates(new ChassisSpeeds(velocityX, velocityY, Math.toRadians(rotateRate)));
+    SwerveModuleState[] moduleStates = 
+    m_kinematics.toSwerveModuleStates(new ChassisSpeeds(velocityX, velocityY, Math.toRadians(rotateRate)));
+
+    // Desaturate drive speeds
+    SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, DRIVE_MAX_LINEAR_SPEED);
 
     // Apply traction control
     applyTractionControl(moduleStates);
@@ -288,6 +302,9 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     smartDashboard();
   }
 
+  /**
+   * SmartDashboard indicators
+   */
   public void smartDashboard() {
     SmartDashboard.putBoolean("TC", m_tractionControlController.isEnabled());
   }
@@ -300,12 +317,13 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    */
   public void teleopPID(double xRequest, double yRequest, double rotateRequest) {
     double moveRequest = Math.hypot(xRequest, yRequest);
-    double moveDirection = Math.atan(yRequest / xRequest);
+    double xComponent = xRequest / ((moveRequest == 0.0) ? 1.0 : moveRequest);
+    double yComponent = yRequest / ((moveRequest == 0.0) ? 1.0 : moveRequest);
 
     double velocityOutput = m_tractionControlController.throttleLookup(moveRequest);
     double rotateOutput = m_turnPIDController.calculate(getAngle(), getTurnRate(), rotateRequest);
 
-    drive(velocityOutput * Math.sin(moveDirection), velocityOutput * Math.cos(moveDirection), rotateOutput);
+    drive(velocityOutput * xComponent, velocityOutput * yComponent, rotateOutput);
   }
 
   /**
@@ -320,7 +338,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * Start calling this repeatedly when robot is in danger of tipping over
    */
   public void antiTip() {
-    // Calculate direction and magnitude of tip
+    // Calculate direction of tip
     double angle = Math.atan(Math.toRadians(getPitch() / getRoll()));
 
     // Drive to counter tipping motion

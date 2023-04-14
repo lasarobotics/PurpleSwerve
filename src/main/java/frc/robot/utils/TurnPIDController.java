@@ -75,7 +75,7 @@ public class TurnPIDController extends PIDController {
       }
     }
 
-    return MathUtil.clamp(super.calculate(currentAngle), -1.0, +1.0);
+    return super.calculate(currentAngle);
   }
 
   /**

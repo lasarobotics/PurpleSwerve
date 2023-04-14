@@ -54,11 +54,15 @@ public class TractionControlController {
    */
   public double calculate(double velocityRequest, double inertialVelocity, double wheelSpeed) {
     double velocityOutput = velocityRequest;
+
+    // Make sure wheel speed and inertial velocity are positive
+    wheelSpeed = Math.abs(wheelSpeed);
+    inertialVelocity = Math.abs(inertialVelocity);
     
     // Apply basic traction control
     if (m_isEnabled) {
       // Check slip ratio
-      double currentSlipRatio = (Math.abs(wheelSpeed) - Math.abs(inertialVelocity)) / Math.abs(inertialVelocity);
+      double currentSlipRatio = (wheelSpeed - inertialVelocity) / inertialVelocity;
       // Limit wheel speed if slipping excessively
       if (currentSlipRatio > m_optimalSlipRatio)
         velocityOutput = Math.copySign(m_optimalSlipRatio * inertialVelocity + inertialVelocity, velocityRequest);
