@@ -7,6 +7,7 @@ package frc.robot;
 import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 
+import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.utils.PIDConstants;
 import frc.robot.utils.SparkPIDConfig;
 
@@ -39,14 +40,13 @@ public final class Constants {
   }
 
   public static class Drive {
-    public static final PIDConstants DRIVE_TURN_PID = new PIDConstants(0.019, 0.0, 0.0014, 0.0);
-    public static final PIDConstants DRIVE_ANTI_TIP_PID = new PIDConstants(0.010, 0.0, 0.0005, 0.0);
+    public static final PIDConstants DRIVE_TURN_PID = new PIDConstants(1.0, 0.0, 0.0, 0.0);
     public static final double DRIVE_SLIP_RATIO = 0.05;
-    public static final double DRIVE_TURN_SCALAR = 40.0;
+    public static final double DRIVE_TURN_SCALAR = 45.0;
     public static final double DRIVE_LOOKAHEAD = 3;
 
     private static final double DRIVE_THROTTLE_INPUT_CURVE_X[] = { 0.0, 0.5, 1.0 };
-    private static final double DRIVE_THROTTLE_INPUT_CURVE_Y[] = { 0.0, 1.975, 3.95 };
+    private static final double DRIVE_THROTTLE_INPUT_CURVE_Y[] = { 0.0, 2.19, 4.38 };
     private static final double DRIVE_TURN_INPUT_CURVE_X[] = { 0.0, 0.100, 0.200, 0.300, 0.400, 0.500, 0.600, 0.700, 0.800, 0.900, 1.0 };
     private static final double DRIVE_TURN_INPUT_CURVE_Y[] = { 0.0, 0.008, 0.032, 0.072, 0.128, 0.200, 0.288, 0.392, 0.512, 0.768, 1.0 };
 
@@ -58,7 +58,7 @@ public final class Constants {
     private static final double DRIVE_VELOCITY_kP = 0.04;
     private static final double DRIVE_VELOCITY_kI = 0.0;
     private static final double DRIVE_VELOCITY_kD = 0.0;
-    private static final double DRIVE_VELOCITY_kF = 0.2;
+    private static final double DRIVE_VELOCITY_kF = 1 / (((Global.NEO_MAX_RPM / 60) * DriveSubsystem.DRIVE_WHEEL_DIAMETER_METERS * Math.PI) / DriveSubsystem.DRIVE_GEAR_RATIO);
     private static final double DRIVE_VELOCITY_TOLERANCE = 0.01;
     private static final boolean DRIVE_VELOCITY_SENSOR_PHASE = false;
     private static final boolean DRIVE_INVERT_MOTOR = false;
