@@ -208,7 +208,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private void drive(double velocityX, double velocityY, double rotateRate) {
     // Convert speeds to module states
     SwerveModuleState[] moduleStates = 
-    m_kinematics.toSwerveModuleStates(new ChassisSpeeds(velocityX, velocityY, Math.toRadians(rotateRate)));
+      m_kinematics.toSwerveModuleStates(new ChassisSpeeds(velocityX, velocityY, Math.toRadians(rotateRate)));
 
     // Desaturate drive speeds
     SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, DRIVE_MAX_LINEAR_SPEED);
@@ -317,13 +317,12 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    */
   public void teleopPID(double xRequest, double yRequest, double rotateRequest) {
     double moveRequest = Math.hypot(xRequest, yRequest);
-    double xComponent = xRequest / ((moveRequest == 0.0) ? 1.0 : moveRequest);
-    double yComponent = yRequest / ((moveRequest == 0.0) ? 1.0 : moveRequest);
+    double moveDirection = Math.atan2(yRequest, xRequest);
 
     double velocityOutput = m_tractionControlController.throttleLookup(moveRequest);
     double rotateOutput = m_turnPIDController.calculate(getAngle(), getTurnRate(), rotateRequest);
 
-    drive(velocityOutput * xComponent, velocityOutput * yComponent, rotateOutput);
+    drive(velocityOutput * Math.cos(moveDirection), velocityOutput * Math.sin(moveDirection), rotateOutput);
   }
 
   /**
