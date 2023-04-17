@@ -239,7 +239,7 @@ public class MAXSwerveModule implements AutoCloseable {
    * Reset swerve module to 0 degrees
    */
   public void reset() {
-    set(new SwerveModuleState(0.0, Rotation2d.fromRadians(0.0)));
+    set(new SwerveModuleState(0.0, Rotation2d.fromRadians(m_location.offset)));
   }
 
   /**
