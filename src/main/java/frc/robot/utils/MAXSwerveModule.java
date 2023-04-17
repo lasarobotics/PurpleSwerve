@@ -114,6 +114,7 @@ public class MAXSwerveModule implements AutoCloseable {
       m_rotateEncoder.setPositionConversionFactor(rotateConversionFactor);
       m_rotateEncoder.setVelocityConversionFactor(rotateConversionFactor / 60);
 
+      // Enable PID wrapping
       m_rotateMotor.getPIDController().setPositionPIDWrappingEnabled(true);
       m_rotateMotor.getPIDController().setPositionPIDWrappingMinInput(0.0);
       m_rotateMotor.getPIDController().setPositionPIDWrappingMaxInput(2 * Math.PI);

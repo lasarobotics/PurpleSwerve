@@ -355,7 +355,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   }
 
   /**
-   * Stop robots
+   * Stop robot
    */
   public void stop() {
     m_lFrontModule.stop();
