@@ -119,7 +119,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     // Initialise pose estimator
     m_poseEstimator = new SwerveDrivePoseEstimator(
       m_kinematics,
-      Rotation2d.fromDegrees(0.0),
+      Rotation2d.fromDegrees(getAngle()),
       new SwerveModulePosition[] {
         m_lFrontModule.getPosition(),
         m_rFrontModule.getPosition(),
@@ -138,7 +138,11 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    */
   public static Hardware initializeHardware(boolean isHardwareReal) {
     MAXSwerveModule lFrontModule = new MAXSwerveModule(
-      MAXSwerveModule.initializeHardware(isHardwareReal, Constants.DriveHardware.FRONT_LEFT_DRIVE_MOTOR_ID, Constants.DriveHardware.FRONT_LEFT_ROTATE_MOTOR_ID),
+      MAXSwerveModule.initializeHardware(
+        isHardwareReal,
+        Constants.DriveHardware.FRONT_LEFT_DRIVE_MOTOR_ID,
+        Constants.DriveHardware.FRONT_LEFT_ROTATE_MOTOR_ID
+      ),
       MAXSwerveModule.ModuleLocation.LeftFront, 
       Constants.Drive.DRIVE_VELOCITY_CONFIG, 
       Constants.Drive.DRIVE_ROTATE_CONFIG,
@@ -149,7 +153,11 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     );
 
     MAXSwerveModule rFrontModule = new MAXSwerveModule(
-      MAXSwerveModule.initializeHardware(isHardwareReal, Constants.DriveHardware.FRONT_RIGHT_DRIVE_MOTOR_ID, Constants.DriveHardware.FRONT_RIGHT_ROTATE_MOTOR_ID),
+      MAXSwerveModule.initializeHardware(
+        isHardwareReal,
+        Constants.DriveHardware.FRONT_RIGHT_DRIVE_MOTOR_ID,
+        Constants.DriveHardware.FRONT_RIGHT_ROTATE_MOTOR_ID
+      ),
       MAXSwerveModule.ModuleLocation.RightFront, 
       Constants.Drive.DRIVE_VELOCITY_CONFIG, 
       Constants.Drive.DRIVE_ROTATE_CONFIG,
@@ -160,7 +168,11 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     );
 
     MAXSwerveModule lRearModule = new MAXSwerveModule(
-      MAXSwerveModule.initializeHardware(isHardwareReal, Constants.DriveHardware.REAR_LEFT_DRIVE_MOTOR_ID, Constants.DriveHardware.REAR_LEFT_ROTATE_MOTOR_ID),
+      MAXSwerveModule.initializeHardware(
+        isHardwareReal,
+        Constants.DriveHardware.REAR_LEFT_DRIVE_MOTOR_ID,
+        Constants.DriveHardware.REAR_LEFT_ROTATE_MOTOR_ID
+      ),
       MAXSwerveModule.ModuleLocation.LeftRear, 
       Constants.Drive.DRIVE_VELOCITY_CONFIG, 
       Constants.Drive.DRIVE_ROTATE_CONFIG,
@@ -171,7 +183,11 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     );
 
     MAXSwerveModule rRearModule = new MAXSwerveModule(
-      MAXSwerveModule.initializeHardware(isHardwareReal, Constants.DriveHardware.REAR_RIGHT_DRIVE_MOTOR_ID, Constants.DriveHardware.REAR_RIGHT_ROTATE_MOTOR_ID),
+      MAXSwerveModule.initializeHardware(
+        isHardwareReal,
+        Constants.DriveHardware.REAR_RIGHT_DRIVE_MOTOR_ID,
+        Constants.DriveHardware.REAR_RIGHT_ROTATE_MOTOR_ID
+      ),
       MAXSwerveModule.ModuleLocation.RightRear, 
       Constants.Drive.DRIVE_VELOCITY_CONFIG, 
       Constants.Drive.DRIVE_ROTATE_CONFIG,
@@ -338,10 +354,10 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    */
   public void antiTip() {
     // Calculate direction of tip
-    double angle = Math.atan(Math.toRadians(getPitch() / getRoll()));
+    double direction = Math.atan2(getPitch(), getRoll());
 
     // Drive to counter tipping motion
-    drive(DRIVE_MAX_LINEAR_SPEED / 2 * Math.sin(angle), DRIVE_MAX_LINEAR_SPEED / 2 * Math.cos(angle), 0.0);
+    drive(DRIVE_MAX_LINEAR_SPEED / 2 * Math.cos(direction), DRIVE_MAX_LINEAR_SPEED / 2 * Math.sin(direction), 0.0);
   }
 
   /**
