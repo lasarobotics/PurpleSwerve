@@ -48,6 +48,8 @@ public class MAXSwerveModule implements AutoCloseable {
 
   private final double MAX_VOLTAGE = 12.0;
   private final double LOCK_POSITION = +Math.PI / 4;
+  private final int DRIVE_MOTOR_CURRENT_LIMIT = 50;
+  private final int ROTATE_MOTOR_CURRENT_LIMIT = 20;
 
   private final SparkMax m_driveMotor;
   private final SparkMax m_rotateMotor;
@@ -97,6 +99,10 @@ public class MAXSwerveModule implements AutoCloseable {
     // Enable voltage compensation
     m_driveMotor.enableVoltageCompensation(MAX_VOLTAGE);
     m_rotateMotor.enableVoltageCompensation(MAX_VOLTAGE);
+
+    // Set current limits
+    m_driveMotor.setSmartCurrentLimit(DRIVE_MOTOR_CURRENT_LIMIT);
+    m_rotateMotor.setSmartCurrentLimit(ROTATE_MOTOR_CURRENT_LIMIT);
 
     // Only do this stuff if hardware is real
     if (swerveHardware.isHardwareReal) {
