@@ -26,7 +26,8 @@ import frc.robot.subsystems.DriveSubsystem;
 public class AutoTrajectory {
   // Ramsete Command values
   private final boolean USE_ALLIANCE = true;
-  private final PIDController PID_CONTROLLER = new PIDController(1.0, 0.0, 0.0);
+  private final PIDController XY_PID_CONTROLLER = new PIDController(1.0, 0.0, 0.0);
+  private final PIDController THETA_PID_CONTROLLER = new PIDController(5.0, 0.0, 0.8);
 
   DriveSubsystem m_driveSubsystem;
   PPSwerveControllerCommand m_swerveCommand;
@@ -48,9 +49,9 @@ public class AutoTrajectory {
       m_trajectory, 
       m_driveSubsystem::getPose, 
       m_driveSubsystem.getKinematics(),
-      PID_CONTROLLER,
-      PID_CONTROLLER,
-      PID_CONTROLLER,
+      XY_PID_CONTROLLER,
+      XY_PID_CONTROLLER,
+      THETA_PID_CONTROLLER,
       m_driveSubsystem::autoDrive, 
       USE_ALLIANCE, 
       m_driveSubsystem
@@ -74,9 +75,9 @@ public class AutoTrajectory {
       m_trajectory, 
       m_driveSubsystem::getPose, 
       m_driveSubsystem.getKinematics(),
-      PID_CONTROLLER,
-      PID_CONTROLLER,
-      PID_CONTROLLER,
+      XY_PID_CONTROLLER,
+      XY_PID_CONTROLLER,
+      THETA_PID_CONTROLLER,
       m_driveSubsystem::autoDrive, 
       USE_ALLIANCE, 
       m_driveSubsystem

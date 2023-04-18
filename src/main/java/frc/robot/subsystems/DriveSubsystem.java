@@ -104,6 +104,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
     // Calibrate and reset navX
     m_navx.calibrate();
+    while (m_navx.isCalibrating()) stop();
     m_navx.reset();
 
     // Setup turn PID
@@ -266,13 +267,6 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   }
 
   /**
-   * Reset navX angle
-   */
-  private void resetAngle() {
-    m_navx.reset();
-  }
-
-  /**
    * Reset drive encoders
    */
   private void resetEncoders() {
@@ -286,8 +280,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * Reset DriveSubsystem PID
    */
   public void resetDrivePID() {
-    resetAngle();
-    m_turnPIDController.setSetpoint(0.0);
+    m_turnPIDController.setSetpoint(getAngle());
     m_turnPIDController.reset();
   }
 
@@ -308,7 +301,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * Update robot pose
    */
   private void updatePose() {
-    m_poseEstimator.update(Rotation2d.fromDegrees(getAngle()), getModulePositions());
+    m_poseEstimator.update(m_navx.getRotation2d(), getModulePositions());
   }
 
   @Override
@@ -392,9 +385,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @param pose Pose to set robot to
    */
   public void resetPose(Pose2d pose) {
-    resetAngle();
     resetEncoders();
-    m_poseEstimator.resetPosition(Rotation2d.fromDegrees(getAngle()), getModulePositions(), pose);
+    m_poseEstimator.resetPosition(m_navx.getRotation2d(), getModulePositions(), pose);
   }
 
   /**
