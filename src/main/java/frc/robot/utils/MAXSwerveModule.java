@@ -169,7 +169,7 @@ public class MAXSwerveModule implements AutoCloseable {
     );
 
     // Optimize swerve module rotation state
-    // CANCoder returns an angle in radians
+    // REV encoder returns an angle in radians
     desiredState = SwerveModuleState.optimize(desiredState, Rotation2d.fromRadians(m_rotateEncoder.getPosition()));
 
     // Set rotate motor position

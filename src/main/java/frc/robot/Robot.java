@@ -13,6 +13,10 @@ public class Robot extends TimedRobot {
 
   private RobotContainer m_robotContainer;
 
+  public Robot() {
+    super(Constants.Global.ROBOT_LOOP_PERIOD);
+  }
+
   @Override
   public void robotInit() {
     m_robotContainer = new RobotContainer();

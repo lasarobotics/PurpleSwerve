@@ -21,13 +21,14 @@ import com.pathplanner.lib.commands.PPSwerveControllerCommand;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import frc.robot.Constants;
 import frc.robot.subsystems.DriveSubsystem;
 
 public class AutoTrajectory {
   // Ramsete Command values
   private final boolean USE_ALLIANCE = true;
-  private final PIDController XY_PID_CONTROLLER = new PIDController(1.0, 0.0, 0.0);
-  private final PIDController THETA_PID_CONTROLLER = new PIDController(5.0, 0.0, 0.8);
+  private final PIDController XY_PID_CONTROLLER = new PIDController(1.0, 0.0, 0.0, Constants.Global.ROBOT_LOOP_PERIOD);
+  private final PIDController THETA_PID_CONTROLLER = new PIDController(5.0, 0.0, 0.8, Constants.Global.ROBOT_LOOP_PERIOD);
 
   DriveSubsystem m_driveSubsystem;
   PPSwerveControllerCommand m_swerveCommand;
