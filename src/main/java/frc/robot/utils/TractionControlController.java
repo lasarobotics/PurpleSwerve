@@ -7,6 +7,10 @@ import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 import edu.wpi.first.math.MathUtil;
 
 public class TractionControlController {
+  private enum State {
+    DISABLED, ENABLED;
+  }
+
   private final double MIN_DEADBAND = 0.001;
   private final double MAX_DEADBAND = 0.2;
 
@@ -16,7 +20,7 @@ public class TractionControlController {
   private double m_optimalSlipRatio = 0.0;
   private double m_deadband = 0.0;
   private double m_maxLinearSpeed = 0.0;
-  private boolean m_isEnabled = true;
+  private State m_state = State.ENABLED;
 
   private HashMap<Double, Double> m_throttleInputMap = new HashMap<Double, Double>();
 
@@ -60,13 +64,11 @@ public class TractionControlController {
     inertialVelocity = Math.abs(inertialVelocity);
     
     // Apply basic traction control
-    if (m_isEnabled) {
-      // Check slip ratio
-      double currentSlipRatio = (wheelSpeed - inertialVelocity) / inertialVelocity;
-      // Limit wheel speed if slipping excessively
-      if (currentSlipRatio > m_optimalSlipRatio)
-        velocityOutput = Math.copySign(m_optimalSlipRatio * inertialVelocity + inertialVelocity, velocityRequest);
-    }
+    // Check slip ratio
+    double currentSlipRatio = ((wheelSpeed - inertialVelocity) / inertialVelocity) * m_state.ordinal();
+    // Limit wheel speed if slipping excessively
+    if (currentSlipRatio > m_optimalSlipRatio)
+      velocityOutput = Math.copySign(m_optimalSlipRatio * inertialVelocity + inertialVelocity, velocityRequest);
 
     return MathUtil.clamp(velocityOutput, -m_maxLinearSpeed, +m_maxLinearSpeed);
   }
@@ -87,21 +89,21 @@ public class TractionControlController {
    * Toggle traction control
    */
   public void toggleTractionControl() {
-    m_isEnabled = !m_isEnabled;
+    m_state = (m_state.equals(State.ENABLED)) ? State.DISABLED : State.ENABLED;
   }
 
   /**
    * Enable traction control
    */
   public void enableTractionControl() {
-    m_isEnabled = true;
+    m_state = State.ENABLED;
   }
 
   /**
    * Disable traction control
    */
   public void disableTractionControl() {
-    m_isEnabled = false;
+    m_state = State.DISABLED;
   }
 
   /**
@@ -109,6 +111,6 @@ public class TractionControlController {
    * @return true if enabled
    */
   public boolean isEnabled() {
-    return m_isEnabled;
+    return m_state.equals(State.ENABLED);
   }
 }

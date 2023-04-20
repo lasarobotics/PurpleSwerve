@@ -394,6 +394,20 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   }
 
   /**
+   * Enable traction control
+   */
+  public void enableTractionControl() {
+    m_tractionControlController.enableTractionControl();
+  }
+
+  /**
+   * Disable traction control
+   */
+  public void disableTractionControl() {
+    m_tractionControlController.disableTractionControl();
+  }
+
+  /**
    * Reset pose estimator
    * @param pose Pose to set robot to
    */

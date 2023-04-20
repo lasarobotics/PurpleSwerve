@@ -327,7 +327,8 @@ public class DriveSubsystemTest {
     when(m_lRearDriveMotor.getEncoderVelocity()).thenReturn(+1.0);
     when(m_rRearDriveMotor.getEncoderVelocity()).thenReturn(-1.0);
 
-    // Try to drive forward
+    // Try to drive forward with traction control
+    m_driveSubsystem.enableTractionControl();
     m_driveSubsystem.teleopPID(+1.0, 0.0, 0.0);
 
     // Verify that motors are being driven with expected values
@@ -338,6 +339,36 @@ public class DriveSubsystemTest {
     verify(m_lRearDriveMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
     verify(m_lRearRotateMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
     verify(m_rRearDriveMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_rRearRotateMotor, times(1)).set(AdditionalMatchers.eq(+Math.PI / 2, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
+  }
+
+  @Test
+  @Order(10)
+  @DisplayName("Test if robot can disable traction control")
+  public void disableTractionControl() {
+    // Hardcode sensor values
+    when(m_navx.getRate()).thenReturn(0.0);
+    when(m_navx.getAngle()).thenReturn(0.0);
+    when(m_navx.getVelocityX()).thenReturn((float)0.0);
+    when(m_navx.getVelocityY()).thenReturn((float)0.0);
+
+    when(m_lFrontDriveMotor.getEncoderVelocity()).thenReturn(-1.0);
+    when(m_rFrontDriveMotor.getEncoderVelocity()).thenReturn(-1.0);
+    when(m_lRearDriveMotor.getEncoderVelocity()).thenReturn(+1.0);
+    when(m_rRearDriveMotor.getEncoderVelocity()).thenReturn(-1.0);
+
+    // Try to drive forward without traction control
+    m_driveSubsystem.disableTractionControl();
+    m_driveSubsystem.teleopPID(+1.0, 0.0, 0.0);
+
+    // Verify that motors are being driven with expected values
+    verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.eq(+DriveSubsystem.DRIVE_MAX_LINEAR_SPEED, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_lFrontRotateMotor, times(1)).set(AdditionalMatchers.eq(-Math.PI / 2, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
+    verify(m_rFrontDriveMotor, times(1)).set(AdditionalMatchers.eq(+DriveSubsystem.DRIVE_MAX_LINEAR_SPEED, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_rFrontRotateMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
+    verify(m_lRearDriveMotor, times(1)).set(AdditionalMatchers.eq(-DriveSubsystem.DRIVE_MAX_LINEAR_SPEED, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_lRearRotateMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
+    verify(m_rRearDriveMotor, times(1)).set(AdditionalMatchers.eq(+DriveSubsystem.DRIVE_MAX_LINEAR_SPEED, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
     verify(m_rRearRotateMotor, times(1)).set(AdditionalMatchers.eq(+Math.PI / 2, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
   }
 }
