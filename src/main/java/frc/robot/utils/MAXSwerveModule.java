@@ -4,7 +4,6 @@
 
 package frc.robot.utils;
 
-import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -22,13 +21,11 @@ public class MAXSwerveModule implements AutoCloseable {
     private boolean isHardwareReal;
     private SparkMax driveMotor;
     private SparkMax rotateMotor;
-    private AbsoluteEncoder rotateEncoder;
 
-    public Hardware(boolean isHardwareReal, SparkMax driveMotor, SparkMax rotateMotor, AbsoluteEncoder rotateEncoder) {
+    public Hardware(boolean isHardwareReal, SparkMax driveMotor, SparkMax rotateMotor) {
       this.isHardwareReal = isHardwareReal;
       this.driveMotor = driveMotor;
       this.rotateMotor = rotateMotor;
-      this.rotateEncoder = rotateEncoder;
     }
   }
 
@@ -53,7 +50,6 @@ public class MAXSwerveModule implements AutoCloseable {
 
   private final SparkMax m_driveMotor;
   private final SparkMax m_rotateMotor;
-  private final AbsoluteEncoder m_rotateEncoder;
   private final SparkPIDConfig m_driveMotorConfig;
   private final SparkPIDConfig m_rotateMotorConfig;
   private final Translation2d m_moduleCoordinate;
@@ -79,7 +75,6 @@ public class MAXSwerveModule implements AutoCloseable {
                          double wheelbase, double trackWidth, double driveGearRatio, double driveWheelDiameter) {
     this.m_driveMotor = swerveHardware.driveMotor;
     this.m_rotateMotor = swerveHardware.rotateMotor;
-    this.m_rotateEncoder = swerveHardware.rotateEncoder;
     this.m_location = location;
     this.m_driveMotorConfig = driveMotorConfig;
     this.m_rotateMotorConfig = rotateMotorConfig;
@@ -108,7 +103,7 @@ public class MAXSwerveModule implements AutoCloseable {
     if (swerveHardware.isHardwareReal) {
       // Initialize PID
       m_driveMotorConfig.initializeSparkPID(m_driveMotor, m_driveMotor.getEncoder());
-      m_rotateMotorConfig.initializeSparkPID(m_rotateMotor, m_rotateEncoder);
+      m_rotateMotorConfig.initializeSparkPID(m_rotateMotor, m_rotateMotor.getAbsoluteEncoder());
 
       // Set drive encoder conversion factor
       double driveConversionFactor = m_driveWheelDiameter * Math.PI / m_driveGearRatio;
@@ -117,8 +112,8 @@ public class MAXSwerveModule implements AutoCloseable {
 
       // Set rotate encoder conversion factor
       double rotateConversionFactor = 2 * Math.PI;
-      m_rotateEncoder.setPositionConversionFactor(rotateConversionFactor);
-      m_rotateEncoder.setVelocityConversionFactor(rotateConversionFactor / 60);
+      m_rotateMotor.getAbsoluteEncoder().setPositionConversionFactor(rotateConversionFactor);
+      m_rotateMotor.getAbsoluteEncoder().setVelocityConversionFactor(rotateConversionFactor / 60);
 
       // Enable PID wrapping
       m_rotateMotor.getPIDController().setPositionPIDWrappingEnabled(true);
@@ -150,9 +145,11 @@ public class MAXSwerveModule implements AutoCloseable {
   }
 
   public static Hardware initializeHardware(boolean isHardwareReal, int driveMotorID, int rotateMotorID) {
-    SparkMax driveMotor = new SparkMax(driveMotorID, MotorType.kBrushless);
-    SparkMax rotateMotor = new SparkMax(rotateMotorID, MotorType.kBrushless);
-    Hardware swerveModuleHardware = new Hardware(isHardwareReal, driveMotor, rotateMotor, rotateMotor.getAbsoluteEncoder());
+    Hardware swerveModuleHardware = new Hardware(
+      isHardwareReal, 
+      new SparkMax(driveMotorID, MotorType.kBrushless),
+      new SparkMax(rotateMotorID, MotorType.kBrushless)
+    );
 
     return swerveModuleHardware;
   }
@@ -170,7 +167,7 @@ public class MAXSwerveModule implements AutoCloseable {
 
     // Optimize swerve module rotation state
     // REV encoder returns an angle in radians
-    desiredState = SwerveModuleState.optimize(desiredState, Rotation2d.fromRadians(m_rotateEncoder.getPosition()));
+    desiredState = SwerveModuleState.optimize(desiredState, Rotation2d.fromRadians(m_rotateMotor.getAbsoluteEncoderPosition()));
 
     // Set rotate motor position
     m_rotateMotor.set(desiredState.angle.getRadians(), ControlType.kPosition);
@@ -202,7 +199,7 @@ public class MAXSwerveModule implements AutoCloseable {
   public SwerveModuleState getCurrentState() {
     return new SwerveModuleState(
       getDriveVelocity(),
-      Rotation2d.fromRadians(m_rotateEncoder.getPosition() - m_location.offset)
+      Rotation2d.fromRadians(m_rotateMotor.getAbsoluteEncoderPosition() - m_location.offset)
     );
   }
 
@@ -213,7 +210,7 @@ public class MAXSwerveModule implements AutoCloseable {
   public SwerveModulePosition getPosition() {
     return new SwerveModulePosition(
       m_driveMotor.getEncoderPosition(),
-      Rotation2d.fromRadians(m_rotateEncoder.getPosition() - m_location.offset)
+      Rotation2d.fromRadians(m_rotateMotor.getAbsoluteEncoderPosition() - m_location.offset)
     );
   }
 

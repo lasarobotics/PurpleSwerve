@@ -20,7 +20,6 @@ import org.mockito.AdditionalMatchers;
 import org.mockito.ArgumentMatchers;
 
 import com.kauailabs.navx.frc.AHRS;
-import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.CANSparkMax.ControlType;
 
 import frc.robot.Constants;
@@ -39,11 +38,6 @@ public class DriveSubsystemTest {
   private SparkMax m_rFrontDriveMotor, m_rFrontRotateMotor;
   private SparkMax m_lRearDriveMotor, m_lRearRotateMotor;
   private SparkMax m_rRearDriveMotor, m_rRearRotateMotor;
-
-  private AbsoluteEncoder m_lFrontRotateEncoder;
-  private AbsoluteEncoder m_rFrontRotateEncoder;
-  private AbsoluteEncoder m_lRearRotateEncoder;
-  private AbsoluteEncoder m_rRearRotateEncoder;
   
   private AHRS m_navx;
 
@@ -52,23 +46,19 @@ public class DriveSubsystemTest {
     // Create mock hardware devices
     m_lFrontDriveMotor = mock(SparkMax.class);
     m_lFrontRotateMotor = mock(SparkMax.class);
-    m_lFrontRotateEncoder = mock(AbsoluteEncoder.class);
     m_rFrontDriveMotor = mock(SparkMax.class);
     m_rFrontRotateMotor = mock(SparkMax.class);
-    m_rFrontRotateEncoder = mock(AbsoluteEncoder.class);
     m_lRearDriveMotor = mock(SparkMax.class);
     m_lRearRotateMotor = mock(SparkMax.class);
-    m_lRearRotateEncoder = mock(AbsoluteEncoder.class);
     m_rRearDriveMotor = mock(SparkMax.class);
     m_rRearRotateMotor = mock(SparkMax.class);
-    m_rRearRotateEncoder = mock(AbsoluteEncoder.class);
     m_navx = mock(AHRS.class);
 
     // Create hardware object using mock devices
     m_drivetrainHardware = new DriveSubsystem.Hardware(
       MOCK_HARDWARE,
       new MAXSwerveModule(
-        new MAXSwerveModule.Hardware(MOCK_HARDWARE, m_lFrontDriveMotor, m_lFrontRotateMotor, m_lFrontRotateEncoder),
+        new MAXSwerveModule.Hardware(MOCK_HARDWARE, m_lFrontDriveMotor, m_lFrontRotateMotor),
         ModuleLocation.LeftFront, 
         Constants.Drive.DRIVE_VELOCITY_CONFIG,
         Constants.Drive.DRIVE_ROTATE_CONFIG,
@@ -78,7 +68,7 @@ public class DriveSubsystemTest {
         DriveSubsystem.DRIVE_GEAR_RATIO
       ),
       new MAXSwerveModule(
-        new MAXSwerveModule.Hardware(MOCK_HARDWARE, m_rFrontDriveMotor, m_rFrontRotateMotor, m_rFrontRotateEncoder),
+        new MAXSwerveModule.Hardware(MOCK_HARDWARE, m_rFrontDriveMotor, m_rFrontRotateMotor),
         ModuleLocation.RightFront, 
         Constants.Drive.DRIVE_VELOCITY_CONFIG,
         Constants.Drive.DRIVE_ROTATE_CONFIG,
@@ -88,7 +78,7 @@ public class DriveSubsystemTest {
         DriveSubsystem.DRIVE_GEAR_RATIO
       ),
       new MAXSwerveModule(
-        new MAXSwerveModule.Hardware(MOCK_HARDWARE, m_lRearDriveMotor, m_lRearRotateMotor, m_lRearRotateEncoder),
+        new MAXSwerveModule.Hardware(MOCK_HARDWARE, m_lRearDriveMotor, m_lRearRotateMotor),
         ModuleLocation.LeftRear, 
         Constants.Drive.DRIVE_VELOCITY_CONFIG,
         Constants.Drive.DRIVE_ROTATE_CONFIG,
@@ -98,7 +88,7 @@ public class DriveSubsystemTest {
         DriveSubsystem.DRIVE_GEAR_RATIO
       ),
       new MAXSwerveModule(
-        new MAXSwerveModule.Hardware(MOCK_HARDWARE, m_rRearDriveMotor, m_rRearRotateMotor, m_rRearRotateEncoder),
+        new MAXSwerveModule.Hardware(MOCK_HARDWARE, m_rRearDriveMotor, m_rRearRotateMotor),
         ModuleLocation.RightRear,
         Constants.Drive.DRIVE_VELOCITY_CONFIG,
         Constants.Drive.DRIVE_ROTATE_CONFIG,
