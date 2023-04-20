@@ -4,7 +4,9 @@
 
 package frc.robot.subsystems;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
+import org.photonvision.EstimatedRobotPose;
 
 import com.kauailabs.navx.frc.AHRS;
 
@@ -301,7 +303,18 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * Update robot pose
    */
   private void updatePose() {
+    // Get estimated poses from VisionSubsystem
+    EstimatedRobotPose[] visionEstimatedRobotPoses = VisionSubsystem.getInstance().getEstimatedGlobalPose(getPose());
+
+    // Update pose based on odometry
     m_poseEstimator.update(m_navx.getRotation2d(), getModulePositions());
+
+    // Exit if no valid vision pose estimates
+    if (ArrayUtils.isEmpty(visionEstimatedRobotPoses)) return;
+
+    // Add vision measurements to pose estimator
+    for (EstimatedRobotPose visionEstimatedRobotPose : visionEstimatedRobotPoses)
+      m_poseEstimator.addVisionMeasurement(visionEstimatedRobotPose.estimatedPose.toPose2d(), visionEstimatedRobotPose.timestampSeconds);
   }
 
   @Override

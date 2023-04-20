@@ -7,6 +7,9 @@ package frc.robot;
 import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.utils.PIDConstants;
 import frc.robot.utils.SparkPIDConfig;
@@ -110,6 +113,14 @@ public final class Constants {
     public static final int REAR_LEFT_ROTATE_MOTOR_ID = 7;
     public static final int REAR_RIGHT_DRIVE_MOTOR_ID = 8;
     public static final int REAR_RIGHT_ROTATE_MOTOR_ID = 9;
+  }
+
+  public static class VisionHardware {
+    public static final String CAMERA_0_NAME = "camera0";
+    public static final Transform3d CAMERA_0_LOCATION = new Transform3d(
+      new Translation3d(0.0, 0.0, 0.0),
+      new Rotation3d(0.0, 0.0, 0.0)
+    );
   }
 
   public static class AccessoryHardware {
