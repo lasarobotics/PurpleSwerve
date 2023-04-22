@@ -5,6 +5,8 @@
 package frc.robot.subsystems;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.photonvision.EstimatedRobotPose;
@@ -80,14 +82,14 @@ public class VisionSubsystem {
    * @param prevEstimatedRobotPose The current best guess at robot pose
    * @return  an EstimatedRobotPose with an estimated pose, the timestamp, and targets used to create the estimate
    */
-  public EstimatedRobotPose[] getEstimatedGlobalPose(Pose2d prevEstimatedRobotPose) {
-    EstimatedRobotPose estimatedPoses[] = new EstimatedRobotPose[m_poseEstimators.length];
+  public List<EstimatedRobotPose> getEstimatedGlobalPose(Pose2d prevEstimatedRobotPose) {
+    List<EstimatedRobotPose> estimatedPoses = new ArrayList<EstimatedRobotPose>();
 
     for (int i = 0; i < m_poseEstimators.length; i++) {
       Optional<EstimatedRobotPose> result;
       m_poseEstimators[i].setReferencePose(prevEstimatedRobotPose);
       result = m_poseEstimators[i].update();
-      if (result.isPresent()) estimatedPoses[i] = result.get();
+      if (result.isPresent()) estimatedPoses.add(result.get());
     }
    
     return estimatedPoses;

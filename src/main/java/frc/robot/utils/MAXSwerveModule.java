@@ -35,10 +35,10 @@ public class MAXSwerveModule implements AutoCloseable {
     LeftRear(2, +Math.PI),
     RightRear(3, +Math.PI / 2);
 
-    public final int value;
+    public final int index;
     public final double offset;
-    private ModuleLocation(int value, double offset) {
-      this.value = value;
+    private ModuleLocation(int index, double offset) {
+      this.index = index;
       this.offset = offset;
     }
   }
@@ -181,7 +181,7 @@ public class MAXSwerveModule implements AutoCloseable {
    * @param states array of states for all swerve modules
    */
   public void set(SwerveModuleState[] states) {
-    set(states[m_location.value]);
+    set(states[m_location.index]);
   }
 
   /**

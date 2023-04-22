@@ -4,7 +4,8 @@
 
 package frc.robot.subsystems;
 
-import org.apache.commons.lang3.ArrayUtils;
+import java.util.List;
+
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 import org.photonvision.EstimatedRobotPose;
 
@@ -246,23 +247,23 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @param moduleStates Calculated module states
    */
   private void applyTractionControl(SwerveModuleState[] moduleStates) {
-    moduleStates[ModuleLocation.LeftFront.value].speedMetersPerSecond = m_tractionControlController.calculate(
-      moduleStates[ModuleLocation.LeftFront.value].speedMetersPerSecond,
+    moduleStates[ModuleLocation.LeftFront.index].speedMetersPerSecond = m_tractionControlController.calculate(
+      moduleStates[ModuleLocation.LeftFront.index].speedMetersPerSecond,
       m_lFrontModule.calculateRealSpeed(getInertialVelocity(), getTurnRate()),
       m_lFrontModule.getDriveVelocity()
     );
-    moduleStates[ModuleLocation.RightFront.value].speedMetersPerSecond = m_tractionControlController.calculate(
-      moduleStates[ModuleLocation.RightFront.value].speedMetersPerSecond,
+    moduleStates[ModuleLocation.RightFront.index].speedMetersPerSecond = m_tractionControlController.calculate(
+      moduleStates[ModuleLocation.RightFront.index].speedMetersPerSecond,
       m_rFrontModule.calculateRealSpeed(getInertialVelocity(), getTurnRate()),
       m_rFrontModule.getDriveVelocity()
     );
-    moduleStates[ModuleLocation.LeftRear.value].speedMetersPerSecond = m_tractionControlController.calculate(
-      moduleStates[ModuleLocation.LeftRear.value].speedMetersPerSecond,
+    moduleStates[ModuleLocation.LeftRear.index].speedMetersPerSecond = m_tractionControlController.calculate(
+      moduleStates[ModuleLocation.LeftRear.index].speedMetersPerSecond,
       m_lRearModule.calculateRealSpeed(getInertialVelocity(), getTurnRate()),
       m_lRearModule.getDriveVelocity()
     );
-    moduleStates[ModuleLocation.RightRear.value].speedMetersPerSecond = m_tractionControlController.calculate(
-      moduleStates[ModuleLocation.RightRear.value].speedMetersPerSecond,
+    moduleStates[ModuleLocation.RightRear.index].speedMetersPerSecond = m_tractionControlController.calculate(
+      moduleStates[ModuleLocation.RightRear.index].speedMetersPerSecond,
       m_rRearModule.calculateRealSpeed(getInertialVelocity(), getTurnRate()),
       m_rRearModule.getDriveVelocity()
     );
@@ -304,13 +305,13 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    */
   private void updatePose() {
     // Get estimated poses from VisionSubsystem
-    EstimatedRobotPose[] visionEstimatedRobotPoses = VisionSubsystem.getInstance().getEstimatedGlobalPose(getPose());
+    List<EstimatedRobotPose> visionEstimatedRobotPoses = VisionSubsystem.getInstance().getEstimatedGlobalPose(getPose());
 
     // Update pose based on odometry
     m_poseEstimator.update(m_navx.getRotation2d(), getModulePositions());
 
     // Exit if no valid vision pose estimates
-    if (ArrayUtils.isEmpty(visionEstimatedRobotPoses)) return;
+    if (visionEstimatedRobotPoses.isEmpty()) return;
 
     // Add vision measurements to pose estimator
     for (EstimatedRobotPose visionEstimatedRobotPose : visionEstimatedRobotPoses)
