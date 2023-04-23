@@ -23,6 +23,7 @@ import org.mockito.ArgumentMatchers;
 import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax.ControlType;
 
+import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.utils.MAXSwerveModule;
@@ -35,7 +36,7 @@ public class AntiTipCommandTest {
   private final boolean MOCK_HARDWARE = false;
   private DriveSubsystem m_driveSubsystem;
   private DriveSubsystem.Hardware m_drivetrainHardware;
-  private AntiTipCommand m_antiTipCommand;
+  private Command m_antiTipCommand;
 
   private SparkMax m_lFrontDriveMotor, m_lFrontRotateMotor;
   private SparkMax m_rFrontDriveMotor, m_rFrontRotateMotor;
@@ -117,7 +118,7 @@ public class AntiTipCommandTest {
     );
 
     // Create AntiTipCommand object
-    m_antiTipCommand = new AntiTipCommand(m_driveSubsystem);
+    m_antiTipCommand = m_driveSubsystem.ANTI_TIP_COMMAND;
   }
 
   @AfterEach
@@ -162,5 +163,32 @@ public class AntiTipCommandTest {
 
     // Assert true
     assertEquals(true, value);
+  }
+
+  @Test
+  @Order(3)
+  @DisplayName("Test if robot stops and locks modules when anti-tip is complete")
+  public void end() {
+    // Try to end command
+    m_antiTipCommand.end(false);
+
+    // Verify that motors are being driven with expected values
+    verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_lFrontRotateMotor, times(1)).set(AdditionalMatchers.eq(+Math.PI / 4, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
+    verify(m_rFrontDriveMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_rFrontRotateMotor, times(1)).set(AdditionalMatchers.eq(+Math.PI / 4, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
+    verify(m_lRearDriveMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_lRearRotateMotor, times(1)).set(AdditionalMatchers.eq(+Math.PI / 4, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
+    verify(m_rRearDriveMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_rRearRotateMotor, times(1)).set(AdditionalMatchers.eq(+Math.PI / 4, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
+    verify(m_lFrontDriveMotor, times(1)).stopMotor();
+    verify(m_lFrontRotateMotor, times(1)).stopMotor();
+    verify(m_rFrontDriveMotor, times(1)).stopMotor();
+    verify(m_rFrontRotateMotor, times(1)).stopMotor();
+    verify(m_lRearDriveMotor, times(1)).stopMotor();
+    verify(m_lRearRotateMotor, times(1)).stopMotor();
+    verify(m_lRearRotateMotor, times(1)).stopMotor();
+    verify(m_rRearDriveMotor, times(1)).stopMotor();
+    verify(m_rRearRotateMotor, times(1)).stopMotor();
   }
 }

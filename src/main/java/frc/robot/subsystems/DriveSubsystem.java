@@ -5,6 +5,7 @@
 package frc.robot.subsystems;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 import org.photonvision.EstimatedRobotPose;
@@ -20,7 +21,10 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
 import frc.robot.utils.MAXSwerveModule;
 import frc.robot.utils.MAXSwerveModule.ModuleLocation;
@@ -77,6 +81,20 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private final double TIP_THRESHOLD = 30.0;
   private final double BALANCED_THRESHOLD = 5.0;
 
+  public final Command ANTI_TIP_COMMAND = new FunctionalCommand(
+    () -> {},
+    () -> { this.antiTip(); },
+    new Consumer<Boolean>() {
+      public void accept(Boolean arg0) {
+        DriveSubsystem.this.resetDrivePID();
+        DriveSubsystem.this.lock();
+        DriveSubsystem.this.stop();
+      };
+    },
+    this::isBalanced,
+    this
+  );
+
   /**
    * Create an instance of DriveSubsystem
    * <p>
@@ -132,6 +150,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
       }, 
       new Pose2d()
     );
+
+    new Trigger(this::isTipping).onTrue(ANTI_TIP_COMMAND);
   }
 
   /**

@@ -290,6 +290,22 @@ public class DriveSubsystemTest {
 
   @Test
   @Order(8)
+  @DisplayName("Test if robot can lock swerve modules")
+  public void lock() {
+    m_driveSubsystem.lock();
+
+    verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_lFrontRotateMotor, times(1)).set(AdditionalMatchers.eq(+Math.PI / 4, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
+    verify(m_rFrontDriveMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_rFrontRotateMotor, times(1)).set(AdditionalMatchers.eq(+Math.PI / 4, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
+    verify(m_lRearDriveMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_lRearRotateMotor, times(1)).set(AdditionalMatchers.eq(+Math.PI / 4, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
+    verify(m_rRearDriveMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_rRearRotateMotor, times(1)).set(AdditionalMatchers.eq(+Math.PI / 4, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
+  }
+
+  @Test
+  @Order(9)
   @DisplayName("Test if robot can maintain orientation")
   public void maintainOrientation() {
     // Hardcode sensor values
@@ -313,7 +329,7 @@ public class DriveSubsystemTest {
   }
 
   @Test
-  @Order(9)
+  @Order(10)
   @DisplayName("Test if robot can limit wheel slip")
   public void tractionControl() {
     // Hardcode sensor values
@@ -343,7 +359,7 @@ public class DriveSubsystemTest {
   }
 
   @Test
-  @Order(10)
+  @Order(11)
   @DisplayName("Test if robot can disable traction control")
   public void disableTractionControl() {
     // Hardcode sensor values

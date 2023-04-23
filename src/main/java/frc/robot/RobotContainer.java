@@ -9,8 +9,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.commands.AntiTipCommand;
 import frc.robot.subsystems.DriveSubsystem;
 
 public class RobotContainer {
@@ -43,8 +41,6 @@ public class RobotContainer {
   }
 
   private void configureBindings() {
-    new Trigger(DRIVE_SUBSYSTEM::isTipping).onTrue(new AntiTipCommand(DRIVE_SUBSYSTEM));
-
     PRIMARY_CONTROLLER.start().onTrue(new InstantCommand(() -> DRIVE_SUBSYSTEM.toggleTractionControl(), DRIVE_SUBSYSTEM));
   }
 

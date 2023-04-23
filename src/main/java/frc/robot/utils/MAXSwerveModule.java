@@ -44,7 +44,7 @@ public class MAXSwerveModule implements AutoCloseable {
   }
 
   private final double MAX_VOLTAGE = 12.0;
-  private final double LOCK_POSITION = +Math.PI / 4;
+  private final double LOCK_POSITION = Math.PI / 4;
   private final int DRIVE_MOTOR_CURRENT_LIMIT = 50;
   private final int ROTATE_MOTOR_CURRENT_LIMIT = 20;
 
@@ -235,7 +235,7 @@ public class MAXSwerveModule implements AutoCloseable {
    * Lock swerve module
    */
   public void lock() {
-    set(new SwerveModuleState(0.0, Rotation2d.fromRadians(LOCK_POSITION)));
+    set(new SwerveModuleState(0.0, Rotation2d.fromRadians(LOCK_POSITION - m_location.offset)));
   }
 
   /**
