@@ -83,7 +83,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
   public final Command ANTI_TIP_COMMAND = new FunctionalCommand(
     () -> {},
-    () -> { this.antiTip(); },
+    () -> { DriveSubsystem.this.antiTip(); },
     new Consumer<Boolean>() {
       public void accept(Boolean arg0) {
         DriveSubsystem.this.resetDrivePID();
@@ -91,7 +91,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
         DriveSubsystem.this.stop();
       };
     },
-    this::isBalanced,
+    DriveSubsystem.this::isBalanced,
     this
   );
 

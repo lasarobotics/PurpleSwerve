@@ -67,10 +67,10 @@ public class AutoTrajectory {
    * @param maxVelocity Maximum velocity of robot during path (m/s)
    * @param maxAcceleration Maximum acceleration of robot during path (m/s^2)
    */
-  public AutoTrajectory(DriveSubsystem driveSubsystem, List<PathPoint> waypoints, boolean reversed, double maxVelocity, double maxAcceleration) {
+  public AutoTrajectory(DriveSubsystem driveSubsystem, List<PathPoint> waypoints, double maxVelocity, double maxAcceleration) {
     this.m_driveSubsystem = driveSubsystem;
 
-    m_trajectory = PathPlanner.generatePath(new PathConstraints(maxVelocity, maxAcceleration), reversed, waypoints);
+    m_trajectory = PathPlanner.generatePath(new PathConstraints(maxVelocity, maxAcceleration), waypoints);
 
     m_swerveCommand = new PPSwerveControllerCommand(
       m_trajectory, 
@@ -89,7 +89,7 @@ public class AutoTrajectory {
    * Reset drive odometry to beginning of this path
    */
   private void resetOdometry() {
-    m_driveSubsystem.resetPose(m_trajectory.getInitialPose());
+    m_driveSubsystem.resetPose(m_trajectory.getInitialHolonomicPose());
   }
 
   /**
