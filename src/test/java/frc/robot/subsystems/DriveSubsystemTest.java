@@ -292,8 +292,16 @@ public class DriveSubsystemTest {
   @Order(8)
   @DisplayName("Test if robot can lock swerve modules")
   public void lock() {
+  // Hardcode sensor values
+    when(m_navx.getRate()).thenReturn(0.0);
+    when(m_navx.getAngle()).thenReturn(0.0);
+    when(m_navx.getVelocityX()).thenReturn((float)0.0);
+    when(m_navx.getVelocityY()).thenReturn((float)0.0);
+
+    // Try to lock swerve modules
     m_driveSubsystem.lock();
 
+    // Verify that motors are being driven with expected values
     verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
     verify(m_lFrontRotateMotor, times(1)).set(AdditionalMatchers.eq(+Math.PI / 4, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
     verify(m_rFrontDriveMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
