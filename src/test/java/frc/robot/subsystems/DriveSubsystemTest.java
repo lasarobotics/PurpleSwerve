@@ -65,7 +65,7 @@ public class DriveSubsystemTest {
         DriveSubsystem.DRIVE_WHEELBASE,
         DriveSubsystem.DRIVE_TRACK_WIDTH,
         DriveSubsystem.DRIVE_GEAR_RATIO,
-        DriveSubsystem.DRIVE_GEAR_RATIO
+        DriveSubsystem.DRIVE_WHEEL_DIAMETER_METERS
       ),
       new MAXSwerveModule(
         new MAXSwerveModule.Hardware(MOCK_HARDWARE, m_rFrontDriveMotor, m_rFrontRotateMotor),
@@ -75,7 +75,7 @@ public class DriveSubsystemTest {
         DriveSubsystem.DRIVE_WHEELBASE,
         DriveSubsystem.DRIVE_TRACK_WIDTH,
         DriveSubsystem.DRIVE_GEAR_RATIO,
-        DriveSubsystem.DRIVE_GEAR_RATIO
+        DriveSubsystem.DRIVE_WHEEL_DIAMETER_METERS
       ),
       new MAXSwerveModule(
         new MAXSwerveModule.Hardware(MOCK_HARDWARE, m_lRearDriveMotor, m_lRearRotateMotor),
@@ -85,7 +85,7 @@ public class DriveSubsystemTest {
         DriveSubsystem.DRIVE_WHEELBASE,
         DriveSubsystem.DRIVE_TRACK_WIDTH,
         DriveSubsystem.DRIVE_GEAR_RATIO,
-        DriveSubsystem.DRIVE_GEAR_RATIO
+        DriveSubsystem.DRIVE_WHEEL_DIAMETER_METERS
       ),
       new MAXSwerveModule(
         new MAXSwerveModule.Hardware(MOCK_HARDWARE, m_rRearDriveMotor, m_rRearRotateMotor),
@@ -95,7 +95,7 @@ public class DriveSubsystemTest {
         DriveSubsystem.DRIVE_WHEELBASE,
         DriveSubsystem.DRIVE_TRACK_WIDTH,
         DriveSubsystem.DRIVE_GEAR_RATIO,
-        DriveSubsystem.DRIVE_GEAR_RATIO
+        DriveSubsystem.DRIVE_WHEEL_DIAMETER_METERS
       ),
       m_navx
     );
