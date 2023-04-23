@@ -175,7 +175,7 @@ public class DriveSubsystemTest {
     // Hardcode sensor values
     when(m_navx.getRate()).thenReturn(0.0);
     when(m_navx.getAngle()).thenReturn(0.0);
-    when(m_navx.getVelocityX()).thenReturn((float)-DriveSubsystem.DRIVE_MAX_LINEAR_SPEED);
+    when(m_navx.getVelocityX()).thenReturn((float)+DriveSubsystem.DRIVE_MAX_LINEAR_SPEED);
     when(m_navx.getVelocityY()).thenReturn((float)0.0);
 
     // Try to strafe left
@@ -199,7 +199,7 @@ public class DriveSubsystemTest {
     // Hardcode sensor values
     when(m_navx.getRate()).thenReturn(0.0);
     when(m_navx.getAngle()).thenReturn(0.0);
-    when(m_navx.getVelocityX()).thenReturn((float)+DriveSubsystem.DRIVE_MAX_LINEAR_SPEED);
+    when(m_navx.getVelocityX()).thenReturn((float)-DriveSubsystem.DRIVE_MAX_LINEAR_SPEED);
     when(m_navx.getVelocityY()).thenReturn((float)0.0);
 
     // Try to strafe right
