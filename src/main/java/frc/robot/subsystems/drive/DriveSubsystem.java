@@ -2,7 +2,7 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems;
+package frc.robot.subsystems.drive;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -26,10 +26,8 @@ import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
-import frc.robot.utils.MAXSwerveModule;
-import frc.robot.utils.MAXSwerveModule.ModuleLocation;
-import frc.robot.utils.TractionControlController;
-import frc.robot.utils.TurnPIDController;
+import frc.robot.subsystems.drive.MAXSwerveModule.ModuleLocation;
+import frc.robot.subsystems.vision.VisionSubsystem;
 
 public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   public static class Hardware {
@@ -86,7 +84,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     () -> { DriveSubsystem.this.antiTip(); },
     new Consumer<Boolean>() {
       public void accept(Boolean arg0) {
-        DriveSubsystem.this.resetDrivePID();
+        DriveSubsystem.this.resetTurnPID();
         DriveSubsystem.this.lock();
         DriveSubsystem.this.stop();
       };
@@ -302,7 +300,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   /**
    * Reset DriveSubsystem PID
    */
-  public void resetDrivePID() {
+  public void resetTurnPID() {
     m_turnPIDController.setSetpoint(getAngle());
     m_turnPIDController.reset();
   }

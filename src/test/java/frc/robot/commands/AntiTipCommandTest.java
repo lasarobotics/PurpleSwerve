@@ -25,9 +25,9 @@ import com.revrobotics.CANSparkMax.ControlType;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
-import frc.robot.subsystems.DriveSubsystem;
-import frc.robot.utils.MAXSwerveModule;
-import frc.robot.utils.MAXSwerveModule.ModuleLocation;
+import frc.robot.subsystems.drive.DriveSubsystem;
+import frc.robot.subsystems.drive.MAXSwerveModule;
+import frc.robot.subsystems.drive.MAXSwerveModule.ModuleLocation;
 import frc.robot.utils.SparkMax;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)

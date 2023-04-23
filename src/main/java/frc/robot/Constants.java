@@ -10,7 +10,7 @@ import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
-import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.drive.DriveSubsystem;
 import frc.robot.utils.PIDConstants;
 import frc.robot.utils.SparkPIDConfig;
 

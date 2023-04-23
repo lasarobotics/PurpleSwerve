@@ -5,7 +5,7 @@
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
-package frc.robot.utils;
+package frc.robot.subsystems.drive;
 
 import java.util.HashMap;
 import java.util.List;
@@ -22,7 +22,6 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.Constants;
-import frc.robot.subsystems.DriveSubsystem;
 
 public class AutoTrajectory {
   // Ramsete Command values
@@ -106,7 +105,7 @@ public class AutoTrajectory {
    */
   public Command getCommandAndStop() {
     return m_swerveCommand.andThen(() -> {
-            m_driveSubsystem.resetDrivePID();
+            m_driveSubsystem.resetTurnPID();
             m_driveSubsystem.lock();
             m_driveSubsystem.stop();
            });
@@ -122,7 +121,7 @@ public class AutoTrajectory {
       return new InstantCommand(() -> resetOdometry())
                  .andThen(m_swerveCommand)
                  .andThen(() -> {
-                    m_driveSubsystem.resetDrivePID();
+                    m_driveSubsystem.resetTurnPID();
                     m_driveSubsystem.lock();
                     m_driveSubsystem.stop();
                   });
@@ -139,7 +138,7 @@ public class AutoTrajectory {
   public Command getCommandAndStopWithEvents(HashMap<String, Command> eventMap) {
     return new FollowPathWithEvents(m_swerveCommand, m_trajectory.getMarkers(), eventMap)
                .andThen(() -> {
-                  m_driveSubsystem.resetDrivePID();
+                  m_driveSubsystem.resetTurnPID();
                   m_driveSubsystem.lock();
                   m_driveSubsystem.stop();
                 });
@@ -158,7 +157,7 @@ public class AutoTrajectory {
       return new InstantCommand(() -> resetOdometry())
                  .andThen(new FollowPathWithEvents(m_swerveCommand, m_trajectory.getMarkers(), eventMap))
                  .andThen(() -> {
-                    m_driveSubsystem.resetDrivePID();
+                    m_driveSubsystem.resetTurnPID();
                     m_driveSubsystem.lock();
                     m_driveSubsystem.stop();
                   });
@@ -170,7 +169,7 @@ public class AutoTrajectory {
    * @return Ramsete command that does NOT stop when complete
    */
   public Command getCommand() {
-    return m_swerveCommand.andThen(() -> m_driveSubsystem.resetDrivePID());
+    return m_swerveCommand.andThen(() -> m_driveSubsystem.resetTurnPID());
   }
 
   /**
@@ -182,7 +181,7 @@ public class AutoTrajectory {
     if (isFirstPath) {
       return new InstantCommand(() -> resetOdometry())
                  .andThen(m_swerveCommand)
-                 .andThen(() -> m_driveSubsystem.resetDrivePID());
+                 .andThen(() -> m_driveSubsystem.resetTurnPID());
     } else return getCommand();  
   }
 }
