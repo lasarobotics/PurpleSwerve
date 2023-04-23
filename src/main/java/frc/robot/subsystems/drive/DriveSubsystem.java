@@ -11,6 +11,7 @@ import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 import org.photonvision.EstimatedRobotPose;
 
 import com.kauailabs.navx.frc.AHRS;
+import com.pathplanner.lib.PathPoint;
 
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -63,6 +64,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   public static final double DRIVE_METERS_PER_ROTATION = DRIVE_METERS_PER_TICK * Constants.Global.NEO_ENCODER_TICKS_PER_ROTATION;
   public static final double DRIVETRAIN_EFFICIENCY = 0.88;
   public static final double DRIVE_MAX_LINEAR_SPEED = (Constants.Global.NEO_MAX_RPM / 60) * DRIVE_METERS_PER_ROTATION * DRIVETRAIN_EFFICIENCY;
+  public static final double DRIVE_AUTO_ACCELERATION = DRIVE_MAX_LINEAR_SPEED - 0.5;
 
   private TurnPIDController m_turnPIDController;
   private TractionControlController m_tractionControlController;
@@ -149,6 +151,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
       new Pose2d()
     );
 
+    // Setup anti-tip command
     new Trigger(this::isTipping).onTrue(ANTI_TIP_COMMAND);
   }
 
@@ -219,7 +222,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
       DRIVE_WHEEL_DIAMETER_METERS
     );
 
-    AHRS navx = new AHRS(SPI.Port.kMXP);
+    AHRS navx = new AHRS(SPI.Port.kMXP, (byte)(Constants.Global.ROBOT_LOOP_PERIOD * 2));
 
     Hardware drivetrainHardware = new Hardware(isHardwareReal, lFrontModule, rFrontModule, lRearModule, rRearModule, navx);
 
@@ -383,6 +386,21 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
     // Drive to counter tipping motion
     drive(DRIVE_MAX_LINEAR_SPEED / 2 * Math.cos(direction), DRIVE_MAX_LINEAR_SPEED / 2 * Math.sin(direction), 0.0);
+  }
+
+  /**
+   * Generate AutoTrajectory to drive to pose
+   * @param pose Destination pose
+   * @return AutoTrajectory that will drive robot to desired pose
+   */
+  public AutoTrajectory driveToPose(Pose2d pose) {
+    Rotation2d heading = new Rotation2d(getPose().getX() - pose.getX(), getPose().getY() - pose.getY());
+    List<PathPoint> waypoints = List.of(
+      new PathPoint(getPose().getTranslation(), Rotation2d.fromRadians(0.0), getInertialVelocity()),
+      new PathPoint(pose.getTranslation(), heading, pose.getRotation())
+    );
+
+    return new AutoTrajectory(this, waypoints, DRIVE_MAX_LINEAR_SPEED, DRIVE_AUTO_ACCELERATION);
   }
 
   /**
