@@ -43,7 +43,7 @@ public class RobotContainer {
   }
 
   private void configureBindings() {
-    new Trigger(DRIVE_SUBSYSTEM::isTipping).whileTrue(new AntiTipCommand(DRIVE_SUBSYSTEM));
+    new Trigger(DRIVE_SUBSYSTEM::isTipping).onTrue(new AntiTipCommand(DRIVE_SUBSYSTEM));
 
     PRIMARY_CONTROLLER.start().onTrue(new InstantCommand(() -> DRIVE_SUBSYSTEM.toggleTractionControl(), DRIVE_SUBSYSTEM));
   }
