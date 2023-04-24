@@ -4,6 +4,9 @@
 
 package frc.robot.subsystems.led;
 
+import java.util.HashMap;
+
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -30,7 +33,7 @@ public class LEDStrip {
   /**
    * LED strip sections
    */
-  private static enum Section {
+  public static enum Section {
     START,
     MIDDLE,
     END,
@@ -71,7 +74,7 @@ public class LEDStrip {
 
   private AddressableLED m_leds;
   private AddressableLEDBuffer m_buffer;
-  private Runnable m_sectionLEDPatterns[];
+  private HashMap<Section, Pair<Pattern, Color>> m_sectionLEDPatterns;
 
   private static final double STROBE_DURATION = 0.1;
   private static final double BREATHE_DURATION = 1.0;
@@ -83,7 +86,6 @@ public class LEDStrip {
 
   private static final Color TEAM_COLOR = Color.kPurple;
   private static final Color ALLIANCE_COLORS[] = { Color.kRed, Color.kBlue, TEAM_COLOR };
-  private static final Runnable DO_NOTHING = () -> {};
 
   /**
    * Create an instance of an LED strip
@@ -93,12 +95,9 @@ public class LEDStrip {
   public LEDStrip(Hardware ledStripHardware, int length) {
     this.m_leds = ledStripHardware.ledStrip;
     this.m_buffer = new AddressableLEDBuffer(length);
-    this.m_sectionLEDPatterns = new Runnable[] {
-      () -> off(Section.FULL),
-      DO_NOTHING,
-      DO_NOTHING,
-      DO_NOTHING
-    };
+    this.m_sectionLEDPatterns = new HashMap<Section, Pair<Pattern, Color>>();
+
+    m_sectionLEDPatterns.put(Section.FULL, new Pair<Pattern, Color>(Pattern.SOLID, TEAM_COLOR));
   }
 
   /**
@@ -218,21 +217,23 @@ public class LEDStrip {
    * @param pattern Desired pattern
    * @param color Desired color
    */
-  public void set(Section section, Pattern pattern, Color color) {
+  private void set(Section section, Pattern pattern, Color color) {
     if (section.equals(Section.FULL)) {
-      m_sectionLEDPatterns[Section.START.ordinal()] = DO_NOTHING;
-      m_sectionLEDPatterns[Section.MIDDLE.ordinal()] = DO_NOTHING;
-      m_sectionLEDPatterns[Section.END.ordinal()] = DO_NOTHING;
-    } else m_sectionLEDPatterns[Section.FULL.ordinal()] = DO_NOTHING;
+      m_sectionLEDPatterns.remove(Section.START);
+      m_sectionLEDPatterns.remove(Section.MIDDLE);
+      m_sectionLEDPatterns.remove(Section.END);
+    } else m_sectionLEDPatterns.remove(Section.FULL);
 
-    m_sectionLEDPatterns[section.ordinal()] = () -> { setPattern(section, pattern, color); };
+    m_sectionLEDPatterns.put(section, new Pair<Pattern, Color>(pattern, color));
   }
 
   /**
    * Update LED strip colors/patterns
    */
   protected void update() {
-    for (Runnable sectionLEDPattern : m_sectionLEDPatterns) sectionLEDPattern.run();
+    m_sectionLEDPatterns.forEach(
+      (section, colorPattern) -> setPattern(section, colorPattern.getFirst(), colorPattern.getSecond())
+    );
     m_leds.setData(m_buffer);
   }
 

@@ -5,7 +5,6 @@
 package frc.robot.subsystems.drive;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 import org.photonvision.EstimatedRobotPose;
@@ -28,29 +27,35 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
 import frc.robot.subsystems.drive.MAXSwerveModule.ModuleLocation;
+import frc.robot.subsystems.led.LEDStrip;
+import frc.robot.subsystems.led.LEDStrip.Pattern;
+import frc.robot.subsystems.led.LEDSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
 
 public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   public static class Hardware {
     boolean isHardwareReal;
+    AHRS navx;
     MAXSwerveModule lFrontModule;
     MAXSwerveModule rFrontModule;
     MAXSwerveModule lRearModule;
     MAXSwerveModule rRearModule;
-    AHRS navx;
+    LEDStrip ledStrip;
 
     public Hardware(boolean isHardwareReal,
+                    AHRS navx,
                     MAXSwerveModule lFrontModule,
                     MAXSwerveModule rFrontModule,
                     MAXSwerveModule lRearModule,
                     MAXSwerveModule rRearModule,
-                    AHRS navx) {
+                    LEDStrip ledStrip) {
       this.isHardwareReal = isHardwareReal;
+      this.navx = navx;
       this.lFrontModule = lFrontModule;
       this.rFrontModule = rFrontModule;
       this.lRearModule = lRearModule;
       this.rRearModule = rRearModule;
-      this.navx = navx;
+      this.ledStrip = ledStrip;
     }
   }
 
@@ -71,27 +76,28 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private SwerveDriveKinematics m_kinematics;
   private SwerveDrivePoseEstimator m_poseEstimator;
 
+  private AHRS m_navx;
   private MAXSwerveModule m_lFrontModule;
   private MAXSwerveModule m_rFrontModule;
   private MAXSwerveModule m_lRearModule;
   private MAXSwerveModule m_rRearModule;
-  private AHRS m_navx;
+  private LEDStrip m_ledStrip;
 
   private final double TOLERANCE = 0.125;
   private final double TIP_THRESHOLD = 30.0;
   private final double BALANCED_THRESHOLD = 5.0;
 
   public final Command ANTI_TIP_COMMAND = new FunctionalCommand(
-    () -> {},
-    () -> { DriveSubsystem.this.antiTip(); },
-    new Consumer<Boolean>() {
-      public void accept(Boolean arg0) {
-        DriveSubsystem.this.resetTurnPID();
-        DriveSubsystem.this.lock();
-        DriveSubsystem.this.stop();
-      };
+    () -> m_ledStrip.setRed(Pattern.STROBE),
+    () -> antiTip(),
+    (interrupted) -> {
+      m_ledStrip.setGreen(Pattern.SOLID);
+      resetTurnPID();
+      lock();
+      stop();
+      m_ledStrip.setTeamColor(Pattern.SOLID);
     },
-    DriveSubsystem.this::isBalanced,
+    this::isBalanced,
     this
   );
 
@@ -117,11 +123,12 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     m_turnPIDController = new TurnPIDController(kP, kD, turnScalar, deadband, lookAhead, turnInputCurve);
     m_tractionControlController =  new TractionControlController(slipRatio, DRIVE_MAX_LINEAR_SPEED, deadband, throttleInputCurve);
 
+    this.m_navx = drivetrainHardware.navx;
     this.m_lFrontModule = drivetrainHardware.lFrontModule;
     this.m_rFrontModule = drivetrainHardware.rFrontModule;
     this.m_lRearModule = drivetrainHardware.lRearModule;
     this.m_rRearModule = drivetrainHardware.rRearModule;
-    this.m_navx = drivetrainHardware.navx;
+    this.m_ledStrip = drivetrainHardware.ledStrip;
 
     // Calibrate and reset navX
     m_navx.calibrate();
@@ -153,6 +160,12 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
     // Setup anti-tip command
     new Trigger(this::isTipping).onTrue(ANTI_TIP_COMMAND);
+
+    // Register LED strip with LED subsystem
+    LEDSubsystem.getInstance().add(m_ledStrip);
+
+    // Set LED strip to team color
+    m_ledStrip.setTeamColor(Pattern.SOLID);
   }
 
   /**
@@ -161,6 +174,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @return Hardware object containing all necessary devices for this subsystem
    */
   public static Hardware initializeHardware(boolean isHardwareReal) {
+    AHRS navx = new AHRS(SPI.Port.kMXP, (byte)(Constants.Global.ROBOT_LOOP_PERIOD * 2));
+
     MAXSwerveModule lFrontModule = new MAXSwerveModule(
       MAXSwerveModule.initializeHardware(
         isHardwareReal,
@@ -221,9 +236,12 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
       DRIVE_WHEEL_DIAMETER_METERS
     );
 
-    AHRS navx = new AHRS(SPI.Port.kMXP, (byte)(Constants.Global.ROBOT_LOOP_PERIOD * 2));
+    LEDStrip ledStrip = new LEDStrip(
+      LEDStrip.initializeHardware(Constants.DriveHardware.LED_STRIP_PORT),
+      Constants.DriveHardware.LED_STRIP_LENGTH
+    );
 
-    Hardware drivetrainHardware = new Hardware(isHardwareReal, lFrontModule, rFrontModule, lRearModule, rRearModule, navx);
+    Hardware drivetrainHardware = new Hardware(isHardwareReal, navx, lFrontModule, rFrontModule, lRearModule, rRearModule, ledStrip);
 
     return drivetrainHardware;  
   }

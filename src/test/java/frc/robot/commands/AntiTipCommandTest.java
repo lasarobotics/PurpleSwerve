@@ -28,6 +28,7 @@ import frc.robot.Constants;
 import frc.robot.subsystems.drive.DriveSubsystem;
 import frc.robot.subsystems.drive.MAXSwerveModule;
 import frc.robot.subsystems.drive.MAXSwerveModule.ModuleLocation;
+import frc.robot.subsystems.led.LEDStrip;
 import frc.robot.utils.SparkMax;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -38,16 +39,19 @@ public class AntiTipCommandTest {
   private DriveSubsystem.Hardware m_drivetrainHardware;
   private Command m_antiTipCommand;
 
+  private AHRS m_navx;
+
   private SparkMax m_lFrontDriveMotor, m_lFrontRotateMotor;
   private SparkMax m_rFrontDriveMotor, m_rFrontRotateMotor;
   private SparkMax m_lRearDriveMotor, m_lRearRotateMotor;
   private SparkMax m_rRearDriveMotor, m_rRearRotateMotor;
-  
-  private AHRS m_navx;
+
+  private LEDStrip m_ledStrip;
 
   @BeforeEach
   public void setup() {
     // Create mock hardware devices
+    m_navx = mock(AHRS.class);
     m_lFrontDriveMotor = mock(SparkMax.class);
     m_lFrontRotateMotor = mock(SparkMax.class);
     m_rFrontDriveMotor = mock(SparkMax.class);
@@ -56,11 +60,12 @@ public class AntiTipCommandTest {
     m_lRearRotateMotor = mock(SparkMax.class);
     m_rRearDriveMotor = mock(SparkMax.class);
     m_rRearRotateMotor = mock(SparkMax.class);
-    m_navx = mock(AHRS.class);
+    m_ledStrip = mock(LEDStrip.class);
 
     // Create hardware object using mock devices
     m_drivetrainHardware = new DriveSubsystem.Hardware(
       MOCK_HARDWARE,
+      m_navx,
       new MAXSwerveModule(
         new MAXSwerveModule.Hardware(MOCK_HARDWARE, m_lFrontDriveMotor, m_lFrontRotateMotor),
         ModuleLocation.LeftFront, 
@@ -101,7 +106,7 @@ public class AntiTipCommandTest {
         DriveSubsystem.DRIVE_GEAR_RATIO,
         DriveSubsystem.DRIVE_GEAR_RATIO
       ),
-      m_navx
+      m_ledStrip
     );
 
     // Create DriveSubsystem object

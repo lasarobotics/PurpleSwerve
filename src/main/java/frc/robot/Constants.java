@@ -113,6 +113,9 @@ public final class Constants {
     public static final int LEFT_REAR_ROTATE_MOTOR_ID = 7;
     public static final int RIGHT_REAR_DRIVE_MOTOR_ID = 8;
     public static final int RIGHT_REAR_ROTATE_MOTOR_ID = 9;
+
+    public static final int LED_STRIP_PORT = 0;
+    public static final int LED_STRIP_LENGTH = 200;
   }
 
   public static class VisionHardware {
