@@ -164,8 +164,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     MAXSwerveModule lFrontModule = new MAXSwerveModule(
       MAXSwerveModule.initializeHardware(
         isHardwareReal,
-        Constants.DriveHardware.FRONT_LEFT_DRIVE_MOTOR_ID,
-        Constants.DriveHardware.FRONT_LEFT_ROTATE_MOTOR_ID
+        Constants.DriveHardware.LEFT_FRONT_DRIVE_MOTOR_ID,
+        Constants.DriveHardware.LEFT_FRONT_ROTATE_MOTOR_ID
       ),
       MAXSwerveModule.ModuleLocation.LeftFront, 
       Constants.Drive.DRIVE_VELOCITY_CONFIG, 
@@ -179,8 +179,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     MAXSwerveModule rFrontModule = new MAXSwerveModule(
       MAXSwerveModule.initializeHardware(
         isHardwareReal,
-        Constants.DriveHardware.FRONT_RIGHT_DRIVE_MOTOR_ID,
-        Constants.DriveHardware.FRONT_RIGHT_ROTATE_MOTOR_ID
+        Constants.DriveHardware.RIGHT_FRONT_DRIVE_MOTOR_ID,
+        Constants.DriveHardware.RIGHT_FRONT_ROTATE_MOTOR_ID
       ),
       MAXSwerveModule.ModuleLocation.RightFront, 
       Constants.Drive.DRIVE_VELOCITY_CONFIG, 
@@ -194,8 +194,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     MAXSwerveModule lRearModule = new MAXSwerveModule(
       MAXSwerveModule.initializeHardware(
         isHardwareReal,
-        Constants.DriveHardware.REAR_LEFT_DRIVE_MOTOR_ID,
-        Constants.DriveHardware.REAR_LEFT_ROTATE_MOTOR_ID
+        Constants.DriveHardware.LEFT_REAR_DRIVE_MOTOR_ID,
+        Constants.DriveHardware.LEFT_REAR_ROTATE_MOTOR_ID
       ),
       MAXSwerveModule.ModuleLocation.LeftRear, 
       Constants.Drive.DRIVE_VELOCITY_CONFIG, 
@@ -209,8 +209,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     MAXSwerveModule rRearModule = new MAXSwerveModule(
       MAXSwerveModule.initializeHardware(
         isHardwareReal,
-        Constants.DriveHardware.REAR_RIGHT_DRIVE_MOTOR_ID,
-        Constants.DriveHardware.REAR_RIGHT_ROTATE_MOTOR_ID
+        Constants.DriveHardware.RIGHT_REAR_DRIVE_MOTOR_ID,
+        Constants.DriveHardware.RIGHT_REAR_ROTATE_MOTOR_ID
       ),
       MAXSwerveModule.ModuleLocation.RightRear, 
       Constants.Drive.DRIVE_VELOCITY_CONFIG, 

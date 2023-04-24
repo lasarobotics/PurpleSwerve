@@ -105,14 +105,14 @@ public final class Constants {
   }
 
   public static class DriveHardware {
-    public static final int FRONT_LEFT_DRIVE_MOTOR_ID = 2;
-    public static final int FRONT_LEFT_ROTATE_MOTOR_ID = 3;
-    public static final int FRONT_RIGHT_DRIVE_MOTOR_ID = 4;
-    public static final int FRONT_RIGHT_ROTATE_MOTOR_ID = 5;
-    public static final int REAR_LEFT_DRIVE_MOTOR_ID = 6;
-    public static final int REAR_LEFT_ROTATE_MOTOR_ID = 7;
-    public static final int REAR_RIGHT_DRIVE_MOTOR_ID = 8;
-    public static final int REAR_RIGHT_ROTATE_MOTOR_ID = 9;
+    public static final int LEFT_FRONT_DRIVE_MOTOR_ID = 2;
+    public static final int LEFT_FRONT_ROTATE_MOTOR_ID = 3;
+    public static final int RIGHT_FRONT_DRIVE_MOTOR_ID = 4;
+    public static final int RIGHT_FRONT_ROTATE_MOTOR_ID = 5;
+    public static final int LEFT_REAR_DRIVE_MOTOR_ID = 6;
+    public static final int LEFT_REAR_ROTATE_MOTOR_ID = 7;
+    public static final int RIGHT_REAR_DRIVE_MOTOR_ID = 8;
+    public static final int RIGHT_REAR_ROTATE_MOTOR_ID = 9;
   }
 
   public static class VisionHardware {
@@ -121,10 +121,6 @@ public final class Constants {
       new Translation3d(0.0, 0.0, 0.0),
       new Rotation3d(0.0, 0.0, 0.0)
     );
-  }
-
-  public static class AccessoryHardware {
-    public static final int BLINKIN_LED_CONTROLLER_PORT = 0;
   }
 
   public static class SmartDashboard {
