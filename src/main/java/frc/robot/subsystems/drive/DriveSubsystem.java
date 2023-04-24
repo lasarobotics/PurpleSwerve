@@ -157,7 +157,6 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
   /**
    * Initialize hardware devices for drive subsystem
-   *
    * @param isHardwareReal True if hardware is real
    * @return Hardware object containing all necessary devices for this subsystem
    */
