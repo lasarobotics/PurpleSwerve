@@ -14,11 +14,15 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.util.Color;
 
 /** LED Strip */
-public class LEDStrip {
+public class LEDStrip implements AutoCloseable {
+  public static final Color TEAM_COLOR = new Color(0x66, 0x33, 0x99);
+
   public static class Hardware {
+    boolean isHardwareReal;
     AddressableLED ledStrip;
 
-    public Hardware(AddressableLED ledStrip) {
+    public Hardware(boolean isHardwareReal, AddressableLED ledStrip) {
+      this.isHardwareReal = isHardwareReal;
       this.ledStrip = ledStrip;
     }
   }
@@ -114,8 +118,8 @@ public class LEDStrip {
      */
     private static boolean contains(int i, AddressableLEDBuffer buffer, Section... sections) {
       boolean contains = false;
-      for (Section section : sections) 
-        contains &= Section.start(buffer, section) <= i && i <= Section.end(buffer, section);
+      for (Section section : sections)
+        contains |= Section.start(buffer, section) <= i && i < Section.end(buffer, section);
 
       return contains;
     } 
@@ -126,10 +130,10 @@ public class LEDStrip {
    */
   public enum Pattern {
     // Team color patterns
-    TEAM_COLOR_SOLID(PatternType.SOLID, Color.kPurple),
-    TEAM_COLOR_STROBE(PatternType.STROBE, Color.kPurple),
-    TEAM_COLOR_BREATHE(PatternType.BREATHE, Color.kPurple),
-    TEAM_COLOR_WAVE(PatternType.WAVE, Color.kPurple),
+    TEAM_COLOR_SOLID(PatternType.SOLID, TEAM_COLOR),
+    TEAM_COLOR_STROBE(PatternType.STROBE, TEAM_COLOR),
+    TEAM_COLOR_BREATHE(PatternType.BREATHE, TEAM_COLOR),
+    TEAM_COLOR_WAVE(PatternType.WAVE, TEAM_COLOR),
     // Red patterns
     RED_SOLID(PatternType.SOLID, Color.kRed),
     RED_STROBE(PatternType.STROBE, Color.kRed),
@@ -218,8 +222,8 @@ public class LEDStrip {
    * @param ledStripPort PWM port for LED strip
    * @return Hardware object containing all necessary devices for this subsystem
    */
-  public static Hardware initializeHardware(int ledStripPort) {
-    Hardware ledStripHardware = new Hardware(new AddressableLED(ledStripPort));
+  public static Hardware initializeHardware(boolean isHardwareReal, int ledStripPort) {
+    Hardware ledStripHardware = new Hardware(isHardwareReal, new AddressableLED(ledStripPort));
 
     return ledStripHardware;
   }
@@ -336,11 +340,8 @@ public class LEDStrip {
    */
   public void set(Pattern pattern, Section... sections) {
     // Remove all conflicting scheduled LED patterns
-    m_sectionLEDPatterns.forEach(
-      (lsections, lpattern) -> {
-        if (!Collections.disjoint(Arrays.asList(lsections), Arrays.asList(sections))) 
-          m_sectionLEDPatterns.remove(lsections);
-      }
+    m_sectionLEDPatterns.entrySet().removeIf(
+      (entry) -> !Collections.disjoint(Arrays.asList(entry.getKey()), Arrays.asList(sections))
     );
 
     // Schedule LED pattern
@@ -370,5 +371,10 @@ public class LEDStrip {
    */
   public void off(Section... sections) {
     set(Pattern.OFF, sections);
+  }
+
+  @Override
+  public void close() {
+    m_leds.close();
   }
 }

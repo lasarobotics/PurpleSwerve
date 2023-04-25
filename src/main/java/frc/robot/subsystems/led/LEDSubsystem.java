@@ -9,7 +9,7 @@ import java.util.Set;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class LEDSubsystem extends SubsystemBase {
+public class LEDSubsystem extends SubsystemBase implements AutoCloseable {
 
   private static LEDSubsystem m_subsystem;
 
@@ -37,5 +37,10 @@ public class LEDSubsystem extends SubsystemBase {
 
   public void add(LEDStrip... ledStrips) {
     for (LEDStrip ledStrip : ledStrips) m_ledStrips.add(ledStrip);
+  }
+
+  @Override
+  public void close() {
+    for (LEDStrip ledStrip : m_ledStrips) ledStrip.close();
   }
 }

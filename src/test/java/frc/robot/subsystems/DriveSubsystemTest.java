@@ -37,12 +37,10 @@ public class DriveSubsystemTest {
   private DriveSubsystem.Hardware m_drivetrainHardware;
 
   private AHRS m_navx;
-
   private SparkMax m_lFrontDriveMotor, m_lFrontRotateMotor;
   private SparkMax m_rFrontDriveMotor, m_rFrontRotateMotor;
   private SparkMax m_lRearDriveMotor, m_lRearRotateMotor;
   private SparkMax m_rRearDriveMotor, m_rRearRotateMotor;
-
   private LEDStrip m_ledStrip;
 
   @BeforeEach

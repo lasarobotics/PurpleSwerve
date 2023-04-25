@@ -238,7 +238,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     );
 
     LEDStrip ledStrip = new LEDStrip(
-      LEDStrip.initializeHardware(Constants.DriveHardware.LED_STRIP_PORT),
+      LEDStrip.initializeHardware(isHardwareReal, Constants.DriveHardware.LED_STRIP_PORT),
       Constants.DriveHardware.LED_STRIP_LENGTH
     );
 
