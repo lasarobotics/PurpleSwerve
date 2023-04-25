@@ -29,6 +29,7 @@ import frc.robot.Constants;
 import frc.robot.subsystems.drive.MAXSwerveModule.ModuleLocation;
 import frc.robot.subsystems.led.LEDStrip;
 import frc.robot.subsystems.led.LEDStrip.Pattern;
+import frc.robot.subsystems.led.LEDStrip.Section;
 import frc.robot.subsystems.led.LEDSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
 
@@ -88,14 +89,14 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private final double BALANCED_THRESHOLD = 5.0;
 
   public final Command ANTI_TIP_COMMAND = new FunctionalCommand(
-    () -> m_ledStrip.setRed(Pattern.STROBE),
+    () -> m_ledStrip.set(Pattern.RED_STROBE, Section.FULL),
     () -> antiTip(),
     (interrupted) -> {
-      m_ledStrip.setGreen(Pattern.SOLID);
+      m_ledStrip.set(Pattern.GREEN_SOLID, Section.FULL);
       resetTurnPID();
       lock();
       stop();
-      m_ledStrip.setTeamColor(Pattern.SOLID);
+      m_ledStrip.set(Pattern.TEAM_COLOR_SOLID, Section.FULL);
     },
     this::isBalanced,
     this
@@ -165,7 +166,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     LEDSubsystem.getInstance().add(m_ledStrip);
 
     // Set LED strip to team color
-    m_ledStrip.setTeamColor(Pattern.SOLID);
+    m_ledStrip.set(Pattern.TEAM_COLOR_SOLID, Section.FULL);
   }
 
   /**

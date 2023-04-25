@@ -4,12 +4,12 @@
 
 package frc.robot.subsystems.led;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 
-import edu.wpi.first.math.Pair;
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.util.Color;
 
@@ -24,57 +24,172 @@ public class LEDStrip {
   }
 
   /**
-   * Valid LED patterns
-   */
-  public enum Pattern {
-    SOLID, STROBE, BREATHE, WAVE, RAINBOW;
-  }
-
-  /**
    * LED strip sections
    */
   public static enum Section {
     START,
     MIDDLE,
-    END,
-    FULL;
+    END;
+
+    public static final Section FULL[] = { START, MIDDLE, END };
 
     private static final int SMALL_SECTION_LENGTH = 10;
 
-    private int start(AddressableLEDBuffer buffer) {
-      switch (this) {
+    /**
+     * Get start index of LED strip sections
+     * @param buffer LED buffer
+     * @param sections Desired sections
+     * @return Start index
+     */
+    private static int start(AddressableLEDBuffer buffer, Section... sections) {
+      return start(
+        buffer, 
+        Collections.min(
+          Arrays.asList(sections), 
+          (a, b) -> Integer.compare(a.ordinal(), b.ordinal())
+        )
+      );
+    }
+    
+    /**
+     * Get start index of LED strip section
+     * @param buffer LED buffer
+     * @param section Desired section
+     * @return Start index
+     */
+    private static int start(AddressableLEDBuffer buffer, Section section) {
+      switch (section) {
         case START:
           return 0;
         case MIDDLE:
           return SMALL_SECTION_LENGTH;
         case END:
           return buffer.getLength() - SMALL_SECTION_LENGTH;
-        case FULL:
-          return 0;
         default:
           return 0;
+      }
+    }
+    
+    /**
+     * Get end index of LED strip sections
+     * @param buffer LED buffer
+     * @param sections Desired sections
+     * @return End index
+     */
+    private static int end(AddressableLEDBuffer buffer, Section... sections) {
+      return end(
+        buffer, 
+        Collections.max(
+          Arrays.asList(sections), 
+          (a, b) -> Integer.compare(a.ordinal(), b.ordinal())
+        )
+      );
+    }
+    
+    /**
+     * Get end index of LED strip section
+     * @param buffer LED buffer
+     * @param sections Desired section
+     * @return end index
+     */
+    private static int end(AddressableLEDBuffer buffer, Section section) {
+      switch (section) {
+        case START:
+          return SMALL_SECTION_LENGTH;
+        case MIDDLE:
+          return buffer.getLength() - SMALL_SECTION_LENGTH;
+        case END:
+          return buffer.getLength();
+        default:
+          return buffer.getLength();
       }
     }
 
-    private int end(AddressableLEDBuffer buffer) {
-      switch (this) {
-        case START:
-          return SMALL_SECTION_LENGTH;
-        case MIDDLE:
-          return buffer.getLength() - SMALL_SECTION_LENGTH;
-        case END:
-          return buffer.getLength();
-        case FULL:
-          return buffer.getLength();
-        default:
-          return buffer.getLength();
-      }
+    /**
+     * Check if index is within LED strip sections
+     * @param i Index
+     * @param buffer LED buffer
+     * @param sections Desired sections
+     * @return True if index falls within specified sections
+     */
+    private static boolean contains(int i, AddressableLEDBuffer buffer, Section... sections) {
+      boolean contains = false;
+      for (Section section : sections) 
+        contains &= Section.start(buffer, section) <= i && i <= Section.end(buffer, section);
+
+      return contains;
+    } 
+  }
+
+  /**
+   * Valid LED patterns
+   */
+  public enum Pattern {
+    // Team color patterns
+    TEAM_COLOR_SOLID(PatternType.SOLID, Color.kPurple),
+    TEAM_COLOR_STROBE(PatternType.STROBE, Color.kPurple),
+    TEAM_COLOR_BREATHE(PatternType.BREATHE, Color.kPurple),
+    TEAM_COLOR_WAVE(PatternType.WAVE, Color.kPurple),
+    // Red patterns
+    RED_SOLID(PatternType.SOLID, Color.kRed),
+    RED_STROBE(PatternType.STROBE, Color.kRed),
+    RED_BREATHE(PatternType.BREATHE, Color.kRed),
+    RED_WAVE(PatternType.WAVE, Color.kRed),
+    // Orange patterns
+    ORANGE_SOLID(PatternType.SOLID, Color.kOrange),
+    ORANGE_STROBE(PatternType.STROBE, Color.kOrange),
+    ORANGE_BREATHE(PatternType.BREATHE, Color.kOrange),
+    ORANGE_WAVE(PatternType.WAVE, Color.kOrange),
+    // Yellow patterns
+    YELLOW_SOLID(PatternType.SOLID, Color.kYellow),
+    YELLOW_STROBE(PatternType.STROBE, Color.kYellow),
+    YELLOW_BREATHE(PatternType.BREATHE, Color.kYellow),
+    YELLOW_WAVE(PatternType.WAVE, Color.kYellow),
+    // Green patterns
+    GREEN_SOLID(PatternType.SOLID, Color.kGreen),
+    GREEN_STROBE(PatternType.STROBE, Color.kGreen),
+    GREEN_BREATHE(PatternType.BREATHE, Color.kGreen),
+    GREEN_WAVE(PatternType.WAVE, Color.kGreen),
+    // Blue patterns
+    BLUE_SOLID(PatternType.SOLID, Color.kBlue),
+    BLUE_STROBE(PatternType.STROBE, Color.kBlue),
+    BLUE_BREATHE(PatternType.BREATHE, Color.kBlue),
+    BLUE_WAVE(PatternType.WAVE, Color.kBlue),
+    // Indigo patterns
+    INDIGO_SOLID(PatternType.SOLID, Color.kIndigo),
+    INDIGO_STROBE(PatternType.STROBE, Color.kIndigo),
+    INDIGO_BREATHE(PatternType.BREATHE, Color.kIndigo),
+    INDIGO_WAVE(PatternType.WAVE, Color.kIndigo),
+    // Violet patterns
+    VIOLET_SOLID(PatternType.SOLID, Color.kViolet),
+    VIOLET_STROBE(PatternType.STROBE, Color.kViolet),
+    VIOLET_BREATHE(PatternType.BREATHE, Color.kViolet),
+    VIOLET_WAVE(PatternType.WAVE, Color.kViolet),
+    // Pink patterns
+    PINK_SOLID(PatternType.SOLID, Color.kPink),
+    PINK_STROBE(PatternType.STROBE, Color.kPink),
+    PINK_BREATHE(PatternType.BREATHE, Color.kPink),
+    PINK_WAVE(PatternType.WAVE, Color.kPink),
+    // Special patterns
+    OFF(PatternType.SOLID, Color.kBlack),
+    RAINBOW(PatternType.RAINBOW, Color.kBlack);
+
+    public final PatternType type;
+    public final Color color;
+
+    private Pattern(PatternType type, Color color) {
+      this.type = type;
+      this.color = color;
     }
+  }
+
+  private enum PatternType {
+    SOLID, STROBE, BREATHE, WAVE, RAINBOW;
   }
 
   private AddressableLED m_leds;
   private AddressableLEDBuffer m_buffer;
-  private HashMap<Section, Pair<Pattern, Color>> m_sectionLEDPatterns;
+  private HashMap<Section[], Pattern> m_sectionLEDPatterns;
 
   private static final double STROBE_DURATION = 0.1;
   private static final double BREATHE_DURATION = 1.0;
@@ -84,9 +199,6 @@ public class LEDStrip {
   private static final double WAVE_CYCLE_LENGTH = 25.0;
   private static final double WAVE_DURATION = 1.0;
 
-  private static final Color TEAM_COLOR = Color.kPurple;
-  private static final Color ALLIANCE_COLORS[] = { Color.kRed, Color.kBlue, TEAM_COLOR };
-
   /**
    * Create an instance of an LED strip
    * @param ledStripHardware Hardware devices required by LED strip
@@ -95,9 +207,9 @@ public class LEDStrip {
   public LEDStrip(Hardware ledStripHardware, int length) {
     this.m_leds = ledStripHardware.ledStrip;
     this.m_buffer = new AddressableLEDBuffer(length);
-    this.m_sectionLEDPatterns = new HashMap<Section, Pair<Pattern, Color>>();
+    this.m_sectionLEDPatterns = new HashMap<Section[], Pattern>();
 
-    m_sectionLEDPatterns.put(Section.FULL, new Pair<Pattern, Color>(Pattern.SOLID, TEAM_COLOR));
+    m_sectionLEDPatterns.put(Section.FULL, Pattern.TEAM_COLOR_SOLID);
   }
 
   /**
@@ -114,36 +226,38 @@ public class LEDStrip {
 
   /**
    * Set LED strip section to solid color
-   * @param section Section of LED strip
+   * @param sections Section of LED strip
    * @param color Color to set
    */
-  private void solid(Section section, Color color) {
-    for (int i = section.start(m_buffer); i < section.end(m_buffer); i++) 
-      m_buffer.setLED(i, color);
+  private void solid(Color color, Section... sections) {
+    for (int i = Section.start(m_buffer, sections); i < Section.end(m_buffer, sections); i++) {
+      if (Section.contains(i, m_buffer, sections))
+        m_buffer.setLED(i, color);
+    }
   }
 
   /**
    * Set LED strip section to strobe pattern
-   * @param section Section of LED strip
+   * @param sections Section of LED strip
    * @param color Color for pattern
    */
-  private void strobe(Section section, Color color) {
+  private void strobe(Color color, Section... sections) {
     boolean on = ((Timer.getFPGATimestamp() % STROBE_DURATION) / STROBE_DURATION) > 0.5;
-    solid(section, on ? color : Color.kBlack);
+    solid(on ? color : Color.kBlack, sections);
   }
 
   /**
    * Set LED strip section to breathe pattern
-   * @param section Section of LED strip
+   * @param sections Section of LED strip
    * @param color Color for pattern
    */
-  private void breathe(Section section, Color color) {
+  private void breathe(Color color, Section... sections) {
     double x = ((Timer.getFPGATimestamp() % BREATHE_DURATION) / BREATHE_DURATION) * 2.0 * Math.PI;
     double ratio = (Math.sin(x) + 1.0) / 2.0;
     double red = (color.red * (1 - ratio));
     double green = (color.green * (1 - ratio));
     double blue = (color.blue * (1 - ratio));
-    solid(section, new Color(red, green, blue));
+    solid(new Color(red, green, blue), sections);
   }
 
   /**
@@ -151,34 +265,37 @@ public class LEDStrip {
    * @param section Section of LED strip
    * @param color Color for pattern
    */
-  private void wave(Section section, Color color) {
+  private void wave(Color color, Section... sections) {
     double x = (1 - ((Timer.getFPGATimestamp() % WAVE_DURATION) / WAVE_DURATION)) * 2.0 * Math.PI;
     double xDiffPerLed = (2.0 * Math.PI) / WAVE_CYCLE_LENGTH;
-    for (int i = 0; i < section.end(m_buffer); i++) {
+    for (int i = 0; i < Section.end(m_buffer, sections); i++) {
       x += xDiffPerLed;
-      if (i >= section.start(m_buffer)) {
+      if (i >= Section.start(m_buffer, sections)) {
         double ratio = (Math.pow(Math.sin(x), WAVE_EXPONENT) + 1.0) / 2.0;
         if (Double.isNaN(ratio)) ratio = (-Math.pow(Math.sin(x + Math.PI), WAVE_EXPONENT) + 1.0) / 2.0;
         if (Double.isNaN(ratio)) ratio = 0.5;
         double red = (color.red * (1 - ratio));
         double green = (color.green * (1 - ratio));
         double blue = (color.blue * (1 - ratio));
-        m_buffer.setLED(i, new Color(red, green, blue));
+        if (Section.contains(i, m_buffer, sections)) m_buffer.setLED(i, new Color(red, green, blue));
       }
     }
   }
 
   /**
    * Set LED strip section to rainbow
-   * @param section Section of LED strip
+   * @param sections Section of LED strip
    */
-  private void rainbow(Section section) {
+  private void rainbow(Section... sections) {
     double x = (1 - ((Timer.getFPGATimestamp() / RAINBOW_DURATION) % 1.0)) * 180.0;
     double xDiffPerLed = 180.0 / RAINBOW_CYCLE_LENGTH;
-    for (int i = 0; i < section.end(m_buffer); i++) {
+    for (int i = 0; i < Section.end(m_buffer, sections); i++) {
       x += xDiffPerLed;
       x %= 180.0;
-      if (i >= section.start(m_buffer)) m_buffer.setHSV(i, (int)x, 255, 255);
+      if (i >= Section.start(m_buffer, sections)) {
+        if (Section.contains(i, m_buffer, sections))
+          m_buffer.setHSV(i, (int)x, 255, 255);
+      }
     }
   }
 
@@ -188,25 +305,25 @@ public class LEDStrip {
    * @param pattern Desired pattern
    * @param color Desired color
    */
-  private void setPattern(Section section, Pattern pattern, Color color) {
-    switch (pattern) {
+  private void setPattern(Pattern pattern, Section... sections) {
+    switch (pattern.type) {
       case SOLID:
-        solid(section, color);
+        solid(pattern.color, sections);
         break;
       case STROBE:
-        strobe(section, color);
+        strobe(pattern.color, sections);
         break;
       case BREATHE:
-        breathe(section, color);
+        breathe(pattern.color, sections);
         break;
       case WAVE:
-        wave(section, color);
+        wave(pattern.color, sections);
         break;
       case RAINBOW:
-        rainbow(section);
+        rainbow(sections);
         break;
       default:
-        off(section);
+        off(sections);
         break;
     }
   }
@@ -217,22 +334,25 @@ public class LEDStrip {
    * @param pattern Desired pattern
    * @param color Desired color
    */
-  private void set(Section section, Pattern pattern, Color color) {
-    if (section.equals(Section.FULL)) {
-      m_sectionLEDPatterns.remove(Section.START);
-      m_sectionLEDPatterns.remove(Section.MIDDLE);
-      m_sectionLEDPatterns.remove(Section.END);
-    } else m_sectionLEDPatterns.remove(Section.FULL);
+  public void set(Pattern pattern, Section... sections) {
+    // Remove all conflicting scheduled LED patterns
+    m_sectionLEDPatterns.forEach(
+      (lsections, lpattern) -> {
+        if (!Collections.disjoint(Arrays.asList(lsections), Arrays.asList(sections))) 
+          m_sectionLEDPatterns.remove(lsections);
+      }
+    );
 
-    m_sectionLEDPatterns.put(section, new Pair<Pattern, Color>(pattern, color));
+    // Schedule LED pattern
+    m_sectionLEDPatterns.put(sections, pattern);
   }
 
   /**
-   * Update LED strip colors/patterns
+   * Update LED strip pattern
    */
   protected void update() {
     m_sectionLEDPatterns.forEach(
-      (section, colorPattern) -> setPattern(section, colorPattern.getFirst(), colorPattern.getSecond())
+      (sections, pattern) -> setPattern(pattern, sections)
     );
     m_leds.setData(m_buffer);
   }
@@ -241,212 +361,14 @@ public class LEDStrip {
    * Turn off LED strip  
    */
   public void off() {
-    set(Section.FULL, Pattern.SOLID, Color.kBlack);
+    set(Pattern.OFF, Section.FULL);
   }
 
   /**
    * Turn off LED strip section
    * @param section LED strip section
    */
-  public void off(Section section) {
-    set(section, Pattern.SOLID, Color.kBlack);
-  }
-
-  /**
-   * Set LED strip to alliance color
-   * @param pattern Desired pattern
-   */
-  public void setAllianceColor(Pattern pattern) {
-    setAllianceColor(Section.FULL, pattern);
-  }
-
-  /**
-   * Set LED strip section to Alliance color
-   * @param section LED strip section
-   * @param pattern Desired pattern
-   */
-  public void setAllianceColor(Section section, Pattern pattern) {
-    if (pattern.equals(Pattern.RAINBOW)) pattern = Pattern.SOLID;
-    set(section, pattern, ALLIANCE_COLORS[DriverStation.getAlliance().ordinal()]);
-  }
-
-  /**
-   * Set LED strip to team color
-   * @param pattern Desired pattern
-   */
-  public void setTeamColor(Pattern pattern) {
-    setTeamColor(Section.FULL, pattern);
-  }
-
-  /**
-   * Set LED strip section to team color
-   * @param section LED strip section
-   * @param pattern Desired pattern 
-   */
-  public void setTeamColor(Section section, Pattern pattern) {
-    if (pattern.equals(Pattern.RAINBOW)) pattern = Pattern.SOLID;
-    set(section, pattern, TEAM_COLOR);
-  }
-
-  /**
-   * Set LED strip to white
-   * @param pattern Desired pattern
-   */
-  public void setWhite(Pattern pattern) {
-    setWhite(Section.FULL, pattern);
-  }
-
-  /**
-   * Set LED strip section to white
-   * @param section LED strip section
-   * @param pattern Desired pattern 
-   */
-  public void setWhite(Section section, Pattern pattern) {
-    if (pattern.equals(Pattern.RAINBOW)) pattern = Pattern.SOLID;
-    set(section, pattern, Color.kWhite);
-  }
-
-  /**
-   * Set LED strip to red
-   * @param pattern Desired pattern
-   */
-  public void setRed(Pattern pattern) {
-    setRed(Section.FULL, pattern);
-  }
-
-  /**
-   * Set LED strip section to red
-   * @param section LED strip section
-   * @param pattern Desired pattern 
-   */
-  public void setRed(Section section, Pattern pattern) {
-    if (pattern.equals(Pattern.RAINBOW)) pattern = Pattern.SOLID;
-    set(section, pattern, Color.kRed);
-  }
-
-  /**
-   * Set LED strip to orange
-   * @param pattern Desired pattern
-   */
-  public void setOrange(Pattern pattern) {
-    setOrange(Section.FULL, pattern);
-  }
-
-  /**
-   * Set LED strip section to yellow
-   * @param section LED strip section
-   * @param pattern Desired pattern 
-   */
-  public void setOrange(Section section, Pattern pattern) {
-    if (pattern.equals(Pattern.RAINBOW)) pattern = Pattern.SOLID;
-    set(section, pattern, Color.kOrange);
-  }
-
-  /**
-   * Set LED strip to yellow
-   * @param pattern Desired pattern
-   */
-  public void setYellow(Pattern pattern) {
-    setYellow(Section.FULL, pattern);
-  }
-
-  /**
-   * Set LED strip section to yellow
-   * @param section LED strip section
-   * @param pattern Desired pattern 
-   */
-  public void setYellow(Section section, Pattern pattern) {
-    if (pattern.equals(Pattern.RAINBOW)) pattern = Pattern.SOLID;
-    set(section, pattern, Color.kYellow);
-  }
-
-  /**
-   * Set LED strip to green
-   * @param pattern Desired pattern
-   */
-  public void setGreen(Pattern pattern) {
-    setGreen(Section.FULL, pattern);
-  }
-
-  /**
-   * Set LED strip section to green
-   * @param section LED strip section
-   * @param pattern Desired pattern 
-   */
-  public void setGreen(Section section, Pattern pattern) {
-    if (pattern.equals(Pattern.RAINBOW)) pattern = Pattern.SOLID;
-    set(section, pattern, Color.kGreen);
-  }
-
-  /**
-   * Set LED strip to blue
-   * @param pattern Desired pattern
-   */
-  public void setBlue(Pattern pattern) {
-    setBlue(Section.FULL, pattern);
-  }
-
-  /**
-   * Set LED strip section to blue
-   * @param section LED strip section
-   * @param pattern Desired pattern 
-   */
-  public void setBlue(Section section, Pattern pattern) {
-    if (pattern.equals(Pattern.RAINBOW)) pattern = Pattern.SOLID;
-    set(section, pattern, Color.kBlue);
-  }
-
-  /**
-   * Set LED strip to indigo
-   * @param pattern Desired pattern
-   */
-  public void setIndigo(Pattern pattern) {
-    setIndigo(Section.FULL, pattern);
-  }
-
-  /**
-   * Set LED strip section to indigo
-   * @param section LED strip section
-   * @param pattern Desired pattern 
-   */
-  public void setIndigo(Section section, Pattern pattern) {
-    if (pattern.equals(Pattern.RAINBOW)) pattern = Pattern.SOLID;
-    set(section, pattern, Color.kIndigo);
-  }
-
-  /**
-   * Set LED strip to violet
-   * @param pattern Desired pattern
-   */
-  public void setViolet(Pattern pattern) {
-    setViolet(Section.FULL, pattern);
-  }
-
-  /**
-   * Set LED strip section to violet
-   * @param section LED strip section
-   * @param pattern Desired pattern 
-   */
-  public void setViolet(Section section, Pattern pattern) {
-    if (pattern.equals(Pattern.RAINBOW)) pattern = Pattern.SOLID;
-    set(section, pattern, Color.kViolet);
-  }
-
-  /**
-   * Set LED strip to pink
-   * @param pattern Desired pattern
-   */
-  public void setPink(Pattern pattern) {
-    setPink(Section.FULL, pattern);
-  }
-
-  /**
-   * Set LED strip section to pink
-   * @param section LED strip section
-   * @param pattern Desired pattern 
-   */
-  public void setPink(Section section, Pattern pattern) {
-    if (pattern.equals(Pattern.RAINBOW)) pattern = Pattern.SOLID;
-    set(section, pattern, Color.kPink);
+  public void off(Section... sections) {
+    set(Pattern.OFF, sections);
   }
 }
