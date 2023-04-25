@@ -8,8 +8,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.led.LEDStrip.Pattern;
+import frc.robot.subsystems.led.LEDStrip.Section;
 
 public class LEDSubsystem extends SubsystemBase implements AutoCloseable {
+  private static boolean m_override = false;
+  private static Pattern m_overridePattern = Pattern.TEAM_COLOR_SOLID;
 
   private static LEDSubsystem m_subsystem;
 
@@ -29,14 +33,29 @@ public class LEDSubsystem extends SubsystemBase implements AutoCloseable {
     for (LEDStrip ledStrip : m_ledStrips) ledStrip.update();
   }
 
+  private void overrideLEDs() {
+    for (LEDStrip ledStrip : m_ledStrips) ledStrip.set(m_overridePattern, Section.FULL);
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+    if (m_override) overrideLEDs();
     setLEDs();
   }
 
   public void add(LEDStrip... ledStrips) {
     for (LEDStrip ledStrip : ledStrips) m_ledStrips.add(ledStrip);
+  }
+
+  public void requestOverride(Pattern pattern) {
+    m_override = true;
+    m_overridePattern = pattern;
+  }
+
+  public void endOverride() {
+    m_override = false;
+    m_overridePattern = Pattern.TEAM_COLOR_SOLID;
   }
 
   @Override
