@@ -2,7 +2,7 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.utils;
+package frc.robot.subsystems.logger;
 
 import java.util.List;
 import java.util.function.BooleanSupplier;
@@ -17,9 +17,7 @@ import edu.wpi.first.util.datalog.DoubleLogEntry;
 import edu.wpi.first.util.datalog.IntegerLogEntry;
 import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.DataLogManager;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.Subsystem;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 /**
  * DataLogger
@@ -28,11 +26,10 @@ import edu.wpi.first.wpilibj2.command.Subsystem;
  * power usage, motor output, temperatures, sensor values, and mechanism states in 
  * an onboard log that can be analysed after a match or test session
  */
-public class DataLogger {
+public class DataLogger extends SubsystemBase {
   private static DataLogger m_logger = null;
   private static DataLog m_log;
   private static List<LogEntry> m_logEntries;
-  public static final Command LOGGING_COMMAND = new RunCommand(() -> m_logger.log(), new Subsystem() {});
 
   public static class LogEntry {
     private DataLogEntry entry;
@@ -93,6 +90,7 @@ public class DataLogger {
 
   private DataLogger() {
     m_log = DataLogManager.getLog();
+    DataLogManager.start();
   }
 
   /**
@@ -105,10 +103,15 @@ public class DataLogger {
   }
 
   /**
-   * Start logging
+   * Log all values with current timestamp
    */
-  public void startLogging() {
-    m_logger.startLogging();
+  private void log() {
+    for (LogEntry entry : m_logEntries) entry.log();
+  }
+
+  @Override
+  public void periodic() {
+    log();
   }
 
   /**
@@ -117,12 +120,5 @@ public class DataLogger {
    */
   public void addEntry(LogEntry entry) {
     m_logEntries.add(entry);
-  }
-
-  /**
-   * Log all values with current timestamp
-   */
-  public void log() {
-    for (LogEntry entry : m_logEntries) entry.log();
   }
 }
