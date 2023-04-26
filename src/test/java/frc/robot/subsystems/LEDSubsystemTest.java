@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.util.Color;
 import frc.robot.subsystems.led.LEDStrip;
+import frc.robot.subsystems.led.LEDStrip.Hardware;
 import frc.robot.subsystems.led.LEDStrip.Pattern;
 import frc.robot.subsystems.led.LEDStrip.Section;
 import frc.robot.subsystems.led.LEDSubsystem;
@@ -33,28 +34,29 @@ public class LEDSubsystemTest {
   private final int MIDDLE_START = 10;
   private final int MIDDLE_END = 20;
   private LEDSubsystem m_ledSubsystem;
-  private LEDStrip.Hardware m_ledHardware;
 
-  private LEDStrip m_ledStrip;
+  private LEDStrip m_ledStrip1;
+  private LEDStrip m_ledStrip2;
 
-  private AddressableLED m_leds;
+  private AddressableLED m_leds1;
+  private AddressableLED m_leds2;
 
   @BeforeEach
   public void setup() {
     // Create mock hardware devices
-    m_leds = mock(AddressableLED.class);
+    m_leds1 = mock(AddressableLED.class);
+    m_leds2 = mock(AddressableLED.class);
 
-    // Create hardware object using mock hardware
-    m_ledHardware = new LEDStrip.Hardware(MOCK_HARDWARE, m_leds);
-
-    // Create LED strip object
-    m_ledStrip = new LEDStrip(m_ledHardware, LENGTH);
+    // Create LED strip objects
+    m_ledStrip1 = new LEDStrip(new Hardware(MOCK_HARDWARE, m_leds1), LENGTH);
+    m_ledStrip2 = new LEDStrip(new Hardware(MOCK_HARDWARE, m_leds2), LENGTH);
 
     // Create LEDSubsystem object
     m_ledSubsystem = LEDSubsystem.getInstance();
 
     // Add LED strips to LED subsystem
-    m_ledSubsystem.add(m_ledStrip);
+    m_ledSubsystem.add(m_ledStrip1);
+    m_ledSubsystem.add(m_ledStrip2);
   }
 
   @AfterEach
@@ -71,13 +73,13 @@ public class LEDSubsystemTest {
     ArgumentCaptor<AddressableLEDBuffer> bufferCaptor = ArgumentCaptor.forClass(AddressableLEDBuffer.class);
 
     // Set LED pattern
-    m_ledStrip.set(Pattern.TEAM_COLOR_SOLID, Section.FULL);
+    m_ledStrip1.set(Pattern.TEAM_COLOR_SOLID, Section.FULL);
 
     // Run LED subsystem loop
     m_ledSubsystem.periodic();
 
     // Verify LEDs are being set
-    verify(m_leds, times(1)).setData(bufferCaptor.capture());
+    verify(m_leds1, times(1)).setData(bufferCaptor.capture());
 
     // Verify LED pattern
     for (int i = 0; i < LENGTH; i++) 
@@ -92,14 +94,14 @@ public class LEDSubsystemTest {
     ArgumentCaptor<AddressableLEDBuffer> bufferCaptor = ArgumentCaptor.forClass(AddressableLEDBuffer.class);
 
     // Set LED pattern
-    m_ledStrip.set(Pattern.RED_SOLID, Section.START);
-    m_ledStrip.set(Pattern.TEAM_COLOR_SOLID, Section.MIDDLE, Section.END);
+    m_ledStrip1.set(Pattern.RED_SOLID, Section.START);
+    m_ledStrip1.set(Pattern.TEAM_COLOR_SOLID, Section.MIDDLE, Section.END);
 
     // Run LED subsystem loop
     m_ledSubsystem.periodic();
     
     // Verify LEDs are being set
-    verify(m_leds, times(1)).setData(bufferCaptor.capture());
+    verify(m_leds1, times(1)).setData(bufferCaptor.capture());
 
     // Verify LED pattern
     for (int i = 0; i < MIDDLE_START; i++)
@@ -116,14 +118,14 @@ public class LEDSubsystemTest {
     ArgumentCaptor<AddressableLEDBuffer> bufferCaptor = ArgumentCaptor.forClass(AddressableLEDBuffer.class);
 
     // Set LED pattern
-    m_ledStrip.set(Pattern.RED_SOLID, Section.MIDDLE);
-    m_ledStrip.set(Pattern.TEAM_COLOR_SOLID, Section.START, Section.END);
+    m_ledStrip1.set(Pattern.RED_SOLID, Section.MIDDLE);
+    m_ledStrip1.set(Pattern.TEAM_COLOR_SOLID, Section.START, Section.END);
 
     // Run LED subsystem loop
     m_ledSubsystem.periodic();
     
     // Verify LEDs are being set
-    verify(m_leds, times(1)).setData(bufferCaptor.capture());
+    verify(m_leds1, times(1)).setData(bufferCaptor.capture());
 
     // Verify LED pattern
     for (int i = 0; i < LENGTH / 3; i++)
@@ -142,19 +144,74 @@ public class LEDSubsystemTest {
     ArgumentCaptor<AddressableLEDBuffer> bufferCaptor = ArgumentCaptor.forClass(AddressableLEDBuffer.class);
 
     // Set LED pattern
-    m_ledStrip.set(Pattern.RED_SOLID, Section.END);
-    m_ledStrip.set(Pattern.TEAM_COLOR_SOLID, Section.START, Section.MIDDLE);
+    m_ledStrip1.set(Pattern.RED_SOLID, Section.END);
+    m_ledStrip1.set(Pattern.TEAM_COLOR_SOLID, Section.START, Section.MIDDLE);
 
     // Run LED subsystem loop
     m_ledSubsystem.periodic();
     
     // Verify LEDs are being set
-    verify(m_leds, times(1)).setData(bufferCaptor.capture());
+    verify(m_leds1, times(1)).setData(bufferCaptor.capture());
 
     // Verify LED pattern
     for (int i = 0; i < MIDDLE_END; i++)
       assertEquals(LEDStrip.TEAM_COLOR, bufferCaptor.getValue().getLED(i));
     for (int i = MIDDLE_END; i < LENGTH; i++)
       assertEquals(Color.kRed, bufferCaptor.getValue().getLED(i));
+  }
+
+  @Test
+  @Order(5)
+  @DisplayName("Test if robot can control multiple LED strips")
+  public void multipleStrips() {
+    // Initialize buffer captors
+    ArgumentCaptor<AddressableLEDBuffer> bufferCaptor1 = ArgumentCaptor.forClass(AddressableLEDBuffer.class);
+    ArgumentCaptor<AddressableLEDBuffer> bufferCaptor2 = ArgumentCaptor.forClass(AddressableLEDBuffer.class);
+
+    // Set LED pattern
+    m_ledStrip1.set(Pattern.RED_SOLID, Section.FULL);
+    m_ledStrip2.set(Pattern.BLUE_SOLID, Section.FULL);
+
+    // Run LED subsystem loop
+    m_ledSubsystem.periodic();
+
+    // Verify LEDs are being set
+    verify(m_leds1, times(1)).setData(bufferCaptor1.capture());
+    verify(m_leds2, times(1)).setData(bufferCaptor2.capture());
+
+    // Verify LED pattern
+    for (int i = 0; i < LENGTH; i++) 
+      assertEquals(Color.kRed, bufferCaptor1.getValue().getLED(i));
+    for (int i = 0; i < LENGTH; i++) 
+      assertEquals(Color.kBlue, bufferCaptor2.getValue().getLED(i));
+  }
+
+  @Test
+  @Order(6)
+  @DisplayName("Test if robot can override subsystem LED control")
+  public void ledOverride() {
+    // Initialize buffer captors
+    ArgumentCaptor<AddressableLEDBuffer> bufferCaptor1 = ArgumentCaptor.forClass(AddressableLEDBuffer.class);
+    ArgumentCaptor<AddressableLEDBuffer> bufferCaptor2 = ArgumentCaptor.forClass(AddressableLEDBuffer.class);
+
+    // Set LED pattern
+    m_ledStrip1.set(Pattern.RED_SOLID, Section.FULL);
+    m_ledStrip2.set(Pattern.BLUE_SOLID, Section.FULL);
+
+    // Request LED override
+    m_ledSubsystem.requestOverride(Pattern.TEAM_COLOR_SOLID);
+
+    // Run LED subsystem loop
+    m_ledSubsystem.periodic();
+
+    // Verify LEDs are being set
+    verify(m_leds1, times(1)).setData(bufferCaptor1.capture());
+    verify(m_leds2, times(1)).setData(bufferCaptor2.capture());
+
+    // Verify LED pattern
+    for (int i = 0; i < LENGTH; i++) 
+      assertEquals(LEDStrip.TEAM_COLOR, bufferCaptor1.getValue().getLED(i));
+    for (int i = 0; i < LENGTH; i++) 
+      assertEquals(LEDStrip.TEAM_COLOR, bufferCaptor2.getValue().getLED(i));
   }
 }
