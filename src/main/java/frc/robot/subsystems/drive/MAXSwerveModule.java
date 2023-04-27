@@ -146,7 +146,7 @@ public class MAXSwerveModule implements AutoCloseable {
     m_radius = m_moduleCoordinate.getNorm();
   }
 
-  public static Hardware initializeHardware(boolean isHardwareReal, int driveMotorID, int rotateMotorID) {
+  public static Hardware initializeHardware(boolean isHardwareReal, SparkMax.ID driveMotorID, SparkMax.ID rotateMotorID) {
     Hardware swerveModuleHardware = new Hardware(
       isHardwareReal, 
       new SparkMax(driveMotorID, MotorType.kBrushless),
