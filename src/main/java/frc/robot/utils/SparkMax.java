@@ -110,6 +110,7 @@ public class SparkMax extends CANSparkMax {
    * @param ctrl Desired control mode
    * @param arbFeedforward Feed forward value
    * @param arbFFUnits Feed forward units
+   * @param pidSlot PID slot to use
    */
   public void set(double value, ControlType ctrl, double arbFeedforward, SparkMaxPIDController.ArbFFUnits arbFFUnits, int pidSlot) {
     getPIDController().setReference(value, ctrl, pidSlot, arbFeedforward, arbFFUnits);
