@@ -51,11 +51,13 @@ public class LEDSubsystem extends SubsystemBase implements AutoCloseable {
   public void requestOverride(Pattern pattern) {
     m_override = true;
     m_overridePattern = pattern;
+    for (LEDStrip ledStrip : m_ledStrips) ledStrip.startOverride();
   }
 
   public void endOverride() {
     m_override = false;
     m_overridePattern = Pattern.TEAM_COLOR_SOLID;
+    for (LEDStrip ledStrip : m_ledStrips) ledStrip.endOverride();
   }
 
   @Override

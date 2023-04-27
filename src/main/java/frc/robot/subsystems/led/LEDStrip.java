@@ -193,7 +193,7 @@ public class LEDStrip implements AutoCloseable {
 
   private AddressableLED m_leds;
   private AddressableLEDBuffer m_buffer;
-  private HashMap<Section[], Pattern> m_sectionLEDPatterns;
+  private HashMap<Section[], Pattern> m_sectionLEDPatterns, m_tempLEDPatterns;
 
   private static final double STROBE_DURATION = 0.1;
   private static final double BREATHE_DURATION = 1.0;
@@ -212,6 +212,7 @@ public class LEDStrip implements AutoCloseable {
     this.m_leds = ledStripHardware.ledStrip;
     this.m_buffer = new AddressableLEDBuffer(length);
     this.m_sectionLEDPatterns = new HashMap<Section[], Pattern>();
+    this.m_tempLEDPatterns = m_sectionLEDPatterns;
 
     m_sectionLEDPatterns.put(Section.FULL, Pattern.TEAM_COLOR_SOLID);
   }
@@ -356,6 +357,21 @@ public class LEDStrip implements AutoCloseable {
       (sections, pattern) -> setPattern(pattern, sections)
     );
     m_leds.setData(m_buffer);
+  }
+
+  /**
+   * Prepare for LED override
+   */
+  protected void startOverride() {
+    // Save LED patterns
+    m_tempLEDPatterns = m_sectionLEDPatterns;
+  }
+
+  /**
+   * Restore LED patterns after override
+   */
+  protected void endOverride() {
+    m_sectionLEDPatterns = m_tempLEDPatterns;
   }
 
   /**
