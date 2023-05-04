@@ -118,8 +118,10 @@ public class LEDStrip implements AutoCloseable {
      */
     private static boolean contains(int i, AddressableLEDBuffer buffer, Section... sections) {
       boolean contains = false;
-      for (Section section : sections)
+      for (Section section : sections) {
         contains |= Section.start(buffer, section) <= i && i < Section.end(buffer, section);
+        if (contains) break;
+      }
 
       return contains;
     } 
