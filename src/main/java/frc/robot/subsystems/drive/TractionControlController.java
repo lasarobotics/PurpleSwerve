@@ -8,7 +8,16 @@ import edu.wpi.first.math.MathUtil;
 
 public class TractionControlController {
   private enum State {
-    DISABLED, ENABLED;
+    DISABLED {
+      @Override
+      public State toggle() { return ENABLED; }
+    },
+    ENABLED {
+      @Override
+      public State toggle() { return DISABLED; }
+    };
+
+    public abstract State toggle(); 
   }
 
   private final double MIN_DEADBAND = 0.001;
@@ -51,8 +60,8 @@ public class TractionControlController {
 
   /**
    * Returns the next output of the traction control controller
-   * @param inertialVelocity Current inertial velocity (m/s)
    * @param velocityRequest Speed request (m/s)
+   * @param inertialVelocity Current inertial velocity (m/s)
    * @param wheelSpeed Linear wheel speed (m/s)
    * @return Optimal motor speed output (m/s)
    */
@@ -89,7 +98,7 @@ public class TractionControlController {
    * Toggle traction control
    */
   public void toggleTractionControl() {
-    m_state = (m_state.equals(State.ENABLED)) ? State.DISABLED : State.ENABLED;
+    m_state = m_state.toggle();
   }
 
   /**

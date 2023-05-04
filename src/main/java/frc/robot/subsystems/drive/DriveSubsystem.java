@@ -26,7 +26,6 @@ import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
-import frc.robot.subsystems.drive.MAXSwerveModule.ModuleLocation;
 import frc.robot.subsystems.led.LEDStrip;
 import frc.robot.subsystems.led.LEDStrip.Pattern;
 import frc.robot.subsystems.led.LEDStrip.Section;
@@ -139,6 +138,9 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     // Setup turn PID
     m_turnPIDController.setTolerance(TOLERANCE);
     m_turnPIDController.setSetpoint(getAngle());
+
+    // Set traction control for swerve modules
+    MAXSwerveModule.setTractionControlController(m_tractionControlController);
 
     // Define drivetrain kinematics
     m_kinematics = new SwerveDriveKinematics(m_lFrontModule.getModuleCoordinate(),
@@ -259,10 +261,23 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   }
 
   /**
+   * Set swerve modules, automatically applying traction control
+   * @param moduleStates Array of calculated module states
+   * @param inertialVelocity Current inertial velocity (m/s)
+   * @param turnRate Current turn rate (degrees/s)
+   */
+  private void setSwerveModules(SwerveModuleState[] moduleStates, double inertialVelocity, double turnRate) {
+    m_lFrontModule.set(moduleStates, inertialVelocity, turnRate);
+    m_rFrontModule.set(moduleStates, inertialVelocity, turnRate);
+    m_lRearModule.set(moduleStates, inertialVelocity, turnRate);
+    m_rRearModule.set(moduleStates, inertialVelocity, turnRate);
+  }
+
+  /**
    * Drive robot and apply traction control
-   * @param velocityX Desired X (forward) velocity in m/s
-   * @param velocityY Desired Y (sideways) velocity in m/s
-   * @param rotateRate Desired rotate rate in degrees per second
+   * @param velocityX Desired X (forward) velocity (m/s)
+   * @param velocityY Desired Y (sideways) velocity (m/s)
+   * @param rotateRate Desired rotate rate (degrees/s)
    */
   private void drive(double velocityX, double velocityY, double rotateRate) {
     // Convert speeds to module states
@@ -272,40 +287,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     // Desaturate drive speeds
     SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, DRIVE_MAX_LINEAR_SPEED);
 
-    // Apply traction control
-    applyTractionControl(moduleStates);
-
-    // Set modules to calculated states
-    setSwerveModules(moduleStates);
-  }
-
-  /**
-   * Apply traction control to all swerve modules
-   * <p>
-   * This method modifies the module states in place
-   * @param moduleStates Calculated module states
-   */
-  private void applyTractionControl(SwerveModuleState[] moduleStates) {
-    moduleStates[ModuleLocation.LeftFront.index].speedMetersPerSecond = m_tractionControlController.calculate(
-      moduleStates[ModuleLocation.LeftFront.index].speedMetersPerSecond,
-      m_lFrontModule.calculateRealSpeed(getInertialVelocity(), getTurnRate()),
-      m_lFrontModule.getDriveVelocity()
-    );
-    moduleStates[ModuleLocation.RightFront.index].speedMetersPerSecond = m_tractionControlController.calculate(
-      moduleStates[ModuleLocation.RightFront.index].speedMetersPerSecond,
-      m_rFrontModule.calculateRealSpeed(getInertialVelocity(), getTurnRate()),
-      m_rFrontModule.getDriveVelocity()
-    );
-    moduleStates[ModuleLocation.LeftRear.index].speedMetersPerSecond = m_tractionControlController.calculate(
-      moduleStates[ModuleLocation.LeftRear.index].speedMetersPerSecond,
-      m_lRearModule.calculateRealSpeed(getInertialVelocity(), getTurnRate()),
-      m_lRearModule.getDriveVelocity()
-    );
-    moduleStates[ModuleLocation.RightRear.index].speedMetersPerSecond = m_tractionControlController.calculate(
-      moduleStates[ModuleLocation.RightRear.index].speedMetersPerSecond,
-      m_rRearModule.calculateRealSpeed(getInertialVelocity(), getTurnRate()),
-      m_rRearModule.getDriveVelocity()
-    );
+    // Set modules to calculated states, with traction control
+    setSwerveModules(moduleStates, getInertialVelocity(), getTurnRate());
   }
 
   /**

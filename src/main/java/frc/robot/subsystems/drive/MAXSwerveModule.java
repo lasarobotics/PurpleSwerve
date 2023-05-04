@@ -61,6 +61,8 @@ public class MAXSwerveModule implements AutoCloseable {
   private final double m_driveWheelDiameter;
   private final double m_radius;
 
+  private static TractionControlController m_tractionControlController;
+
   /**
    * Create an instance of a MAXSwerveModule
    * @param swerveHardware Hardware devices required by swerve module
@@ -146,6 +148,13 @@ public class MAXSwerveModule implements AutoCloseable {
     m_radius = m_moduleCoordinate.getNorm();
   }
 
+  /**
+   * Initialize hardware devices for MAXSwerve module
+   * @param isHardwareReal True if hardware is real
+   * @param driveMotorID Drive motor ID
+   * @param rotateMotorID Rotate motor ID
+   * @return Hardware object containing all necessary objects for a MAXSwerve module
+   */
   public static Hardware initializeHardware(boolean isHardwareReal, SparkMax.ID driveMotorID, SparkMax.ID rotateMotorID) {
     Hardware swerveModuleHardware = new Hardware(
       isHardwareReal, 
@@ -154,6 +163,24 @@ public class MAXSwerveModule implements AutoCloseable {
     );
 
     return swerveModuleHardware;
+  }
+
+  /**
+   * Set traction control controller to use
+   * @param tractionControlController
+   */
+  public static void setTractionControlController(TractionControlController tractionControlController) {
+    m_tractionControlController = tractionControlController;
+  }
+
+  /**
+   * Get real speed of module
+   * @param inertialVelocity Inertial velocity of robot (m/s)
+   * @param turnRate Turn rate of robot (degrees/s)
+   * @return Speed of module (m/s)
+   */
+  private double calculateRealSpeed(double inertialVelocity, double turnRate) {
+    return inertialVelocity + Math.toRadians(turnRate) * m_radius;
   }
 
   /**
@@ -179,10 +206,46 @@ public class MAXSwerveModule implements AutoCloseable {
   }
 
   /**
+   * Set swerve module direction and speed, automatically applying traction control
+   * @param state Desired swerve module state
+   * @param inertialVelocity Current inertial velocity (m/s)
+   * @param turnRate Current turn rate (degrees/s)
+   */
+  public void set(SwerveModuleState state, double inertialVelocity, double turnRate) {
+    // Apply traction control
+    state.speedMetersPerSecond = m_tractionControlController.calculate(
+      state.speedMetersPerSecond,
+      calculateRealSpeed(inertialVelocity, turnRate),
+      getDriveVelocity()
+    );
+
+    // Set swerve module state
+    set(state);
+  }
+
+  /**
    * Set swerve module direction and speed
-   * @param states array of states for all swerve modules
+   * @param states Array of states for all swerve modules
    */
   public void set(SwerveModuleState[] states) {
+    set(states[m_location.index]);
+  }
+
+  /**
+   * Set swerve module direction and speed, automatically applying traction control
+   * @param states Array of states for all swerve modules
+   * @param inertialVelocity Current inertial velocity (m/s)
+   * @param turnRate Current turn rate (degrees/s)
+   */
+  public void set(SwerveModuleState[] states, double inertialVelocity, double turnRate) {
+    // Apply traction control
+    states[m_location.index].speedMetersPerSecond = m_tractionControlController.calculate(
+      states[m_location.index].speedMetersPerSecond,
+      calculateRealSpeed(inertialVelocity, turnRate),
+      getDriveVelocity()
+    );
+
+    // Set swerve module state
     set(states[m_location.index]);
   }
 
@@ -214,16 +277,6 @@ public class MAXSwerveModule implements AutoCloseable {
       m_driveMotor.getEncoderPosition(),
       Rotation2d.fromRadians(m_rotateMotor.getAbsoluteEncoderPosition() - m_location.offset)
     );
-  }
-
-  /**
-   * Get real speed of module
-   * @param inertialVelocity Inertial velocity of robot in m/s
-   * @param turnRate Turn rate of robot in degrees per second
-   * @return Speed of module in m/s
-   */
-  public double calculateRealSpeed(double inertialVelocity, double turnRate) {
-    return inertialVelocity + Math.toRadians(turnRate) * m_radius;
   }
 
   /**
