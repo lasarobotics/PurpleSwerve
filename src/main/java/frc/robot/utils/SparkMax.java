@@ -7,8 +7,8 @@ import com.revrobotics.SparkMaxAbsoluteEncoder;
 import com.revrobotics.SparkMaxPIDController;
 
 import edu.wpi.first.util.datalog.DataLog;
-import edu.wpi.first.util.datalog.DoubleLogEntry;
 import edu.wpi.first.wpilibj.DataLogManager;
+import frc.robot.utils.DataLogger.DoubleLogEntry;
 
 public class SparkMax extends CANSparkMax {
 
@@ -69,8 +69,7 @@ public class SparkMax extends CANSparkMax {
    * @param ctrl Control mode that was used
    */
   private void log(double value, ControlType ctrl) {
-    m_valueLogEntry.setMetadata(ctrl.name());
-    m_valueLogEntry.append(value);
+    m_valueLogEntry.append(value, ctrl.name());
     m_currentLogEntry.append(getOutputCurrent());
   }
 
@@ -210,7 +209,7 @@ public class SparkMax extends CANSparkMax {
    */
   public void resetRelativeEncoder() {
     getRelativeEncoder().setPosition(0.0);
-    DataLogManager.log(m_name + ": External relative encoder reset");
+    DataLogger.log(m_name + ": External relative encoder reset");
   }
 
   /**
@@ -218,6 +217,6 @@ public class SparkMax extends CANSparkMax {
    */
   public void resetEncoder() {
     getEncoder().setPosition(0.0);
-    DataLogManager.log(m_name + ": Internal encoder reset");
+    DataLogger.log(m_name + ": Internal encoder reset");
   }
 }
