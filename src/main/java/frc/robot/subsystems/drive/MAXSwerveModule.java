@@ -238,15 +238,7 @@ public class MAXSwerveModule implements AutoCloseable {
    * @param turnRate Current turn rate (degrees/s)
    */
   public void set(SwerveModuleState[] states, double inertialVelocity, double turnRate) {
-    // Apply traction control
-    states[m_location.index].speedMetersPerSecond = m_tractionControlController.calculate(
-      states[m_location.index].speedMetersPerSecond,
-      calculateRealSpeed(inertialVelocity, turnRate),
-      getDriveVelocity()
-    );
-
-    // Set swerve module state
-    set(states[m_location.index]);
+    set(states[m_location.index], inertialVelocity, turnRate);
   }
 
   /**
