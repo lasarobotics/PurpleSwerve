@@ -15,6 +15,7 @@ import com.pathplanner.lib.PathPoint;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -112,10 +113,9 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @param turnScalar Scalar for turn input (degrees)
    * @param deadband Deadband for controller input [+0.001, +0.2]
    * @param lookAhead Turn PID lookahead, in number of loops
-   * @param slipRatio Tracion control slip ratio
+   * @param slipRatio Traction control slip ratio [+0.01, +0.15]
    * @param throttleInputCurve Spline function characterising throttle input
    * @param turnInputCurve Spline function characterising turn input
-   * @param currentLimitConfiguration Drive current limit
    */
   public DriveSubsystem(Hardware drivetrainHardware, double kP, double kD,
                         double turnScalar, double deadband, double lookAhead, double slipRatio,
@@ -400,17 +400,17 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   }
 
   /**
-   * Orient robot towards a desired pose/point on the field
+   * Orient robot towards a desired point on the field
    * @param velocityX Desired X (forward) velocity (m/s)
    * @param velocityY Desired Y (sideways) velocity (m/s)
-   * @param pose Destination pose/point
+   * @param point Target point
    */
-  public void orientRobotTowardsPose(double xRequest, double yRequest, Pose2d pose) {
+  public void orientTowardsPoint(double xRequest, double yRequest, Translation2d point) {
     double moveRequest = Math.hypot(xRequest, yRequest);
     double moveDirection = Math.atan2(yRequest, xRequest);
     double velocityOutput = m_tractionControlController.throttleLookup(moveRequest);
     
-    double desiredAngle = new Rotation2d(getPose().getX() - pose.getX(), getPose().getY() - pose.getY()).getDegrees();
+    double desiredAngle = new Rotation2d(getPose().getX() - point.getX(), getPose().getY() - point.getY()).getDegrees();
     double angleToTurn = desiredAngle - getAngle();
     double direction = angleToTurn / Math.abs(angleToTurn);   
     double rotateOutput = m_turnPIDController.calculate(getAngle(), getTurnRate(), direction);
@@ -419,11 +419,11 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   }
 
   /**
-   * Orient robot towards a desired pose/point on the field (without any strafing)
-   * @param pose Destination pose/point
+   * Orient robot towards a desired point on the field (without any strafing)
+   * @param pose Destination point
    */
-  public void orientRobotTowardsPose(Pose2d pose) {
-    orientRobotTowardsPose(0.0, 0.0, pose);
+  public void orientTowardsPoint(Translation2d point) {
+    orientTowardsPoint(0.0, 0.0, point);
   }
 
   /**
