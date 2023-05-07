@@ -152,12 +152,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     m_poseEstimator = new SwerveDrivePoseEstimator(
       m_kinematics,
       Rotation2d.fromDegrees(getAngle()),
-      new SwerveModulePosition[] {
-        m_lFrontModule.getPosition(),
-        m_rFrontModule.getPosition(),
-        m_lRearModule.getPosition(),
-        m_rRearModule.getPosition()
-      }, 
+      getModulePositions(), 
       new Pose2d()
     );
 

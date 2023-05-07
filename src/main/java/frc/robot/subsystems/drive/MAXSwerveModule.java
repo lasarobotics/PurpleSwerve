@@ -50,16 +50,16 @@ public class MAXSwerveModule implements AutoCloseable {
   private final int DRIVE_MOTOR_CURRENT_LIMIT = 50;
   private final int ROTATE_MOTOR_CURRENT_LIMIT = 20;
 
-  private final SparkMax m_driveMotor;
-  private final SparkMax m_rotateMotor;
-  private final SparkPIDConfig m_driveMotorConfig;
-  private final SparkPIDConfig m_rotateMotorConfig;
-  private final Translation2d m_moduleCoordinate;
-  private final ModuleLocation m_location;
+  private SparkMax m_driveMotor;
+  private SparkMax m_rotateMotor;
+  private SparkPIDConfig m_driveMotorConfig;
+  private SparkPIDConfig m_rotateMotorConfig;
+  private Translation2d m_moduleCoordinate;
+  private ModuleLocation m_location;
 
-  private final double m_driveGearRatio;
-  private final double m_driveWheelDiameter;
-  private final double m_radius;
+  private double m_driveGearRatio;
+  private double m_driveWheelDiameter;
+  private double m_radius;
 
   private static TractionControlController m_tractionControlController;
 
