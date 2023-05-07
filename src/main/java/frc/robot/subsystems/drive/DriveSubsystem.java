@@ -400,6 +400,33 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   }
 
   /**
+   * Orient robot towards a desired pose/point on the field
+   * @param velocityX Desired X (forward) velocity (m/s)
+   * @param velocityY Desired Y (sideways) velocity (m/s)
+   * @param pose Destination pose/point
+   */
+  public void orientRobotTowardsPose(double xRequest, double yRequest, Pose2d pose) {
+    double moveRequest = Math.hypot(xRequest, yRequest);
+    double moveDirection = Math.atan2(yRequest, xRequest);
+    double velocityOutput = m_tractionControlController.throttleLookup(moveRequest);
+    
+    double desiredAngle = new Rotation2d(getPose().getX() - pose.getX(), getPose().getY() - pose.getY()).getDegrees();
+    double angleToTurn = desiredAngle - getAngle();
+    double direction = angleToTurn / Math.abs(angleToTurn);   
+    double rotateOutput = m_turnPIDController.calculate(getAngle(), getTurnRate(), direction);
+
+    drive(velocityOutput * Math.cos(moveDirection), velocityOutput * Math.sin(moveDirection), rotateOutput);
+  }
+
+  /**
+   * Orient robot towards a desired pose/point on the field (without any strafing)
+   * @param pose Destination pose/point
+   */
+  public void orientRobotTowardsPose(Pose2d pose) {
+    orientRobotTowardsPose(0.0, 0.0, pose);
+  }
+
+  /**
    * Lock swerve modules
    */
   public void lock() {
