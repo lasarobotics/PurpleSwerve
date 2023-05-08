@@ -401,8 +401,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
   /**
    * Orient robot towards a desired point on the field
-   * @param velocityX Desired X (forward) velocity (m/s)
-   * @param velocityY Desired Y (sideways) velocity (m/s)
+   * @param xRequest Desired X axis (forward) speed [-1.0, +1.0]
+   * @param yRequest Desired Y axis (sideways) speed [-1.0, +1.0]
    * @param point Target point
    */
   public void orientTowardsPoint(double xRequest, double yRequest, Translation2d point) {
@@ -410,10 +410,10 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     double moveDirection = Math.atan2(yRequest, xRequest);
     double velocityOutput = m_tractionControlController.throttleLookup(moveRequest);
     
-    double desiredAngle = new Rotation2d(getPose().getX() - point.getX(), getPose().getY() - point.getY()).getDegrees();
-    double angleToTurn = desiredAngle - getAngle();
-    double direction = angleToTurn / Math.abs(angleToTurn);   
-    double rotateOutput = m_turnPIDController.calculate(getAngle(), getTurnRate(), direction);
+    Pose2d currentPose = getPose();
+    double currentAngle = currentPose.getRotation().getDegrees();
+    double desiredAngle = Math.toDegrees(Math.atan2(currentPose.getX() - point.getX(), currentPose.getY() - point.getY()));
+    double rotateOutput = m_turnPIDController.calculate(currentAngle, desiredAngle);
 
     drive(velocityOutput * Math.cos(moveDirection), velocityOutput * Math.sin(moveDirection), rotateOutput);
   }
