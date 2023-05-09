@@ -22,6 +22,9 @@ import org.mockito.ArgumentMatchers;
 import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax.ControlType;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.Constants;
 import frc.robot.subsystems.drive.DriveSubsystem;
 import frc.robot.subsystems.drive.MAXSwerveModule;
@@ -399,4 +402,71 @@ public class DriveSubsystemTest {
     verify(m_rRearDriveMotor, times(1)).set(AdditionalMatchers.eq(+DriveSubsystem.DRIVE_MAX_LINEAR_SPEED, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
     verify(m_rRearRotateMotor, times(1)).set(AdditionalMatchers.eq(+Math.PI / 2, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
   }
+
+  @Test
+  @Order(12)
+  @DisplayName("Test if robot can rotate right towards specified point")
+  public void rotateRightTowardsPoint() {
+    // Hardcode sensor values
+    when(m_navx.getRate()).thenReturn(0.0);
+    when(m_navx.getAngle()).thenReturn(0.0);
+    when(m_navx.getVelocityX()).thenReturn((float)0.0);
+    when(m_navx.getVelocityY()).thenReturn((float)0.0);
+    when(m_navx.getRotation2d()).thenReturn(new Rotation2d(0.0));
+    when(m_lFrontDriveMotor.getEncoderPosition()).thenReturn(0.0);
+    when(m_lFrontDriveMotor.getAbsoluteEncoderPosition()).thenReturn(0.0);
+    when(m_rFrontDriveMotor.getEncoderPosition()).thenReturn(0.0);
+    when(m_rFrontDriveMotor.getAbsoluteEncoderPosition()).thenReturn(0.0);
+    when(m_lRearDriveMotor.getEncoderPosition()).thenReturn(0.0);
+    when(m_lRearDriveMotor.getAbsoluteEncoderPosition()).thenReturn(0.0);
+    when(m_rRearDriveMotor.getEncoderPosition()).thenReturn(0.0);
+    when(m_rRearDriveMotor.getAbsoluteEncoderPosition()).thenReturn(0.0);
+
+    m_driveSubsystem.resetPose(new Pose2d(new Translation2d(Constants.Field.FIELD_LENGTH / 2, Constants.Field.FIELD_WIDTH / 2), Rotation2d.fromDegrees(0.0)));
+    m_driveSubsystem.orientTowardsPoint(new Translation2d(0.0, Constants.Field.FIELD_WIDTH));
+
+    // Verify that motors are being driven with expected values
+    verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.lt(0.0), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_lFrontRotateMotor, times(1)).set(AdditionalMatchers.eq(+Math.PI / 4, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
+    verify(m_rFrontDriveMotor, times(1)).set(AdditionalMatchers.lt(0.0), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_rFrontRotateMotor, times(1)).set(AdditionalMatchers.eq(+Math.PI / 4, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
+    verify(m_lRearDriveMotor, times(1)).set(AdditionalMatchers.lt(0.0), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_lRearRotateMotor, times(1)).set(AdditionalMatchers.eq(+Math.PI / 4, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
+    verify(m_rRearDriveMotor, times(1)).set(AdditionalMatchers.lt(0.0), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_rRearRotateMotor, times(1)).set(AdditionalMatchers.eq(+Math.PI / 4, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
+  }
+
+  @Test
+  @Order(13)
+  @DisplayName("Test if robot can rotate left towards specified point")
+  public void rotateLeftTowardsPoint() {
+    // Hardcode sensor values
+    when(m_navx.getRate()).thenReturn(0.0);
+    when(m_navx.getAngle()).thenReturn(0.0);
+    when(m_navx.getVelocityX()).thenReturn((float)0.0);
+    when(m_navx.getVelocityY()).thenReturn((float)0.0);
+    when(m_navx.getRotation2d()).thenReturn(new Rotation2d(0.0));
+    when(m_lFrontDriveMotor.getEncoderPosition()).thenReturn(0.0);
+    when(m_lFrontDriveMotor.getAbsoluteEncoderPosition()).thenReturn(0.0);
+    when(m_rFrontDriveMotor.getEncoderPosition()).thenReturn(0.0);
+    when(m_rFrontDriveMotor.getAbsoluteEncoderPosition()).thenReturn(0.0);
+    when(m_lRearDriveMotor.getEncoderPosition()).thenReturn(0.0);
+    when(m_lRearDriveMotor.getAbsoluteEncoderPosition()).thenReturn(0.0);
+    when(m_rRearDriveMotor.getEncoderPosition()).thenReturn(0.0);
+    when(m_rRearDriveMotor.getAbsoluteEncoderPosition()).thenReturn(0.0);
+
+    m_driveSubsystem.resetPose(new Pose2d(new Translation2d(Constants.Field.FIELD_LENGTH / 2, Constants.Field.FIELD_WIDTH / 2), Rotation2d.fromDegrees(0.0)));
+    m_driveSubsystem.orientTowardsPoint(new Translation2d(0.0, 0.0));
+
+    // Verify that motors are being driven with expected values
+    verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.gt(0.0), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_lFrontRotateMotor, times(1)).set(AdditionalMatchers.eq(+Math.PI / 4, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
+    verify(m_rFrontDriveMotor, times(1)).set(AdditionalMatchers.gt(0.0), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_rFrontRotateMotor, times(1)).set(AdditionalMatchers.eq(+Math.PI / 4, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
+    verify(m_lRearDriveMotor, times(1)).set(AdditionalMatchers.gt(0.0), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_lRearRotateMotor, times(1)).set(AdditionalMatchers.eq(+Math.PI / 4, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
+    verify(m_rRearDriveMotor, times(1)).set(AdditionalMatchers.gt(0.0), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_rRearRotateMotor, times(1)).set(AdditionalMatchers.eq(+Math.PI / 4, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
+  }
+
 }

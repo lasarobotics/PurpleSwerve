@@ -28,6 +28,11 @@ import frc.robot.utils.SparkPIDConfig;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
+  public static class Field {
+    public static final double FIELD_WIDTH = 8.1026;
+    public static final double FIELD_LENGTH = 16.4846;
+  }
+
   public static class Global {
     public static final double ROBOT_LOOP_PERIOD = 1.0 / 50.0;
 

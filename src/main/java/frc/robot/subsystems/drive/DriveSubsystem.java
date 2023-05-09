@@ -412,7 +412,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     
     Pose2d currentPose = getPose();
     double currentAngle = currentPose.getRotation().getDegrees();
-    double desiredAngle = Math.toDegrees(Math.atan2(currentPose.getX() - point.getX(), currentPose.getY() - point.getY()));
+    double desiredAngle = Math.toDegrees(Math.atan2(currentPose.getY() - point.getY(), currentPose.getX() - point.getX()));
     double rotateOutput = m_turnPIDController.calculate(currentAngle, desiredAngle);
 
     drive(velocityOutput * Math.cos(moveDirection), velocityOutput * Math.sin(moveDirection), rotateOutput);
