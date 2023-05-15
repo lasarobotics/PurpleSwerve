@@ -454,4 +454,31 @@ public class DriveSubsystemTest {
     verify(m_rRearDriveMotor, times(1)).set(AdditionalMatchers.lt(0.0), ArgumentMatchers.eq(ControlType.kVelocity));
     verify(m_rRearRotateMotor, times(1)).set(AdditionalMatchers.eq(+Math.PI / 4, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
   }
+
+  @Test
+  @Order(14)
+  @DisplayName("Test if robot can stop when oriented towards point")
+  public void stopOrientationAtPoint() {
+    // Hardcode sensor values
+    double desiredAngle = Math.atan2(-Constants.Field.FIELD_WIDTH / 2, Constants.Field.FIELD_LENGTH / 2);
+    when(m_navx.getRate()).thenReturn(0.0);
+    when(m_navx.getAngle()).thenReturn(0.0);
+    when(m_navx.getVelocityX()).thenReturn((float)0.0);
+    when(m_navx.getVelocityY()).thenReturn((float)0.0);
+    when(m_navx.getRotation2d()).thenReturn(Rotation2d.fromRadians(desiredAngle));
+    
+    // Set robot at right angle
+    m_driveSubsystem.resetPose(new Pose2d(Constants.Field.FIELD_LENGTH / 2, Constants.Field.FIELD_WIDTH / 2, Rotation2d.fromRadians(desiredAngle)));
+    m_driveSubsystem.orientTowardsPoint(new Translation2d(0.0, Constants.Field.FIELD_WIDTH));
+
+    // Verify that motors are being driven with expected values
+    verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_lFrontRotateMotor, times(1)).set(AdditionalMatchers.eq(-Math.PI / 2, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
+    verify(m_rFrontDriveMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_rFrontRotateMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
+    verify(m_lRearDriveMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_lRearRotateMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
+    verify(m_rRearDriveMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_rRearRotateMotor, times(1)).set(AdditionalMatchers.eq(+Math.PI / 2, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
+  }
 }
