@@ -238,8 +238,7 @@ public class LEDStrip implements AutoCloseable {
    */
   private void solid(Color color, Section... sections) {
     for (int i = Section.start(m_buffer, sections); i < Section.end(m_buffer, sections); i++) {
-      if (Section.contains(i, m_buffer, sections))
-        m_buffer.setLED(i, color);
+      if (Section.contains(i, m_buffer, sections)) m_buffer.setLED(i, color);
     }
   }
 
@@ -299,10 +298,7 @@ public class LEDStrip implements AutoCloseable {
     for (int i = 0; i < Section.end(m_buffer, sections); i++) {
       x += xDiffPerLed;
       x %= 180.0;
-      if (i >= Section.start(m_buffer, sections)) {
-        if (Section.contains(i, m_buffer, sections))
-          m_buffer.setHSV(i, (int)x, 255, 255);
-      }
+      if (Section.contains(i, m_buffer, sections)) m_buffer.setHSV(i, (int)x, 255, 255);
     }
   }
 
@@ -364,7 +360,7 @@ public class LEDStrip implements AutoCloseable {
   /**
    * Prepare for LED override
    */
-  protected void requestOverride() {
+  protected void startOverride() {
     // Save LED patterns
     m_tempLEDPatterns.clear();
     m_tempLEDPatterns.putAll(m_sectionLEDPatterns);

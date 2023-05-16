@@ -128,7 +128,7 @@ public class LEDSubsystemTest {
     verify(m_leds1, times(1)).setData(bufferCaptor.capture());
 
     // Verify LED pattern
-    for (int i = 0; i < LENGTH / 3; i++)
+    for (int i = 0; i < MIDDLE_START; i++)
       assertEquals(LEDStrip.TEAM_COLOR, bufferCaptor.getValue().getLED(i));
     for (int i = MIDDLE_START; i < MIDDLE_END; i++)
       assertEquals(Color.kRed, bufferCaptor.getValue().getLED(i));
@@ -199,7 +199,7 @@ public class LEDSubsystemTest {
     m_ledStrip2.set(Pattern.BLUE_SOLID, Section.FULL);
 
     // Request LED override
-    m_ledSubsystem.requestOverride(Pattern.TEAM_COLOR_SOLID);
+    m_ledSubsystem.startOverride(Pattern.TEAM_COLOR_SOLID);
 
     // Run LED subsystem loop
     m_ledSubsystem.periodic();
