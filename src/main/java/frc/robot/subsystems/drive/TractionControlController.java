@@ -37,7 +37,7 @@ public class TractionControlController {
    * Create an instance of TractionControlController
    * @param optimalSlipRatio Desired slip ratio [+0.01, +0.15]
    * @param maxLinearSpeed maximum linear speed of robot (m/s)
-   * @param deadband Deadband for controller input [+0.001, +0.1]
+   * @param deadband Deadband for controller input [+0.001, +0.2]
    * @param tractionControlCurve Expression characterising traction of the robot with "X" as the variable
    * @param throttleInputCurve Expression characterising throttle input with "X" as the variable
    */

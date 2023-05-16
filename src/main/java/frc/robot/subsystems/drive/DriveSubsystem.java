@@ -390,9 +390,10 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @return AutoTrajectory that will drive robot to desired pose
    */
   public AutoTrajectory driveToPose(Pose2d pose) {
-    Rotation2d heading = new Rotation2d(getPose().getX() - pose.getX(), getPose().getY() - pose.getY());
+    Pose2d currentPose = getPose();
+    Rotation2d heading = new Rotation2d(currentPose.getX() - pose.getX(), currentPose.getY() - pose.getY());
     List<PathPoint> waypoints = List.of(
-      new PathPoint(getPose().getTranslation(), Rotation2d.fromRadians(0.0), getInertialVelocity()),
+      new PathPoint(currentPose.getTranslation(), Rotation2d.fromRadians(0.0), getInertialVelocity()),
       new PathPoint(pose.getTranslation(), heading, pose.getRotation())
     );
 
