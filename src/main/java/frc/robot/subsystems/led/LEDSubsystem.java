@@ -45,7 +45,7 @@ public class LEDSubsystem extends SubsystemBase implements AutoCloseable {
   }
 
   public void add(LEDStrip... ledStrips) {
-    m_ledStrips.addAll(m_ledStrips);
+    for (LEDStrip ledStrip : ledStrips) m_ledStrips.add(ledStrip);
   }
 
   public void startOverride(Pattern pattern) {
