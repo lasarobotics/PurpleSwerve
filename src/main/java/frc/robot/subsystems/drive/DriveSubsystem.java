@@ -279,20 +279,40 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
   /**
    * Drive robot and apply traction control
-   * @param velocityX Desired X (forward) velocity (m/s)
-   * @param velocityY Desired Y (sideways) velocity (m/s)
-   * @param rotateRate Desired rotate rate (degrees/s)
+   * @param xRequest Desired X (forward) velocity (m/s)
+   * @param yRequest Desired Y (sideways) velocity (m/s)
+   * @param rotateRequest Desired rotate rate (degrees/s)
+   * @param inertialVelocity Current robot inertial velocity (m/s)
+   * @param rotateRate Current robot rotate rate (degrees/s)
    */
-  private void drive(double velocityX, double velocityY, double rotateRate) {
+  private void drive(double xRequest, double yRequest, double rotateRequest, double inertialVelocity, double rotateRate) {
     // Convert speeds to module states
     SwerveModuleState[] moduleStates = 
-      m_kinematics.toSwerveModuleStates(new ChassisSpeeds(velocityX, velocityY, Math.toRadians(rotateRate)));
+      m_kinematics.toSwerveModuleStates(new ChassisSpeeds(xRequest, yRequest, Math.toRadians(rotateRequest)));
 
     // Desaturate drive speeds
     SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, DRIVE_MAX_LINEAR_SPEED);
 
-    // Set modules to calculated states, with traction control
-    setSwerveModules(moduleStates, getInertialVelocity(), getTurnRate());
+    // Set modules to calculated states, WITH traction control
+    setSwerveModules(moduleStates, inertialVelocity, rotateRate);
+  }
+
+  /**
+   * Drive robot without traction control
+   * @param xRequest Desired X (forward) velocity (m/s)
+   * @param yRequest Desired Y (sideways) velocity (m/s)
+   * @param rotateRequest Desired rotate rate (degrees/s)
+   */
+  private void drive(double xRequest, double yRequest, double rotateRequest) {
+    // Convert speeds to module states
+    SwerveModuleState[] moduleStates = 
+      m_kinematics.toSwerveModuleStates(new ChassisSpeeds(xRequest, yRequest, Math.toRadians(rotateRequest)));
+
+    // Desaturate drive speeds
+    SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, DRIVE_MAX_LINEAR_SPEED);
+
+    // Set modules to calculated states, WITHOUT traction control
+    setSwerveModules(moduleStates);
   }
 
   /**
@@ -369,9 +389,9 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     double moveDirection = Math.atan2(yRequest, xRequest);
 
     double velocityOutput = m_tractionControlController.throttleLookup(moveRequest);
-    double rotateOutput = m_turnPIDController.calculate(getAngle(), getTurnRate(), rotateRequest);
+    double rotateOutput = m_turnPIDController.calculate(getAngle(), getRotateRate(), rotateRequest);
 
-    drive(velocityOutput * Math.cos(moveDirection), velocityOutput * Math.sin(moveDirection), rotateOutput);
+    drive(velocityOutput * Math.cos(moveDirection), velocityOutput * Math.sin(moveDirection), rotateOutput, getInertialVelocity(), getRotateRate());
   }
 
   /**
@@ -557,9 +577,9 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
   /**
    * Get rotate rate of robot
-   * @return Current rotate rate of robot in degrees per second
+   * @return Current rotate rate of robot (degrees/s)
    */
-  public double getTurnRate() {
+  public double getRotateRate() {
     return m_navx.getRate();
   }
 
