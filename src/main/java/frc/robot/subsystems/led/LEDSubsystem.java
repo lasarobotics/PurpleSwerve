@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems.led;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -45,7 +46,7 @@ public class LEDSubsystem extends SubsystemBase implements AutoCloseable {
   }
 
   public void add(LEDStrip... ledStrips) {
-    for (LEDStrip ledStrip : ledStrips) m_ledStrips.add(ledStrip);
+    m_ledStrips.addAll(Arrays.asList(ledStrips));
   }
 
   public void startOverride(Pattern pattern) {

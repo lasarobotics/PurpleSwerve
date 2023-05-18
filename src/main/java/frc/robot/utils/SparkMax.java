@@ -22,7 +22,7 @@ public class SparkMax extends CANSparkMax {
     }
   }
 
-  public static final int PID_SLOT = 0;
+  private static final int PID_SLOT = 0;
   private static final int ALT_ENCODER_CPR = 8192;
   private static final String VALUE_LOG_ENTRY = "Value";
   private static final String CURRENT_LOG_ENTRY = "Current";
