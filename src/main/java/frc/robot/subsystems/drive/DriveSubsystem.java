@@ -12,6 +12,8 @@ import org.photonvision.EstimatedRobotPose;
 import com.kauailabs.navx.frc.AHRS;
 import com.pathplanner.lib.PathPoint;
 
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -20,6 +22,9 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -87,6 +92,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private final double TOLERANCE = 0.125;
   private final double TIP_THRESHOLD = 30.0;
   private final double BALANCED_THRESHOLD = 5.0;
+  private final Matrix<N3, N1> ODOMETRY_STDDEV = VecBuilder.fill(0.03, 0.03, Units.degreesToRadians(1));
+  private final Matrix<N3, N1> VISION_STDDEV = VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(40));
 
   public final Command ANTI_TIP_COMMAND = new FunctionalCommand(
     () -> m_ledStrip.set(Pattern.RED_STROBE, Section.FULL),
@@ -153,7 +160,9 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
       m_kinematics,
       Rotation2d.fromDegrees(getAngle()),
       getModulePositions(), 
-      new Pose2d()
+      new Pose2d(),
+      ODOMETRY_STDDEV,
+      VISION_STDDEV
     );
 
     // Setup anti-tip command
