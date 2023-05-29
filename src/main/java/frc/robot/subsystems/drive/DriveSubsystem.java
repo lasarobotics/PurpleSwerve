@@ -268,13 +268,13 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * Set swerve modules, automatically applying traction control
    * @param moduleStates Array of calculated module states
    * @param inertialVelocity Current inertial velocity (m/s)
-   * @param turnRate Current turn rate (degrees/s)
+   * @param rotateRate Current rotate rate (degrees/s)
    */
-  private void setSwerveModules(SwerveModuleState[] moduleStates, double inertialVelocity, double turnRate) {
-    m_lFrontModule.set(moduleStates, inertialVelocity, turnRate);
-    m_rFrontModule.set(moduleStates, inertialVelocity, turnRate);
-    m_lRearModule.set(moduleStates, inertialVelocity, turnRate);
-    m_rRearModule.set(moduleStates, inertialVelocity, turnRate);
+  private void setSwerveModules(SwerveModuleState[] moduleStates, double inertialVelocity, double rotateRate) {
+    m_lFrontModule.set(moduleStates, inertialVelocity, rotateRate);
+    m_rFrontModule.set(moduleStates, inertialVelocity, rotateRate);
+    m_lRearModule.set(moduleStates, inertialVelocity, rotateRate);
+    m_rRearModule.set(moduleStates, inertialVelocity, rotateRate);
   }
 
   /**

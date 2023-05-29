@@ -176,11 +176,11 @@ public class MAXSwerveModule implements AutoCloseable {
   /**
    * Get real speed of module
    * @param inertialVelocity Inertial velocity of robot (m/s)
-   * @param turnRate Turn rate of robot (degrees/s)
+   * @param rotateRate Rotate rate of robot (degrees/s)
    * @return Speed of module (m/s)
    */
-  private double calculateRealSpeed(double inertialVelocity, double turnRate) {
-    return inertialVelocity + Math.toRadians(turnRate) * m_radius;
+  private double calculateRealSpeed(double inertialVelocity, double rotateRate) {
+    return inertialVelocity + Math.toRadians(rotateRate) * m_radius;
   }
 
   /**
@@ -209,13 +209,13 @@ public class MAXSwerveModule implements AutoCloseable {
    * Set swerve module direction and speed, automatically applying traction control
    * @param state Desired swerve module state
    * @param inertialVelocity Current inertial velocity (m/s)
-   * @param turnRate Current turn rate (degrees/s)
+   * @param rotateRate Current rotate rate (degrees/s)
    */
-  public void set(SwerveModuleState state, double inertialVelocity, double turnRate) {
+  public void set(SwerveModuleState state, double inertialVelocity, double rotateRate) {
     // Apply traction control
     state.speedMetersPerSecond = m_tractionControlController.calculate(
       state.speedMetersPerSecond,
-      calculateRealSpeed(inertialVelocity, turnRate),
+      calculateRealSpeed(inertialVelocity, rotateRate),
       getDriveVelocity()
     );
 
@@ -235,10 +235,10 @@ public class MAXSwerveModule implements AutoCloseable {
    * Set swerve module direction and speed, automatically applying traction control
    * @param states Array of states for all swerve modules
    * @param inertialVelocity Current inertial velocity (m/s)
-   * @param turnRate Current turn rate (degrees/s)
+   * @param rotateRate Current turn rate (degrees/s)
    */
-  public void set(SwerveModuleState[] states, double inertialVelocity, double turnRate) {
-    set(states[m_location.index], inertialVelocity, turnRate);
+  public void set(SwerveModuleState[] states, double inertialVelocity, double rotateRate) {
+    set(states[m_location.index], inertialVelocity, rotateRate);
   }
 
   /**

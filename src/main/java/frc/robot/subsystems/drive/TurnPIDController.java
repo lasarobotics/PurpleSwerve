@@ -50,14 +50,14 @@ public class TurnPIDController extends PIDController {
   /**
    * Returns next output of TurnPIDController
    * @param currentAngle current yaw angle of robot (degrees)
-   * @param turnRate current yaw turn rate of robot (degrees/sec)
-   * @param turnRequest turn request [-1.0, +1.0]
+   * @param rotateRate current yaw rotate rate of robot (degrees/sec)
+   * @param rotateRequest rotate request [-1.0, +1.0]
    * 
    * @return optimal turn output [-1.0, +1.0]
    */
-  public double calculate(double currentAngle, double turnRate, double turnRequest) {
+  public double calculate(double currentAngle, double rotateRate, double rotateRequest) {
     // Filter turnRequest
-    m_turnRequest -= (m_turnRequest - turnRequest) * FILTER_FACTOR;
+    m_turnRequest -= (m_turnRequest - rotateRequest) * FILTER_FACTOR;
 
     // Start turning if input is greater than deadband
     if (Math.abs(m_turnRequest) >= m_deadband) {
@@ -70,7 +70,7 @@ public class TurnPIDController extends PIDController {
     } else { 
       // When turning is complete, set setpoint to current angle
       if (m_isTurning) {
-        super.setSetpoint(currentAngle + (turnRate * m_lookAhead * Constants.Global.ROBOT_LOOP_PERIOD));
+        super.setSetpoint(currentAngle + (rotateRate * m_lookAhead * Constants.Global.ROBOT_LOOP_PERIOD));
         m_isTurning = false;
       }
     }
