@@ -332,10 +332,17 @@ public class LEDStrip implements AutoCloseable {
   }
 
   /**
-   * Set pattern and color of LED strip section
-   * @param section LED strip section to set
+   * Set pattern and color of LED strip
    * @param pattern Desired pattern
-   * @param color Desired color
+   */
+  public void set(Pattern pattern) {
+    set(pattern, Section.FULL);
+  }
+
+  /**
+   * Set pattern and color of LED strip sections
+   * @param pattern Desired pattern
+   * @param sections LED strip sections to set
    */
   public void set(Pattern pattern, Section... sections) {
     // Remove all conflicting scheduled LED patterns
@@ -382,7 +389,7 @@ public class LEDStrip implements AutoCloseable {
   }
 
   /**
-   * Turn off LED strip section
+   * Turn off LED strip sections
    * @param section LED strip section
    */
   public void off(Section... sections) {
