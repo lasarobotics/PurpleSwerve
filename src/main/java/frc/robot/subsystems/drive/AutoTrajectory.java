@@ -19,13 +19,14 @@ import com.pathplanner.lib.commands.FollowPathWithEvents;
 import com.pathplanner.lib.commands.PPSwerveControllerCommand;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.Constants;
 
 public class AutoTrajectory {
   // Ramsete Command values
-  private final boolean USE_ALLIANCE = true;
+  private final boolean USE_ALLIANCE = false;
   private final PIDController XY_PID_CONTROLLER = new PIDController(1.0, 0.0, 0.0, Constants.Global.ROBOT_LOOP_PERIOD);
   private final PIDController THETA_PID_CONTROLLER = new PIDController(5.0, 0.0, 0.8, Constants.Global.ROBOT_LOOP_PERIOD);
 
@@ -43,8 +44,13 @@ public class AutoTrajectory {
   public AutoTrajectory(DriveSubsystem driveSubsystem, String pathName) {
     this.m_driveSubsystem = driveSubsystem;
 
-    m_trajectory = PathPlanner.loadPath(pathName, PathPlanner.getConstraintsFromPath(pathName));
+    // Get path and transform for current alliance
+    m_trajectory = PathPlannerTrajectory.transformTrajectoryForAlliance(
+      PathPlanner.loadPath(pathName, PathPlanner.getConstraintsFromPath(pathName)),
+      DriverStation.getAlliance()
+    );
 
+    // Set swerve command
     m_swerveCommand = new PPSwerveControllerCommand(
       m_trajectory, 
       m_driveSubsystem::getPose, 
@@ -69,8 +75,10 @@ public class AutoTrajectory {
   public AutoTrajectory(DriveSubsystem driveSubsystem, List<PathPoint> waypoints, double maxVelocity, double maxAcceleration) {
     this.m_driveSubsystem = driveSubsystem;
 
+    // Generate path from waypoints
     m_trajectory = PathPlanner.generatePath(new PathConstraints(maxVelocity, maxAcceleration), waypoints);
 
+    // Set swerve command
     m_swerveCommand = new PPSwerveControllerCommand(
       m_trajectory, 
       m_driveSubsystem::getPose, 
