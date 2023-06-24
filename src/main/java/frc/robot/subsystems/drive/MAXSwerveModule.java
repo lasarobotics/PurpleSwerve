@@ -61,7 +61,7 @@ public class MAXSwerveModule implements AutoCloseable {
   private double m_driveWheelDiameter;
   private double m_radius;
 
-  private static TractionControlController m_tractionControlController;
+  private TractionControlController m_tractionControlController;
 
   /**
    * Create an instance of a MAXSwerveModule
@@ -69,6 +69,8 @@ public class MAXSwerveModule implements AutoCloseable {
    * @param location Location of module
    * @param driveMotorConfig Drive motor velocity PID config
    * @param rotateMotorConfig Rotate motor position PID config
+   * @param slipRatio Desired slip ratio
+   * @param maxLinearSpeed Maximum linear speed of drive wheel
    * @param wheelbase Robot wheelbase in meters
    * @param trackWidth Robot track width in meters
    * @param driveGearRatio Drive gear ratio
@@ -76,7 +78,9 @@ public class MAXSwerveModule implements AutoCloseable {
    */
   public MAXSwerveModule(Hardware swerveHardware, ModuleLocation location, 
                          SparkPIDConfig driveMotorConfig, SparkPIDConfig rotateMotorConfig,
-                         double wheelbase, double trackWidth, double driveGearRatio, double driveWheelDiameter) {
+                         double slipRatio, double maxLinearSpeed,
+                         double wheelbase, double trackWidth, 
+                         double driveGearRatio, double driveWheelDiameter) {
     this.m_driveMotor = swerveHardware.driveMotor;
     this.m_rotateMotor = swerveHardware.rotateMotor;
     this.m_location = location;
@@ -84,6 +88,7 @@ public class MAXSwerveModule implements AutoCloseable {
     this.m_rotateMotorConfig = rotateMotorConfig;
     this.m_driveGearRatio = driveGearRatio;
     this.m_driveWheelDiameter = driveWheelDiameter;
+    this.m_tractionControlController =  new TractionControlController(slipRatio, maxLinearSpeed);
 
     // Reset devices to default
     m_driveMotor.restoreFactoryDefaults();
@@ -163,14 +168,6 @@ public class MAXSwerveModule implements AutoCloseable {
     );
 
     return swerveModuleHardware;
-  }
-
-  /**
-   * Set traction control controller to use
-   * @param tractionControlController
-   */
-  public static void setTractionControlController(TractionControlController tractionControlController) {
-    m_tractionControlController = tractionControlController;
   }
 
   /**
@@ -290,6 +287,27 @@ public class MAXSwerveModule implements AutoCloseable {
    */
   public void reset() {
     set(new SwerveModuleState(0.0, Rotation2d.fromRadians(m_location.offset)));
+  }
+
+  /**
+   * Toggle traction control
+   */
+  public void toggleTractionControl() {
+    m_tractionControlController.toggleTractionControl();
+  }
+
+  /**
+   * Enable traction control
+   */
+  public void enableTractionControl() {
+    m_tractionControlController.enableTractionControl();
+  }
+
+  /**
+   * Disable traction control
+   */
+  public void disableTractionControl() {
+    m_tractionControlController.disableTractionControl();
   }
 
   /**

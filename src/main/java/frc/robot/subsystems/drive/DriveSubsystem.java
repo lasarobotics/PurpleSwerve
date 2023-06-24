@@ -34,7 +34,6 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
 import frc.robot.subsystems.led.LEDStrip;
 import frc.robot.subsystems.led.LEDStrip.Pattern;
-import frc.robot.subsystems.led.LEDStrip.Section;
 import frc.robot.subsystems.led.LEDSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
 
@@ -77,8 +76,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   public static final double DRIVE_MAX_LINEAR_SPEED = (Constants.Global.NEO_MAX_RPM / 60) * DRIVE_METERS_PER_ROTATION * DRIVETRAIN_EFFICIENCY;
   public static final double DRIVE_AUTO_ACCELERATION = DRIVE_MAX_LINEAR_SPEED - 0.5;
 
+  private ThrottleMap m_throttleMap;
   private TurnPIDController m_turnPIDController;
-  private TractionControlController m_tractionControlController;
   private SwerveDriveKinematics m_kinematics;
   private SwerveDrivePoseEstimator m_poseEstimator;
 
@@ -95,15 +94,17 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private final Matrix<N3, N1> ODOMETRY_STDDEV = VecBuilder.fill(0.03, 0.03, Units.degreesToRadians(1));
   private final Matrix<N3, N1> VISION_STDDEV = VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(40));
 
+  private boolean m_isTractionControlEnabled = true;
+
   public final Command ANTI_TIP_COMMAND = new FunctionalCommand(
-    () -> m_ledStrip.set(Pattern.RED_STROBE, Section.FULL),
+    () -> m_ledStrip.set(Pattern.RED_STROBE),
     () -> antiTip(),
     (interrupted) -> {
-      m_ledStrip.set(Pattern.GREEN_SOLID, Section.FULL);
+      m_ledStrip.set(Pattern.GREEN_SOLID);
       resetTurnPID();
       lock();
       stop();
-      m_ledStrip.set(Pattern.TEAM_COLOR_SOLID, Section.FULL);
+      m_ledStrip.set(Pattern.TEAM_COLOR_SOLID);
     },
     this::isBalanced,
     this
@@ -127,8 +128,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   public DriveSubsystem(Hardware drivetrainHardware, double kP, double kD,
                         double turnScalar, double deadband, double lookAhead, double slipRatio,
                         PolynomialSplineFunction throttleInputCurve, PolynomialSplineFunction turnInputCurve) {
+    m_throttleMap = new ThrottleMap(throttleInputCurve, deadband, DRIVE_MAX_LINEAR_SPEED);
     m_turnPIDController = new TurnPIDController(kP, kD, turnScalar, deadband, lookAhead, turnInputCurve);
-    m_tractionControlController =  new TractionControlController(slipRatio, DRIVE_MAX_LINEAR_SPEED, deadband, throttleInputCurve);
 
     this.m_navx = drivetrainHardware.navx;
     this.m_lFrontModule = drivetrainHardware.lFrontModule;
@@ -145,9 +146,6 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     // Setup turn PID
     m_turnPIDController.setTolerance(TOLERANCE);
     m_turnPIDController.setSetpoint(getAngle());
-
-    // Set traction control for swerve modules
-    MAXSwerveModule.setTractionControlController(m_tractionControlController);
 
     // Define drivetrain kinematics
     m_kinematics = new SwerveDriveKinematics(m_lFrontModule.getModuleCoordinate(),
@@ -172,7 +170,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     LEDSubsystem.getInstance().add(m_ledStrip);
 
     // Set LED strip to team color
-    m_ledStrip.set(Pattern.TEAM_COLOR_SOLID, Section.FULL);
+    m_ledStrip.set(Pattern.TEAM_COLOR_SOLID);
   }
 
   /**
@@ -192,6 +190,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
       MAXSwerveModule.ModuleLocation.LeftFront, 
       Constants.Drive.DRIVE_VELOCITY_CONFIG, 
       Constants.Drive.DRIVE_ROTATE_CONFIG,
+      Constants.Drive.DRIVE_SLIP_RATIO,
+      DRIVE_MAX_LINEAR_SPEED,
       DRIVE_WHEELBASE,
       DRIVE_TRACK_WIDTH,
       DRIVE_GEAR_RATIO,
@@ -207,6 +207,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
       MAXSwerveModule.ModuleLocation.RightFront, 
       Constants.Drive.DRIVE_VELOCITY_CONFIG, 
       Constants.Drive.DRIVE_ROTATE_CONFIG,
+      Constants.Drive.DRIVE_SLIP_RATIO,
+      DRIVE_MAX_LINEAR_SPEED,
       DRIVE_WHEELBASE,
       DRIVE_TRACK_WIDTH,
       DRIVE_GEAR_RATIO,
@@ -222,6 +224,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
       MAXSwerveModule.ModuleLocation.LeftRear, 
       Constants.Drive.DRIVE_VELOCITY_CONFIG, 
       Constants.Drive.DRIVE_ROTATE_CONFIG,
+      Constants.Drive.DRIVE_SLIP_RATIO,
+      DRIVE_MAX_LINEAR_SPEED,
       DRIVE_WHEELBASE,
       DRIVE_TRACK_WIDTH,
       DRIVE_GEAR_RATIO,
@@ -237,6 +241,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
       MAXSwerveModule.ModuleLocation.RightRear, 
       Constants.Drive.DRIVE_VELOCITY_CONFIG, 
       Constants.Drive.DRIVE_ROTATE_CONFIG,
+      Constants.Drive.DRIVE_SLIP_RATIO,
+      DRIVE_MAX_LINEAR_SPEED,
       DRIVE_WHEELBASE,
       DRIVE_TRACK_WIDTH,
       DRIVE_GEAR_RATIO,
@@ -375,7 +381,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * SmartDashboard indicators
    */
   public void smartDashboard() {
-    SmartDashboard.putBoolean("TC", m_tractionControlController.isEnabled());
+    SmartDashboard.putBoolean("TC", m_isTractionControlEnabled);
   }
 
   /**
@@ -388,7 +394,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     double moveRequest = Math.hypot(xRequest, yRequest);
     double moveDirection = Math.atan2(yRequest, xRequest);
 
-    double velocityOutput = m_tractionControlController.throttleLookup(moveRequest);
+    double velocityOutput = m_throttleMap.throttleLookup(moveRequest);
     double rotateOutput = m_turnPIDController.calculate(getAngle(), getRotateRate(), rotateRequest);
 
     drive(velocityOutput * Math.cos(moveDirection), velocityOutput * Math.sin(moveDirection), rotateOutput, getInertialVelocity(), getRotateRate());
@@ -438,7 +444,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   public void orientTowardsPoint(double xRequest, double yRequest, Translation2d point) {
     double moveRequest = Math.hypot(xRequest, yRequest);
     double moveDirection = Math.atan2(yRequest, xRequest);
-    double velocityOutput = m_tractionControlController.throttleLookup(moveRequest);
+    double velocityOutput = m_throttleMap.throttleLookup(moveRequest);
     
     Pose2d currentPose = getPose();
     double currentAngle = currentPose.getRotation().getDegrees();
@@ -480,21 +486,33 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * Toggle traction control
    */
   public void toggleTractionControl() {
-    m_tractionControlController.toggleTractionControl();
+    m_isTractionControlEnabled = !m_isTractionControlEnabled;
+    m_lFrontModule.toggleTractionControl();
+    m_rFrontModule.toggleTractionControl();
+    m_lRearModule.toggleTractionControl();
+    m_rRearModule.toggleTractionControl();
   }
 
   /**
    * Enable traction control
    */
   public void enableTractionControl() {
-    m_tractionControlController.enableTractionControl();
+    m_isTractionControlEnabled = true;
+    m_lFrontModule.enableTractionControl();
+    m_rFrontModule.enableTractionControl();
+    m_lRearModule.enableTractionControl();
+    m_rRearModule.enableTractionControl();
   }
 
   /**
    * Disable traction control
    */
   public void disableTractionControl() {
-    m_tractionControlController.disableTractionControl();
+    m_isTractionControlEnabled = false;
+    m_lFrontModule.disableTractionControl();
+    m_rFrontModule.disableTractionControl();
+    m_lRearModule.disableTractionControl();
+    m_rRearModule.disableTractionControl();
   }
 
   /**

@@ -1,10 +1,7 @@
 package frc.robot.subsystems.drive;
 
-import java.util.HashMap;
-
-import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
-
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.LinearFilter;
 
 public class TractionControlController {
   private enum State {
@@ -20,47 +17,44 @@ public class TractionControlController {
     public abstract State toggle(); 
   }
 
-  private final double MIN_DEADBAND = 0.001;
-  private final double MAX_DEADBAND = 0.2;
-
   private final double MIN_SLIP_RATIO = 0.01;
-  private final double MAX_SLIP_RATIO = 0.15;
+  private final double MAX_SLIP_RATIO = 0.40;
+  private final int FILTER_WINDOW_SIZE = 5;
 
+  private double m_averageWheelSpeed = 0.0;
   private double m_optimalSlipRatio = 0.0;
-  private double m_deadband = 0.0;
+  private double m_currentSlipRatio = 0.0;
   private double m_maxLinearSpeed = 0.0;
+  private boolean m_isSlipping = false;
   private State m_state = State.ENABLED;
 
-  private HashMap<Double, Double> m_throttleInputMap = new HashMap<Double, Double>();
+  private LinearFilter m_speedFilter;
 
   /**
    * Create an instance of TractionControlController
-   * @param optimalSlipRatio Desired slip ratio [+0.01, +0.15]
+   * @param optimalSlipRatio Desired slip ratio [+0.01, +0.40]
    * @param maxLinearSpeed maximum linear speed of robot (m/s)
-   * @param deadband Deadband for controller input [+0.001, +0.2]
-   * @param tractionControlCurve Expression characterising traction of the robot with "X" as the variable
-   * @param throttleInputCurve Expression characterising throttle input with "X" as the variable
    */
-  public TractionControlController(double optimalSlipRatio, double maxLinearSpeed, double deadband, PolynomialSplineFunction throttleInputCurve) {
+  public TractionControlController(double optimalSlipRatio, double maxLinearSpeed) {
     this.m_optimalSlipRatio = MathUtil.clamp(optimalSlipRatio, MIN_SLIP_RATIO, MAX_SLIP_RATIO);
     this.m_maxLinearSpeed = Math.floor(maxLinearSpeed * 1000) / 1000;
-    this.m_deadband = MathUtil.clamp(deadband, MIN_DEADBAND, MAX_DEADBAND);
+    this.m_speedFilter = LinearFilter.movingAverage(FILTER_WINDOW_SIZE); 
+  }
 
-    // Fill throttle input hashmap
-    for (int i = 0; i <= 1000; i++) {
-      double key = (double)i / 1000;
-      double deadbandKey = MathUtil.applyDeadband(key, m_deadband);
-      // Evaluate value between [0.0, +MAX_LINEAR_SPEED]
-      double value = MathUtil.clamp(throttleInputCurve.value(deadbandKey), 0.0, +maxLinearSpeed);
-      // Add both positive and negative values to map
-      m_throttleInputMap.put(+key, +value);
-      m_throttleInputMap.put(-key, -value);
-    }
+  private void updateSlipRatio(double wheelSpeed, double inertialVelocity) {
+    // Calculate average speed using moving average filter
+    m_averageWheelSpeed = m_speedFilter.calculate(wheelSpeed);
+
+    // Calculate current slip ratio
+    m_currentSlipRatio = ((wheelSpeed - m_averageWheelSpeed) / inertialVelocity) * m_state.ordinal();
+
+    // Check if wheel is slipping
+    m_isSlipping = m_currentSlipRatio > m_optimalSlipRatio;
   }
 
   /**
    * Returns the next output of the traction control controller
-   * @param velocityRequest Speed request (m/s)
+   * @param velocityRequest Velocity request (m/s)
    * @param inertialVelocity Current inertial velocity (m/s)
    * @param wheelSpeed Linear wheel speed (m/s)
    * @return Optimal motor speed output (m/s)
@@ -73,25 +67,21 @@ public class TractionControlController {
     inertialVelocity = Math.abs(inertialVelocity);
     
     // Apply basic traction control
-    // Check slip ratio
-    double currentSlipRatio = ((wheelSpeed - inertialVelocity) / inertialVelocity) * m_state.ordinal();
     // Limit wheel speed if slipping excessively
-    if (currentSlipRatio > m_optimalSlipRatio)
-      velocityOutput = Math.copySign(m_optimalSlipRatio * inertialVelocity + inertialVelocity, velocityRequest);
+    updateSlipRatio(wheelSpeed, inertialVelocity);
+    if (m_isSlipping) 
+      velocityOutput = Math.copySign(m_optimalSlipRatio * inertialVelocity + m_averageWheelSpeed, velocityRequest);
 
+    // Return corrected velocity output, clamping to max linear speed
     return MathUtil.clamp(velocityOutput, -m_maxLinearSpeed, +m_maxLinearSpeed);
   }
 
   /**
-   * Lookup velocity given throttle input
-   * @param throttleLookup Throttle input [-1.0, +1.0]
-   * @return Corresponding velocity
+   * Is wheel slipping
+   * @return True if wheel is slipping
    */
-  public double throttleLookup(double throttleLookup) {
-    throttleLookup = Math.copySign(Math.floor(Math.abs(throttleLookup) * 1000) / 1000, throttleLookup) + 0.0;
-    throttleLookup = MathUtil.clamp(throttleLookup, -1.0, +1.0);
-    
-    return m_throttleInputMap.get(throttleLookup);
+  public boolean isSlipping() {
+    return m_isSlipping;
   }
 
   /**
@@ -99,6 +89,7 @@ public class TractionControlController {
    */
   public void toggleTractionControl() {
     m_state = m_state.toggle();
+    m_speedFilter.reset();
   }
 
   /**
@@ -106,6 +97,7 @@ public class TractionControlController {
    */
   public void enableTractionControl() {
     m_state = State.ENABLED;
+    m_speedFilter.reset();
   }
 
   /**
@@ -113,11 +105,12 @@ public class TractionControlController {
    */
   public void disableTractionControl() {
     m_state = State.DISABLED;
+    m_speedFilter.reset();
   }
 
   /**
    * Is traction control enabled
-   * @return true if enabled
+   * @return True if enabled
    */
   public boolean isEnabled() {
     return m_state.equals(State.ENABLED);

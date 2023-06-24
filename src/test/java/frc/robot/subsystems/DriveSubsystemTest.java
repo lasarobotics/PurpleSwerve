@@ -69,6 +69,8 @@ public class DriveSubsystemTest {
         ModuleLocation.LeftFront, 
         Constants.Drive.DRIVE_VELOCITY_CONFIG,
         Constants.Drive.DRIVE_ROTATE_CONFIG,
+        Constants.Drive.DRIVE_SLIP_RATIO,
+        DriveSubsystem.DRIVE_MAX_LINEAR_SPEED,
         DriveSubsystem.DRIVE_WHEELBASE,
         DriveSubsystem.DRIVE_TRACK_WIDTH,
         DriveSubsystem.DRIVE_GEAR_RATIO,
@@ -79,6 +81,8 @@ public class DriveSubsystemTest {
         ModuleLocation.RightFront, 
         Constants.Drive.DRIVE_VELOCITY_CONFIG,
         Constants.Drive.DRIVE_ROTATE_CONFIG,
+        Constants.Drive.DRIVE_SLIP_RATIO,
+        DriveSubsystem.DRIVE_MAX_LINEAR_SPEED,
         DriveSubsystem.DRIVE_WHEELBASE,
         DriveSubsystem.DRIVE_TRACK_WIDTH,
         DriveSubsystem.DRIVE_GEAR_RATIO,
@@ -89,6 +93,8 @@ public class DriveSubsystemTest {
         ModuleLocation.LeftRear, 
         Constants.Drive.DRIVE_VELOCITY_CONFIG,
         Constants.Drive.DRIVE_ROTATE_CONFIG,
+        Constants.Drive.DRIVE_SLIP_RATIO,
+        DriveSubsystem.DRIVE_MAX_LINEAR_SPEED,
         DriveSubsystem.DRIVE_WHEELBASE,
         DriveSubsystem.DRIVE_TRACK_WIDTH,
         DriveSubsystem.DRIVE_GEAR_RATIO,
@@ -99,6 +105,8 @@ public class DriveSubsystemTest {
         ModuleLocation.RightRear,
         Constants.Drive.DRIVE_VELOCITY_CONFIG,
         Constants.Drive.DRIVE_ROTATE_CONFIG,
+        Constants.Drive.DRIVE_SLIP_RATIO,
+        DriveSubsystem.DRIVE_MAX_LINEAR_SPEED,
         DriveSubsystem.DRIVE_WHEELBASE,
         DriveSubsystem.DRIVE_TRACK_WIDTH,
         DriveSubsystem.DRIVE_GEAR_RATIO,
@@ -363,13 +371,13 @@ public class DriveSubsystemTest {
     m_driveSubsystem.teleopPID(+1.0, 0.0, 0.0);
 
     // Verify that motors are being driven with expected values
-    verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.eq(+0.2, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
     verify(m_lFrontRotateMotor, times(1)).set(AdditionalMatchers.eq(-Math.PI / 2, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
-    verify(m_rFrontDriveMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_rFrontDriveMotor, times(1)).set(AdditionalMatchers.eq(+0.2, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
     verify(m_rFrontRotateMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
-    verify(m_lRearDriveMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_lRearDriveMotor, times(1)).set(AdditionalMatchers.eq(-0.2, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
     verify(m_lRearRotateMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
-    verify(m_rRearDriveMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_rRearDriveMotor, times(1)).set(AdditionalMatchers.eq(+0.2, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
     verify(m_rRearRotateMotor, times(1)).set(AdditionalMatchers.eq(+Math.PI / 2, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
   }
 
