@@ -31,6 +31,7 @@ import frc.robot.subsystems.drive.MAXSwerveModule;
 import frc.robot.subsystems.drive.MAXSwerveModule.ModuleLocation;
 import frc.robot.subsystems.led.LEDStrip;
 import frc.robot.utils.SparkMax;
+import frc.robot.utils.SparkMaxInputsAutoLogged;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class DriveSubsystemTest {
@@ -59,6 +60,17 @@ public class DriveSubsystemTest {
     m_rRearDriveMotor = mock(SparkMax.class);
     m_rRearRotateMotor = mock(SparkMax.class);
     m_ledStrip = mock(LEDStrip.class);
+
+    SparkMaxInputsAutoLogged inputs = new SparkMaxInputsAutoLogged();
+    
+    when(m_lFrontDriveMotor.getInputs()).thenReturn(inputs);
+    when(m_lFrontRotateMotor.getInputs()).thenReturn(inputs);
+    when(m_rFrontDriveMotor.getInputs()).thenReturn(inputs);
+    when(m_rFrontRotateMotor.getInputs()).thenReturn(inputs);
+    when(m_lRearDriveMotor.getInputs()).thenReturn(inputs);
+    when(m_lRearRotateMotor.getInputs()).thenReturn(inputs);
+    when(m_rRearDriveMotor.getInputs()).thenReturn(inputs);
+    when(m_rRearRotateMotor.getInputs()).thenReturn(inputs);
 
     // Create hardware object using mock devices
     m_drivetrainHardware = new DriveSubsystem.Hardware(
@@ -361,10 +373,13 @@ public class DriveSubsystemTest {
     when(m_navx.getVelocityX()).thenReturn((float)0.0);
     when(m_navx.getVelocityY()).thenReturn((float)0.0);
 
-    when(m_lFrontDriveMotor.getEncoderVelocity()).thenReturn(-1.0);
-    when(m_rFrontDriveMotor.getEncoderVelocity()).thenReturn(-1.0);
-    when(m_lRearDriveMotor.getEncoderVelocity()).thenReturn(+1.0);
-    when(m_rRearDriveMotor.getEncoderVelocity()).thenReturn(-1.0);
+    SparkMaxInputsAutoLogged inputs = new SparkMaxInputsAutoLogged();
+    inputs.encoderVelocity = +1.0;
+
+    when(m_lFrontDriveMotor.getInputs()).thenReturn(inputs);
+    when(m_rFrontDriveMotor.getInputs()).thenReturn(inputs);
+    when(m_lRearDriveMotor.getInputs()).thenReturn(inputs);
+    when(m_rRearDriveMotor.getInputs()).thenReturn(inputs);
 
     // Try to drive forward with traction control
     m_driveSubsystem.enableTractionControl();
@@ -391,10 +406,13 @@ public class DriveSubsystemTest {
     when(m_navx.getVelocityX()).thenReturn((float)0.0);
     when(m_navx.getVelocityY()).thenReturn((float)0.0);
 
-    when(m_lFrontDriveMotor.getEncoderVelocity()).thenReturn(-1.0);
-    when(m_rFrontDriveMotor.getEncoderVelocity()).thenReturn(-1.0);
-    when(m_lRearDriveMotor.getEncoderVelocity()).thenReturn(+1.0);
-    when(m_rRearDriveMotor.getEncoderVelocity()).thenReturn(-1.0);
+    SparkMaxInputsAutoLogged inputs = new SparkMaxInputsAutoLogged();
+    inputs.encoderVelocity = +1.0;
+
+    when(m_lFrontDriveMotor.getInputs()).thenReturn(inputs);
+    when(m_rFrontDriveMotor.getInputs()).thenReturn(inputs);
+    when(m_lRearDriveMotor.getInputs()).thenReturn(inputs);
+    when(m_rRearDriveMotor.getInputs()).thenReturn(inputs);
 
     // Try to drive forward without traction control
     m_driveSubsystem.disableTractionControl();

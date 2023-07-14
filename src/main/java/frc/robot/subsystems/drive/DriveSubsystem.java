@@ -373,6 +373,11 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+    m_lFrontModule.periodic();
+    m_rFrontModule.periodic();
+    m_lRearModule.periodic();
+    m_rRearModule.periodic();
+    
     updatePose();
     smartDashboard();
   }

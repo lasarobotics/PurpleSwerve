@@ -111,14 +111,14 @@ public final class Constants {
   }
 
   public static class DriveHardware {
-    public static final SparkMax.ID LEFT_FRONT_DRIVE_MOTOR_ID = new SparkMax.ID(2, "LF drive motor");
-    public static final SparkMax.ID LEFT_FRONT_ROTATE_MOTOR_ID = new SparkMax.ID(3, "LF rotate motor");
-    public static final SparkMax.ID RIGHT_FRONT_DRIVE_MOTOR_ID = new SparkMax.ID(4, "RF drive motor");
-    public static final SparkMax.ID RIGHT_FRONT_ROTATE_MOTOR_ID = new SparkMax.ID(5, "RF rotate motor");
-    public static final SparkMax.ID LEFT_REAR_DRIVE_MOTOR_ID = new SparkMax.ID(6, "LR drive motor");
-    public static final SparkMax.ID LEFT_REAR_ROTATE_MOTOR_ID = new SparkMax.ID(7, "LR rotate motor");
-    public static final SparkMax.ID RIGHT_REAR_DRIVE_MOTOR_ID = new SparkMax.ID(8, "RR drive motor");
-    public static final SparkMax.ID RIGHT_REAR_ROTATE_MOTOR_ID = new SparkMax.ID(9, "RR rotate motor");
+    public static final SparkMax.ID LEFT_FRONT_DRIVE_MOTOR_ID = new SparkMax.ID(2, "DriveHardware/Swerve/LeftFront/Drive");
+    public static final SparkMax.ID LEFT_FRONT_ROTATE_MOTOR_ID = new SparkMax.ID(3, "DriveHardware/Swerve/LeftFront/Rotate");
+    public static final SparkMax.ID RIGHT_FRONT_DRIVE_MOTOR_ID = new SparkMax.ID(4, "DriveHardware/Swerve/RightFront/Drive");
+    public static final SparkMax.ID RIGHT_FRONT_ROTATE_MOTOR_ID = new SparkMax.ID(5, "DriveHardware/Swerve/RightFront/Rotate");
+    public static final SparkMax.ID LEFT_REAR_DRIVE_MOTOR_ID = new SparkMax.ID(6, "DriveHardware/Swerve/LeftRear/Drive");
+    public static final SparkMax.ID LEFT_REAR_ROTATE_MOTOR_ID = new SparkMax.ID(7, "DriveHardawre/Swerve/LeftRear/Rotate");
+    public static final SparkMax.ID RIGHT_REAR_DRIVE_MOTOR_ID = new SparkMax.ID(8, "DriveHardware/Swerve/RightRear/Drive");
+    public static final SparkMax.ID RIGHT_REAR_ROTATE_MOTOR_ID = new SparkMax.ID(9, "DriveHardware/Swerve/RightRear/Rotate");
 
     public static final int LED_STRIP_PORT = 0;
     public static final int LED_STRIP_LENGTH = 200;
