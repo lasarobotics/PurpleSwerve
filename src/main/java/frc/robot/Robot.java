@@ -26,9 +26,10 @@ public class Robot extends LoggedRobot {
   }
 
   @Override
+  @SuppressWarnings("resource")
   public void robotInit() {
     Logger.getInstance().recordMetadata("ProjectName", "PurpleSwerve"); // Set a metadata value
-
+    
     if (isReal()) {
       Logger.getInstance().addDataReceiver(new WPILOGWriter("/media/sda1/")); // Log to a USB stick
       Logger.getInstance().addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
@@ -40,9 +41,8 @@ public class Robot extends LoggedRobot {
       Logger.getInstance().addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim"))); // Save outputs to a new log
     }
     
-    // Logger.getInstance().disableDeterministicTimestamps() // See "Deterministic Timestamps" in the "Understanding Data Flow" page
     Logger.getInstance().start(); // Start logging! No more data receivers, replay sources, or metadata values may be added.
-
+    
     m_robotContainer = new RobotContainer();
   }
 

@@ -8,12 +8,13 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
-import com.revrobotics.REVLibError;
-import com.revrobotics.RelativeEncoder;
+import com.revrobotics.MotorFeedbackSensor;
 import com.revrobotics.SparkMaxAbsoluteEncoder;
-import com.revrobotics.SparkMaxAnalogSensor.Mode;
-import com.revrobotics.SparkMaxLimitSwitch.Type;
+import com.revrobotics.SparkMaxAnalogSensor;
+import com.revrobotics.SparkMaxLimitSwitch;
 import com.revrobotics.SparkMaxPIDController;
+
+import edu.wpi.first.wpilibj.DataLogManager;
 
 public class SparkMax {
 
@@ -25,6 +26,10 @@ public class SparkMax {
       this.deviceID = deviceID;
       this.name = name;
     }
+  }
+
+  public enum FeedbackSensor {
+    NEO_ENCODER, ANALOG, THROUGH_BORE_ENCODER;
   }
 
   @AutoLog
@@ -40,10 +45,16 @@ public class SparkMax {
   }
 
   private static final int PID_SLOT = 0;
+  private static final double MAX_VOLTAGE = 12.0;
+  private static final String VALUE_LOG_ENTRY = "/OutputValue";
+  private static final String MODE_LOG_ENTRY = "/OutputMode";
+  private static final String CURRENT_LOG_ENTRY = "/Current";
+  private static final String ENCODER_RESET_MESSAGE = "/EncoderReset";
+  
+  private CANSparkMax m_spark;
 
-  private CANSparkMax m_motor;
-  private final SparkMaxInputsAutoLogged m_inputs;
   private String m_name;
+  private SparkMaxInputsAutoLogged m_inputs;
 
   /**
    * Create a Spark Max object that is unit-testing friendly
@@ -51,9 +62,161 @@ public class SparkMax {
    * @param motorType The motor type connected to the controller
    */
   public SparkMax(ID id, MotorType motorType) {
-    this.m_motor = new CANSparkMax(id.deviceID, motorType);
-    this.m_inputs = new SparkMaxInputsAutoLogged();
     this.m_name = id.name;
+    this.m_spark = new CANSparkMax(id.deviceID, motorType);
+
+    m_spark.restoreFactoryDefaults();
+    m_spark.enableVoltageCompensation(MAX_VOLTAGE);
+  }
+
+  /**
+   * Log output values
+   * @param value Value that was set
+   * @param ctrl Control mode that was used
+   */
+  private void logOutputs(double value, ControlType ctrl) {
+    Logger.getInstance().recordOutput(m_name + VALUE_LOG_ENTRY, value);
+    Logger.getInstance().recordOutput(m_name + MODE_LOG_ENTRY, ctrl.name());
+    Logger.getInstance().recordOutput(m_name + CURRENT_LOG_ENTRY, m_spark.getOutputCurrent());
+  }
+
+  /**
+   * Get the position of the motor. This returns the native units of 'rotations' by default, and can
+   * be changed by a scale factor using setPositionConversionFactor().
+   * @return Number of rotations of the motor
+   */
+  private double getEncoderPosition() {
+    return m_spark.getEncoder().getPosition();
+  }
+
+  /**
+   * Get the velocity of the motor. This returns the native units of 'RPM' by default, and can be
+   * changed by a scale factor using setVelocityConversionFactor().
+   * @return Number the RPM of the motor
+   */
+  private double getEncoderVelocity() {
+    return m_spark.getEncoder().getVelocity();
+  }
+
+  /**
+   * Returns an object for interfacing with a connected analog sensor.
+   * @return An object for interfacing with a connected analog sensor
+   */
+  private SparkMaxAnalogSensor getAnalog() {
+    return m_spark.getAnalog(SparkMaxAnalogSensor.Mode.kAbsolute);
+  }
+
+  /**
+   * Get position of the motor. This returns the native units 'volt' by default, and can
+   * be changed by a scale factor using setPositionConversionFactor().
+   * @return Volts on the sensor
+   */
+  private double getAnalogPosition() {
+    return getAnalog().getPosition();
+  }
+
+  /**
+   * Get the velocity of the motor. This returns the native units of 'volts per second' by default, and can be
+   * changed by a scale factor using setVelocityConversionFactor().
+   * @return Volts per second on the sensor
+   */
+  private double getAnalogVelocity() {
+    return getAnalog().getVelocity();
+  }
+
+  /**
+   * Returns an object for interfacing with a connected absolute encoder.
+   * @return An object for interfacing with a connected absolute encoder
+   */
+  private AbsoluteEncoder getAbsoluteEncoder() {
+    return m_spark.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle);
+  }
+
+  /**
+   * Get position of the motor. This returns the native units 'rotations' by default, and can
+   * be changed by a scale factor using setPositionConversionFactor().
+   * @return Number of rotations of the motor
+   */
+  private double getAbsoluteEncoderPosition() {
+    return getAbsoluteEncoder().getPosition();
+  }
+
+  /**
+   * Get the velocity of the motor. This returns the native units of 'RPM' by default, and can be
+   * changed by a scale factor using setVelocityConversionFactor().
+   * @return Number the RPM of the motor
+   */
+  private double getAbsoluteEncoderVelocity() {
+    return getAbsoluteEncoder().getVelocity();
+  }
+
+  /**
+   * Update sensor input readings
+   */
+  private void updateInputs() {
+    m_inputs.encoderPosition = getEncoderPosition();
+    m_inputs.encoderVelocity = getEncoderVelocity();
+    m_inputs.analogPosition = getAnalogPosition();
+    m_inputs.analogVelocity = getAnalogVelocity();
+    m_inputs.absoluteEncoderPosition = getAbsoluteEncoderPosition();
+    m_inputs.absoluteEncoderVelocity = getAbsoluteEncoderVelocity();
+    m_inputs.forwardLimitSwitch = m_spark.getForwardLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen).isPressed();
+    m_inputs.reverseLimitSwitch = m_spark.getReverseLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen).isPressed();
+  }
+
+  /**
+   * Call this method periodically
+   */
+  public void periodic() {
+    updateInputs();
+    Logger.getInstance().processInputs(m_name, m_inputs);
+  }
+
+  /**
+   * Get latest sensor input data
+   * @return Latest sensor data
+   */
+  public SparkMaxInputs getInputs() {
+    return m_inputs;
+  }
+
+  /**
+   * Initializes Spark Max PID
+   * @param config Configuration to apply
+   * @param feedbackSensor Feedback device to use for Spark PID
+   * @param forwardLimitSwitch Enable forward limit switch
+   * @param reverseLimitSwitch Enable reverse limit switch
+   */
+  public void initializeSparkPID(SparkPIDConfig config, FeedbackSensor feedbackSensor,
+                                 boolean forwardLimitSwitch, boolean reverseLimitSwitch) {
+    MotorFeedbackSensor selectedSensor;
+    switch (feedbackSensor) {
+      case NEO_ENCODER:
+        selectedSensor = m_spark.getEncoder();
+        break;
+      case ANALOG:
+        selectedSensor = m_spark.getAnalog(SparkMaxAnalogSensor.Mode.kAbsolute);
+        break;
+      case THROUGH_BORE_ENCODER:
+        selectedSensor = m_spark.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle);
+        break;
+      default:
+        selectedSensor = m_spark.getEncoder();
+        break;
+    }
+
+    config.initializeSparkPID(m_spark, selectedSensor, forwardLimitSwitch, reverseLimitSwitch);
+  }
+
+  /**
+   * Initializes Spark Max PID
+   * <p>
+   * Calls {@link SparkMax#initializeSparkPID(SparkPIDConfig, FeedbackSensor, boolean, boolean)} with no limit switches 
+   * @param config Configuration to apply
+   * @param feedbackSensor Feedback device to use for Spark PID
+   */
+  public void initializeSparkPID(SparkPIDConfig config, FeedbackSensor feedbackSensor) {
+    initializeSparkPID(config, feedbackSensor, false, false);
   }
 
   /**
@@ -70,7 +233,8 @@ public class SparkMax {
    * @param ctrl Desired control mode
    */
   public void set(double value, ControlType ctrl) {
-    m_motor.getPIDController().setReference(value, ctrl);
+    m_spark.getPIDController().setReference(value, ctrl);
+    logOutputs(value, ctrl);
   }
 
   /**
@@ -93,16 +257,86 @@ public class SparkMax {
    * @param pidSlot PID slot to use
    */
   public void set(double value, ControlType ctrl, double arbFeedforward, SparkMaxPIDController.ArbFFUnits arbFFUnits, int pidSlot) {
-    m_motor.getPIDController().setReference(value, ctrl, pidSlot, arbFeedforward, arbFFUnits);
+    m_spark.getPIDController().setReference(value, ctrl, pidSlot, arbFeedforward, arbFFUnits);
+    logOutputs(value, ctrl);
+  }
+
+  /**
+   * Set the conversion factor for position of the encoder. Multiplied by the native output units to
+   * give you position.
+   * @param FeedbackSensor Sensor to set conversion factor for
+   * @param factor The conversion factor to multiply the native units by
+   */
+  public void setPositionConversionFactor(FeedbackSensor sensor, double factor) {
+    switch (sensor) {
+      case NEO_ENCODER:
+        m_spark.getEncoder().setPositionConversionFactor(factor);
+        break;
+      case ANALOG:
+        getAnalog().setPositionConversionFactor(factor);
+        break;
+      case THROUGH_BORE_ENCODER:
+        getAbsoluteEncoder().setPositionConversionFactor(factor);
+        break;
+      default:
+        break;
+    }
+  }
+
+  /**
+   * Set the conversion factor for velocity of the encoder. Multiplied by the native output units to
+   * give you velocity.
+   * @param FeedbackSensor Sensor to set conversion factor for
+   * @param factor The conversion factor to multiply the native units by
+   */
+  public void setVelocityConversionFactor(FeedbackSensor sensor, double factor) {
+    switch (sensor) {
+      case NEO_ENCODER:
+        m_spark.getEncoder().setVelocityConversionFactor(factor);
+        break;
+      case ANALOG:
+        getAnalog().setVelocityConversionFactor(factor);
+        break;
+      case THROUGH_BORE_ENCODER:
+        getAbsoluteEncoder().setVelocityConversionFactor(factor);
+        break;
+      default:
+        break;
+    }
+  }
+
+  /**
+   * Reset NEO built-in encoder
+   */
+  public void resetEncoder() {
+    m_spark.getEncoder().setPosition(0.0);
+    DataLogManager.log(m_name + ENCODER_RESET_MESSAGE);
+  }
+
+  /**
+   * Enable PID wrapping for closed loop position control
+   * @param minInput Value of the min input for position
+   * @param maxInput Value of max input for position
+   */
+  public void enablePIDWrapping(double minInput, double maxInput) {
+    m_spark.getPIDController().setPositionPIDWrappingEnabled(true);
+    m_spark.getPIDController().setPositionPIDWrappingMinInput(minInput);
+    m_spark.getPIDController().setPositionPIDWrappingMaxInput(maxInput);
+  }
+
+  /**
+   * Disable PID wrapping for close loop position control
+   */
+  public void disablePIDWrapping() {
+    m_spark.getPIDController().setPositionPIDWrappingEnabled(false);
   }
 
   /**
    * Sets the idle mode setting for the SPARK MAX.
    * @param mode Idle mode (coast or brake).
-   * @return {@link REVLibError#kOk} if successful
    */
-  public REVLibError setIdleMode(IdleMode mode) {
-    return m_motor.setIdleMode(mode);
+  public void setIdleMode(IdleMode mode) {
+    m_spark.setIdleMode(mode);
   }
 
   /**
@@ -116,138 +350,25 @@ public class SparkMax {
    * that could be enough to cause damage to the motor and controller. This current limit provides a
    * smarter strategy to deal with high current draws and keep the motor and controller operating in
    * a safe region.
-   *
+   * 
    * @param limit The current limit in Amps.
-   * @return {@link REVLibError#kOk} if successful
    */
-  public REVLibError setSmartCurrentLimit(int limit) {
-    return m_motor.setSmartCurrentLimit(limit);
+  public void setSmartCurrentLimit(int limit) {
+    m_spark.setSmartCurrentLimit(limit);
   }
 
   /**
-   * Sets the voltage compensation setting for all modes on the SPARK MAX and enables voltage
-   * compensation.
-   * @param nominalVoltage Nominal voltage to compensate output to
-   * @return {@link REVLibError#kOk} if successful
-   */
-  public REVLibError enableVoltageCompensation(double nominalVoltage) {
-    return m_motor.enableVoltageCompensation(nominalVoltage);
-  }
-
-  /** Updates the set of loggable inputs. */
-  public void updateInputs() {
-    m_inputs.encoderPosition = getEncoderPosition();
-    m_inputs.encoderVelocity = getEncoderVelocity();
-    m_inputs.analogPosition = m_motor.getAnalog(Mode.kAbsolute).getPosition();
-    m_inputs.analogVelocity = m_motor.getAnalog(Mode.kAbsolute).getVelocity();
-    m_inputs.absoluteEncoderPosition = getAbsoluteEncoderPosition();
-    m_inputs.absoluteEncoderVelocity = getAbsoluteEncoderVelocity();
-    m_inputs.forwardLimitSwitch = m_motor.getForwardLimitSwitch(Type.kNormallyOpen).isPressed();
-    m_inputs.reverseLimitSwitch = m_motor.getReverseLimitSwitch(Type.kNormallyOpen).isPressed();
-  }
-  
-  public void periodic() {
-    updateInputs();
-    Logger.getInstance().processInputs(m_name, m_inputs);
-  }
-
-  /**
-   * Returns an object for interfacing with the hall sensor integrated into a brushless motor, which
-   * is connected to the front port of the SPARK MAX.
-   *
-   * <p>To access a quadrature encoder connected to the encoder pins or the front port of the SPARK
-   * MAX, you must call the version of this method with EncoderType and countsPerRev parameters.
-   *
-   * @return An object for interfacing with the integrated encoder.
-   */
-  public RelativeEncoder getEncoder() {
-    return m_motor.getEncoder();
-  }
-
-  /**
-   * Get the position of the motor. This returns the native units of 'rotations' by default, and can
-   * be changed by a scale factor using setPositionConversionFactor().W
-   * @return Number of rotations of the motor
-   */
-  public double getEncoderPosition() {
-    return getEncoder().getPosition();
-  }
-
-  /**
-   * Get the velocity of the motor. This returns the native units of 'RPM' by default, and can be
-   * changed by a scale factor using setVelocityConversionFactor().
-   * @return Number the RPM of the motor
-   */
-  public double getEncoderVelocity() {
-    return getEncoder().getVelocity();
-  }
-
-  /**
-   * Returns an object for interfacing with a connected absolute encoder.
-   * @return An object for interfacing with a connected absolute encoder
-   */
-  public AbsoluteEncoder getAbsoluteEncoder() {
-    return m_motor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle);
-  }
-
-  /**
-   * Get position of the motor. This returns the native units 'rotations' by default, and can
-   * be changed by a scale factor using setPositionConversionFactor().
-   * @return Number of rotations of the motor
-   */
-  public double getAbsoluteEncoderPosition() {
-    return getAbsoluteEncoder().getPosition();
-  }
-
-  /**
-   * Get the velocity of the motor. This returns the native units of 'RPM' by default, and can be
-   * changed by a scale factor using setVelocityConversionFactor().
-   * @return Number the RPM of the motor
-   */
-  public double getAbsoluteEncoderVelocity() {
-    return getAbsoluteEncoder().getVelocity();
-  }
-
-  /** @return An object for interfacing with the integrated PID controller. */
-  public SparkMaxPIDController getPIDController() {
-    return m_motor.getPIDController();
-  }
-
-  /**
-   * Get the underlying CANSparkMax motor
-   * @return Underlying CANSparkMax motor
-   */
-  public CANSparkMax getMotor() {
-    return m_motor;
-  }
-
-  /**
-   * Reset NEO built-in encoder
-   */
-  public void resetEncoder() {
-    getEncoder().setPosition(0.0);
-  }
-
-  /**
-   * Restore motor controller parameters to factory default until the next controller reboot
-   * @return {@link REVLibError#kOk} if successful
-   */
-  public REVLibError restoreFactoryDefaults() {
-    return m_motor.restoreFactoryDefaults();
-  }
-
-  /** 
-   * Closes the SPARK MAX Controller 
-   */
-  public void close() {
-    m_motor.close();
-  }
-
-  /**
-   * Stops motor movement. Motor can be moved again by calling set without having to re-enable 
-   * the motor.
+   * Stops motor movement. Motor can be moved again by calling set without having to re-enable the
+   * motor.
    */
   public void stopMotor() {
-    m_motor.stopMotor();
+    m_spark.stopMotor();
+  }
+
+  /**
+   * Closes the Spark Max controller
+   */
+  public void close() {
+    m_spark.close();
   }
 }

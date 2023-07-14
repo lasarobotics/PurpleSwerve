@@ -377,7 +377,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     m_rFrontModule.periodic();
     m_lRearModule.periodic();
     m_rRearModule.periodic();
-
+    
     updatePose();
     smartDashboard();
   }
