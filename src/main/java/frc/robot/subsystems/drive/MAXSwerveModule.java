@@ -111,8 +111,8 @@ public class MAXSwerveModule implements AutoCloseable {
     // Only do this stuff if hardware is real
     if (swerveHardware.isHardwareReal) {
       // Initialize PID
-      m_driveMotorConfig.initializeSparkPID(m_driveMotor, m_driveMotor.getEncoder());
-      m_rotateMotorConfig.initializeSparkPID(m_rotateMotor, m_rotateMotor.getAbsoluteEncoder());
+      m_driveMotorConfig.initializeSparkPID(m_driveMotor.getMotor(), m_driveMotor.getEncoder());
+      m_rotateMotorConfig.initializeSparkPID(m_rotateMotor.getMotor(), m_rotateMotor.getAbsoluteEncoder());
 
       // Set drive encoder conversion factor
       double driveConversionFactor = m_driveWheelDiameter * Math.PI / m_driveGearRatio;
@@ -236,6 +236,11 @@ public class MAXSwerveModule implements AutoCloseable {
    */
   public void set(SwerveModuleState[] states, double inertialVelocity, double rotateRate) {
     set(states[m_location.index], inertialVelocity, rotateRate);
+  }
+
+  public void periodic() {
+    m_driveMotor.periodic();
+    m_rotateMotor.periodic();
   }
 
   /**

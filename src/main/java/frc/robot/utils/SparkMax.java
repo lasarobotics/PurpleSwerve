@@ -1,16 +1,21 @@
 package frc.robot.utils;
 
+import org.littletonrobotics.junction.AutoLog;
+import org.littletonrobotics.junction.Logger;
+
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMax.ControlType;
+import com.revrobotics.CANSparkMax.IdleMode;
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.REVLibError;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxAbsoluteEncoder;
+import com.revrobotics.SparkMaxAnalogSensor.Mode;
+import com.revrobotics.SparkMaxLimitSwitch.Type;
 import com.revrobotics.SparkMaxPIDController;
 
-import edu.wpi.first.util.datalog.DataLog;
-import edu.wpi.first.wpilibj.DataLogManager;
-import frc.robot.utils.DataLogger.DoubleLogEntry;
-
-public class SparkMax extends CANSparkMax {
+public class SparkMax {
 
   public static class ID {
     public final int deviceID;
@@ -22,26 +27,23 @@ public class SparkMax extends CANSparkMax {
     }
   }
 
-  private static final int PID_SLOT = 0;
-  private static final int ALT_ENCODER_CPR = 8192;
-  private static final String VALUE_LOG_ENTRY = "Value";
-  private static final String CURRENT_LOG_ENTRY = "Current";
-  private static final String INTERNAL_ENCODER_POSITION = "Internal encoder position";
-  private static final String INTERNAL_ENCODER_VELOCITY = "Internal encoder velocity";
-  private static final String RELATIVE_ENCODER_POSITION = "External relative encoder position";
-  private static final String RELATIVE_ENCODER_VELOCITY = "External relative encoder velocity";
-  private static final String ABSOLUTE_ENCODER_POSITION = "Absolute encoder position";
-  private static final String ABSOLUTE_ENCODER_VELOCITY = "Absolute encoder velocity";
+  @AutoLog
+  public static class SparkMaxInputs {
+    public double encoderPosition = 0.0;
+    public double encoderVelocity = 0.0;
+    public double analogPosition = 0.0;
+    public double analogVelocity = 0.0;
+    public double absoluteEncoderPosition = 0.0;
+    public double absoluteEncoderVelocity = 0.0;
+    public boolean forwardLimitSwitch = false;
+    public boolean reverseLimitSwitch = false;
+  }
 
+  private static final int PID_SLOT = 0;
+
+  private CANSparkMax m_motor;
+  private final SparkMaxInputsAutoLogged m_inputs;
   private String m_name;
-  private DoubleLogEntry m_valueLogEntry;
-  private DoubleLogEntry m_currentLogEntry;
-  private DoubleLogEntry m_internalEncoderPositionLogEntry;
-  private DoubleLogEntry m_internalEncoderVelocityLogEntry;
-  private DoubleLogEntry m_relativeEncoderPositionLogEntry;
-  private DoubleLogEntry m_relativeEncoderVelocityLogEntry;
-  private DoubleLogEntry m_absoluteEncoderPositionLogEntry;
-  private DoubleLogEntry m_absoluteEncoderVelocityLogEntry;
 
   /**
    * Create a Spark Max object that is unit-testing friendly
@@ -49,28 +51,9 @@ public class SparkMax extends CANSparkMax {
    * @param motorType The motor type connected to the controller
    */
   public SparkMax(ID id, MotorType motorType) {
-    super(id.deviceID, motorType);
+    this.m_motor = new CANSparkMax(id.deviceID, motorType);
+    this.m_inputs = new SparkMaxInputsAutoLogged();
     this.m_name = id.name;
-
-    DataLog log = DataLogManager.getLog();
-    m_valueLogEntry = new DoubleLogEntry(log, String.join(" ", m_name, VALUE_LOG_ENTRY));
-    m_currentLogEntry = new DoubleLogEntry(log, String.join(" ", m_name, CURRENT_LOG_ENTRY));
-    m_internalEncoderPositionLogEntry = new DoubleLogEntry(log, String.join(" ", m_name, INTERNAL_ENCODER_POSITION));
-    m_internalEncoderVelocityLogEntry = new DoubleLogEntry(log, String.join(" ", m_name, INTERNAL_ENCODER_VELOCITY));
-    m_relativeEncoderPositionLogEntry = new DoubleLogEntry(log, String.join(" ", m_name, RELATIVE_ENCODER_POSITION));
-    m_relativeEncoderVelocityLogEntry = new DoubleLogEntry(log, String.join(" ", m_name, RELATIVE_ENCODER_VELOCITY));
-    m_absoluteEncoderPositionLogEntry = new DoubleLogEntry(log, String.join(" ", m_name, ABSOLUTE_ENCODER_POSITION));
-    m_absoluteEncoderVelocityLogEntry = new DoubleLogEntry(log, String.join(" ", m_name, ABSOLUTE_ENCODER_VELOCITY));
-  }
-
-  /**
-   * Log values
-   * @param value Value that was set
-   * @param ctrl Control mode that was used
-   */
-  private void log(double value, ControlType ctrl) {
-    m_valueLogEntry.append(value, ctrl.name());
-    m_currentLogEntry.append(getOutputCurrent());
   }
 
   /**
@@ -87,8 +70,7 @@ public class SparkMax extends CANSparkMax {
    * @param ctrl Desired control mode
    */
   public void set(double value, ControlType ctrl) {
-    getPIDController().setReference(value, ctrl);
-    log(value, ctrl);
+    m_motor.getPIDController().setReference(value, ctrl);
   }
 
   /**
@@ -102,7 +84,6 @@ public class SparkMax extends CANSparkMax {
     set(value, ctrl, arbFeedforward, arbFFUnits, PID_SLOT);
   }
 
-
   /**
    * Set motor output value with arbitrary feed forward
    * @param value Value to set
@@ -112,8 +93,75 @@ public class SparkMax extends CANSparkMax {
    * @param pidSlot PID slot to use
    */
   public void set(double value, ControlType ctrl, double arbFeedforward, SparkMaxPIDController.ArbFFUnits arbFFUnits, int pidSlot) {
-    getPIDController().setReference(value, ctrl, pidSlot, arbFeedforward, arbFFUnits);
-    log(value, ctrl);
+    m_motor.getPIDController().setReference(value, ctrl, pidSlot, arbFeedforward, arbFFUnits);
+  }
+
+  /**
+   * Sets the idle mode setting for the SPARK MAX.
+   * @param mode Idle mode (coast or brake).
+   * @return {@link REVLibError#kOk} if successful
+   */
+  public REVLibError setIdleMode(IdleMode mode) {
+    return m_motor.setIdleMode(mode);
+  }
+
+  /**
+   * Sets the current limit in Amps.
+   *
+   * <p>The motor controller will reduce the controller voltage output to avoid surpassing this
+   * limit. This limit is enabled by default and used for brushless only. This limit is highly
+   * recommended when using the NEO brushless motor.
+   *
+   * <p>The NEO Brushless Motor has a low internal resistance, which can mean large current spikes
+   * that could be enough to cause damage to the motor and controller. This current limit provides a
+   * smarter strategy to deal with high current draws and keep the motor and controller operating in
+   * a safe region.
+   *
+   * @param limit The current limit in Amps.
+   * @return {@link REVLibError#kOk} if successful
+   */
+  public REVLibError setSmartCurrentLimit(int limit) {
+    return m_motor.setSmartCurrentLimit(limit);
+  }
+
+  /**
+   * Sets the voltage compensation setting for all modes on the SPARK MAX and enables voltage
+   * compensation.
+   * @param nominalVoltage Nominal voltage to compensate output to
+   * @return {@link REVLibError#kOk} if successful
+   */
+  public REVLibError enableVoltageCompensation(double nominalVoltage) {
+    return m_motor.enableVoltageCompensation(nominalVoltage);
+  }
+
+  /** Updates the set of loggable inputs. */
+  public void updateInputs() {
+    m_inputs.encoderPosition = getEncoderPosition();
+    m_inputs.encoderVelocity = getEncoderVelocity();
+    m_inputs.analogPosition = m_motor.getAnalog(Mode.kAbsolute).getPosition();
+    m_inputs.analogVelocity = m_motor.getAnalog(Mode.kAbsolute).getVelocity();
+    m_inputs.absoluteEncoderPosition = getAbsoluteEncoderPosition();
+    m_inputs.absoluteEncoderVelocity = getAbsoluteEncoderVelocity();
+    m_inputs.forwardLimitSwitch = m_motor.getForwardLimitSwitch(Type.kNormallyOpen).isPressed();
+    m_inputs.reverseLimitSwitch = m_motor.getReverseLimitSwitch(Type.kNormallyOpen).isPressed();
+  }
+  
+  public void periodic() {
+    updateInputs();
+    Logger.getInstance().processInputs(m_name, m_inputs);
+  }
+
+  /**
+   * Returns an object for interfacing with the hall sensor integrated into a brushless motor, which
+   * is connected to the front port of the SPARK MAX.
+   *
+   * <p>To access a quadrature encoder connected to the encoder pins or the front port of the SPARK
+   * MAX, you must call the version of this method with EncoderType and countsPerRev parameters.
+   *
+   * @return An object for interfacing with the integrated encoder.
+   */
+  public RelativeEncoder getEncoder() {
+    return m_motor.getEncoder();
   }
 
   /**
@@ -122,10 +170,7 @@ public class SparkMax extends CANSparkMax {
    * @return Number of rotations of the motor
    */
   public double getEncoderPosition() {
-    double position = getEncoder().getPosition();
-    m_internalEncoderPositionLogEntry.append(position);
-
-    return position;
+    return getEncoder().getPosition();
   }
 
   /**
@@ -134,10 +179,7 @@ public class SparkMax extends CANSparkMax {
    * @return Number the RPM of the motor
    */
   public double getEncoderVelocity() {
-    double velocity = getEncoder().getVelocity();
-    m_internalEncoderVelocityLogEntry.append(velocity);
-
-    return velocity;
+    return getEncoder().getVelocity();
   }
 
   /**
@@ -145,7 +187,7 @@ public class SparkMax extends CANSparkMax {
    * @return An object for interfacing with a connected absolute encoder
    */
   public AbsoluteEncoder getAbsoluteEncoder() {
-    return getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle);
+    return m_motor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle);
   }
 
   /**
@@ -154,10 +196,7 @@ public class SparkMax extends CANSparkMax {
    * @return Number of rotations of the motor
    */
   public double getAbsoluteEncoderPosition() {
-    double position = getAbsoluteEncoder().getPosition();
-    m_absoluteEncoderPositionLogEntry.append(position);
-    
-    return position;
+    return getAbsoluteEncoder().getPosition();
   }
 
   /**
@@ -166,50 +205,20 @@ public class SparkMax extends CANSparkMax {
    * @return Number the RPM of the motor
    */
   public double getAbsoluteEncoderVelocity() {
-    double velocity = getAbsoluteEncoder().getVelocity();
-    m_absoluteEncoderVelocityLogEntry.append(velocity);
+    return getAbsoluteEncoder().getVelocity();
+  }
 
-    return velocity;
+  /** @return An object for interfacing with the integrated PID controller. */
+  public SparkMaxPIDController getPIDController() {
+    return m_motor.getPIDController();
   }
 
   /**
-   * Return an object for interfacing with a connected through bore encoder
-   * @return An object for interfacing with relative encoder
+   * Get the underlying CANSparkMax motor
+   * @return Underlying CANSparkMax motor
    */
-  public RelativeEncoder getRelativeEncoder() {
-    return getAlternateEncoder(ALT_ENCODER_CPR);
-  }
-
-  /**
-   * Get the position of the motor. This returns the native units of 'rotations' by default, and can
-   * be changed by a scale factor using setPositionConversionFactor().
-   * @return Number of rotations of the motor
-   */
-  public double getRelativeEncoderPosition() {
-    double position = getRelativeEncoder().getPosition();
-    m_relativeEncoderPositionLogEntry.append(position);
-
-    return position;
-  }
-
-  /**
-   * Get the velocity of the motor. This returns the native units of 'RPM' by default, and can be
-   * changed by a scale factor using setVelocityConversionFactor().
-   * @return Number the RPM of the motor
-   */
-  public double getRelativeEncoderVelocity() {
-    double velocity = getRelativeEncoder().getVelocity();
-    m_relativeEncoderVelocityLogEntry.append(velocity);
-
-    return velocity;
-  }
-
-  /**
-   * Reset relative encoder
-   */
-  public void resetRelativeEncoder() {
-    getRelativeEncoder().setPosition(0.0);
-    DataLogger.log(m_name + ": External relative encoder reset");
+  public CANSparkMax getMotor() {
+    return m_motor;
   }
 
   /**
@@ -217,6 +226,28 @@ public class SparkMax extends CANSparkMax {
    */
   public void resetEncoder() {
     getEncoder().setPosition(0.0);
-    DataLogger.log(m_name + ": Internal encoder reset");
+  }
+
+  /**
+   * Restore motor controller parameters to factory default until the next controller reboot
+   * @return {@link REVLibError#kOk} if successful
+   */
+  public REVLibError restoreFactoryDefaults() {
+    return m_motor.restoreFactoryDefaults();
+  }
+
+  /** 
+   * Closes the SPARK MAX Controller 
+   */
+  public void close() {
+    m_motor.close();
+  }
+
+  /**
+   * Stops motor movement. Motor can be moved again by calling set without having to re-enable 
+   * the motor.
+   */
+  public void stopMotor() {
+    m_motor.stopMotor();
   }
 }
