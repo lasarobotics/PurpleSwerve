@@ -1,3 +1,7 @@
+// Copyright (c) FIRST and other WPILib contributors.
+// Open Source Software; you can modify and/or share it under the terms of
+// the WPILib BSD license file in the root directory of this project.
+
 package frc.robot.utils;
 
 import org.littletonrobotics.junction.AutoLog;
@@ -16,7 +20,7 @@ import com.revrobotics.SparkMaxPIDController;
 
 import edu.wpi.first.wpilibj.DataLogManager;
 
-public class SparkMax {
+public class SparkMax implements AutoCloseable {
 
   public static class ID {
     public final int deviceID;
@@ -64,6 +68,7 @@ public class SparkMax {
   public SparkMax(ID id, MotorType motorType) {
     this.m_name = id.name;
     this.m_spark = new CANSparkMax(id.deviceID, motorType);
+    this.m_inputs = new SparkMaxInputsAutoLogged();
 
     m_spark.restoreFactoryDefaults();
     m_spark.enableVoltageCompensation(MAX_VOLTAGE);
@@ -368,6 +373,7 @@ public class SparkMax {
   /**
    * Closes the Spark Max controller
    */
+  @Override
   public void close() {
     m_spark.close();
   }
