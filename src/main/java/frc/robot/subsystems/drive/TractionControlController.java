@@ -6,6 +6,7 @@ package frc.robot.subsystems.drive;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.LinearFilter;
+import frc.robot.Constants;
 
 public class TractionControlController {
   private enum State {
@@ -23,7 +24,7 @@ public class TractionControlController {
 
   private final double MIN_SLIP_RATIO = 0.01;
   private final double MAX_SLIP_RATIO = 0.40;
-  private final int FILTER_WINDOW_SIZE = 5;
+  private final int FILTER_TIME_CONSTANT_MULTIPLIER = 5;
 
   private double m_averageWheelSpeed = 0.0;
   private double m_optimalSlipRatio = 0.0;
@@ -42,11 +43,14 @@ public class TractionControlController {
   public TractionControlController(double optimalSlipRatio, double maxLinearSpeed) {
     this.m_optimalSlipRatio = MathUtil.clamp(optimalSlipRatio, MIN_SLIP_RATIO, MAX_SLIP_RATIO);
     this.m_maxLinearSpeed = Math.floor(maxLinearSpeed * 1000) / 1000;
-    this.m_speedFilter = LinearFilter.movingAverage(FILTER_WINDOW_SIZE); 
+    this.m_speedFilter = LinearFilter.singlePoleIIR(
+      Constants.Global.ROBOT_LOOP_PERIOD * FILTER_TIME_CONSTANT_MULTIPLIER,
+      Constants.Global.ROBOT_LOOP_PERIOD
+    );
   }
 
   private void updateSlipRatio(double wheelSpeed, double inertialVelocity) {
-    // Calculate average speed using moving average filter
+    // Calculate average speed using single pole IIR filter
     m_averageWheelSpeed = m_speedFilter.calculate(wheelSpeed);
 
     // Calculate current slip ratio
