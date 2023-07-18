@@ -34,6 +34,7 @@ public class TractionControlController {
   private State m_state = State.ENABLED;
 
   private LinearFilter m_speedFilter;
+  private LinearFilter m_outputFilter;
 
   /**
    * Create an instance of TractionControlController
@@ -44,6 +45,10 @@ public class TractionControlController {
     this.m_optimalSlipRatio = MathUtil.clamp(optimalSlipRatio, MIN_SLIP_RATIO, MAX_SLIP_RATIO);
     this.m_maxLinearSpeed = Math.floor(maxLinearSpeed * 1000) / 1000;
     this.m_speedFilter = LinearFilter.singlePoleIIR(
+      Constants.Global.ROBOT_LOOP_PERIOD * FILTER_TIME_CONSTANT_MULTIPLIER,
+      Constants.Global.ROBOT_LOOP_PERIOD
+    );
+    this.m_outputFilter = LinearFilter.singlePoleIIR(
       Constants.Global.ROBOT_LOOP_PERIOD * FILTER_TIME_CONSTANT_MULTIPLIER,
       Constants.Global.ROBOT_LOOP_PERIOD
     );
@@ -80,6 +85,10 @@ public class TractionControlController {
     if (m_isSlipping) 
       velocityOutput = Math.copySign(m_optimalSlipRatio * inertialVelocity + m_averageWheelSpeed, velocityRequest);
 
+    // Filter velocity output if TC enabled
+    velocityOutput = (m_state.ordinal() & 1) * m_outputFilter.calculate(velocityOutput) 
+                   + (~m_state.ordinal() & 1) * velocityOutput;
+
     // Return corrected velocity output, clamping to max linear speed
     return MathUtil.clamp(velocityOutput, -m_maxLinearSpeed, +m_maxLinearSpeed);
   }
@@ -98,6 +107,7 @@ public class TractionControlController {
   public void toggleTractionControl() {
     m_state = m_state.toggle();
     m_speedFilter.reset();
+    m_outputFilter.reset();
   }
 
   /**
@@ -106,6 +116,7 @@ public class TractionControlController {
   public void enableTractionControl() {
     m_state = State.ENABLED;
     m_speedFilter.reset();
+    m_outputFilter.reset();
   }
 
   /**
@@ -114,6 +125,7 @@ public class TractionControlController {
   public void disableTractionControl() {
     m_state = State.DISABLED;
     m_speedFilter.reset();
+    m_outputFilter.reset();
   }
 
   /**
