@@ -9,7 +9,6 @@ import java.util.List;
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 import org.photonvision.EstimatedRobotPose;
 
-import com.kauailabs.navx.frc.AHRS;
 import com.pathplanner.lib.PathPoint;
 
 import edu.wpi.first.math.Matrix;
@@ -36,11 +35,12 @@ import frc.robot.subsystems.led.LEDStrip;
 import frc.robot.subsystems.led.LEDStrip.Pattern;
 import frc.robot.subsystems.led.LEDSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
+import frc.robot.utils.NavX2;
 
 public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   public static class Hardware {
     boolean isHardwareReal;
-    AHRS navx;
+    NavX2 navx;
     MAXSwerveModule lFrontModule;
     MAXSwerveModule rFrontModule;
     MAXSwerveModule lRearModule;
@@ -48,7 +48,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     LEDStrip ledStrip;
 
     public Hardware(boolean isHardwareReal,
-                    AHRS navx,
+                    NavX2 navx,
                     MAXSwerveModule lFrontModule,
                     MAXSwerveModule rFrontModule,
                     MAXSwerveModule lRearModule,
@@ -81,7 +81,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private SwerveDriveKinematics m_kinematics;
   private SwerveDrivePoseEstimator m_poseEstimator;
 
-  private AHRS m_navx;
+  private NavX2 m_navx;
   private MAXSwerveModule m_lFrontModule;
   private MAXSwerveModule m_rFrontModule;
   private MAXSwerveModule m_lRearModule;
@@ -179,7 +179,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @return Hardware object containing all necessary devices for this subsystem
    */
   public static Hardware initializeHardware(boolean isHardwareReal) {
-    AHRS navx = new AHRS(SPI.Port.kMXP, (byte)(Constants.Global.ROBOT_LOOP_PERIOD * 2));
+    NavX2 navx = new NavX2(Constants.DriveHardware.NAVX_ID, SPI.Port.kMXP, (byte)(Constants.Global.ROBOT_LOOP_PERIOD * 2));
 
     MAXSwerveModule lFrontModule = new MAXSwerveModule(
       MAXSwerveModule.initializeHardware(
@@ -377,6 +377,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     m_rFrontModule.periodic();
     m_lRearModule.periodic();
     m_rRearModule.periodic();
+
+    m_navx.periodic();
     
     updatePose();
     smartDashboard();

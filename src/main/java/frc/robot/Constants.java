@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import frc.robot.subsystems.drive.DriveSubsystem;
+import frc.robot.utils.NavX2;
 import frc.robot.utils.PIDConstants;
 import frc.robot.utils.SparkMax;
 import frc.robot.utils.SparkPIDConfig;
@@ -119,6 +120,8 @@ public final class Constants {
     public static final SparkMax.ID LEFT_REAR_ROTATE_MOTOR_ID = new SparkMax.ID(7, "DriveHardware/Swerve/LeftRear/Rotate");
     public static final SparkMax.ID RIGHT_REAR_DRIVE_MOTOR_ID = new SparkMax.ID(8, "DriveHardware/Swerve/RightRear/Drive");
     public static final SparkMax.ID RIGHT_REAR_ROTATE_MOTOR_ID = new SparkMax.ID(9, "DriveHardware/Swerve/RightRear/Rotate");
+
+    public static final NavX2.ID NAVX_ID = new NavX2.ID("DriveHardware/NavX2");
 
     public static final int LED_STRIP_PORT = 0;
     public static final int LED_STRIP_LENGTH = 200;

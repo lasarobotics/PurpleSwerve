@@ -19,7 +19,6 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.mockito.AdditionalMatchers;
 import org.mockito.ArgumentMatchers;
 
-import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax.ControlType;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -30,6 +29,7 @@ import frc.robot.subsystems.drive.DriveSubsystem;
 import frc.robot.subsystems.drive.MAXSwerveModule;
 import frc.robot.subsystems.drive.MAXSwerveModule.ModuleLocation;
 import frc.robot.subsystems.led.LEDStrip;
+import frc.robot.utils.NavX2;
 import frc.robot.utils.SparkMax;
 import frc.robot.utils.SparkMaxInputsAutoLogged;
 
@@ -40,7 +40,7 @@ public class DriveSubsystemTest {
   private DriveSubsystem m_driveSubsystem;
   private DriveSubsystem.Hardware m_drivetrainHardware;
 
-  private AHRS m_navx;
+  private NavX2 m_navx;
   private SparkMax m_lFrontDriveMotor, m_lFrontRotateMotor;
   private SparkMax m_rFrontDriveMotor, m_rFrontRotateMotor;
   private SparkMax m_lRearDriveMotor, m_lRearRotateMotor;
@@ -50,7 +50,7 @@ public class DriveSubsystemTest {
   @BeforeEach
   public void setup() {
     // Create mock hardware devices
-    m_navx = mock(AHRS.class);
+    m_navx = mock(NavX2.class);
     m_lFrontDriveMotor = mock(SparkMax.class);
     m_lFrontRotateMotor = mock(SparkMax.class);
     m_rFrontDriveMotor = mock(SparkMax.class);
