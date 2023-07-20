@@ -54,7 +54,7 @@ public class NavX2 implements AutoCloseable {
    * the X Axis.
    * @return The current pitch value in degrees (-180 to 180).
    */
-  public float getPitch() {
+  private float getPitch() {
     return m_navx.getPitch();
   }
 
@@ -74,7 +74,7 @@ public class NavX2 implements AutoCloseable {
    * in degrees. This heading is based on integration of the returned rate 
    * from the Z-axis (yaw) gyro.
    */
-  public double getAngle() {
+  private double getAngle() {
     return m_navx.getAngle();
   }
 
@@ -84,7 +84,7 @@ public class NavX2 implements AutoCloseable {
    * the X Axis.
    * @return The current roll value in degrees (-180 to 180).
    */
-  public float getRoll() {
+  private float getRoll() {
     return m_navx.getRoll();
   }
 
@@ -96,7 +96,7 @@ public class NavX2 implements AutoCloseable {
    * resulting velocities are not known to be very accurate.
    * @return Current Velocity (in meters/squared).
    */
-  public float getVelocityX() {
+  private float getVelocityX() {
     return m_navx.getVelocityX();
   }
 
@@ -108,7 +108,7 @@ public class NavX2 implements AutoCloseable {
    * resulting velocities are not known to be very accurate.
    * @return Current Velocity (in meters/squared).
    */
-  public float getVelocityY() {
+  private float getVelocityY() {
     return m_navx.getVelocityY();
   }
   
@@ -119,7 +119,7 @@ public class NavX2 implements AutoCloseable {
    *<p>
    * @return The current rate of change in yaw angle (in degrees per second)
    */
-  public double getRate() {
+  private double getRate() {
     return m_navx.getRate();
   }
   
@@ -137,7 +137,7 @@ public class NavX2 implements AutoCloseable {
    *
    * @return the current heading of the robot as a {@link edu.wpi.first.math.geometry.Rotation2d}.
    */
-  public Rotation2d getRotation2d() {
+  private Rotation2d getRotation2d() {
     return m_navx.getRotation2d();
   }
 

@@ -29,8 +29,10 @@ import frc.robot.subsystems.drive.MAXSwerveModule;
 import frc.robot.subsystems.drive.MAXSwerveModule.ModuleLocation;
 import frc.robot.subsystems.led.LEDStrip;
 import frc.robot.utils.NavX2;
+import frc.robot.utils.NavX2InputsAutoLogged;
 import frc.robot.utils.SparkMax;
 import frc.robot.utils.SparkMaxInputsAutoLogged;
+import frc.robot.utils.NavX2.NavX2Inputs;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class AntiTipCommandTest {
@@ -63,16 +65,20 @@ public class AntiTipCommandTest {
     m_rRearRotateMotor = mock(SparkMax.class);
     m_ledStrip = mock(LEDStrip.class);
 
-    SparkMaxInputsAutoLogged inputs = new SparkMaxInputsAutoLogged();
     
-    when(m_lFrontDriveMotor.getInputs()).thenReturn(inputs);
-    when(m_lFrontRotateMotor.getInputs()).thenReturn(inputs);
-    when(m_rFrontDriveMotor.getInputs()).thenReturn(inputs);
-    when(m_rFrontRotateMotor.getInputs()).thenReturn(inputs);
-    when(m_lRearDriveMotor.getInputs()).thenReturn(inputs);
-    when(m_lRearRotateMotor.getInputs()).thenReturn(inputs);
-    when(m_rRearDriveMotor.getInputs()).thenReturn(inputs);
-    when(m_rRearRotateMotor.getInputs()).thenReturn(inputs);
+    NavX2InputsAutoLogged navxInputs = new NavX2InputsAutoLogged();
+    when(m_navx.getInputs()).thenReturn(navxInputs);
+
+    SparkMaxInputsAutoLogged sparkMaxInputs = new SparkMaxInputsAutoLogged();
+    
+    when(m_lFrontDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
+    when(m_lFrontRotateMotor.getInputs()).thenReturn(sparkMaxInputs);
+    when(m_rFrontDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
+    when(m_rFrontRotateMotor.getInputs()).thenReturn(sparkMaxInputs);
+    when(m_lRearDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
+    when(m_lRearRotateMotor.getInputs()).thenReturn(sparkMaxInputs);
+    when(m_rRearDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
+    when(m_rRearRotateMotor.getInputs()).thenReturn(sparkMaxInputs);
 
     // Create hardware object using mock devices
     m_drivetrainHardware = new DriveSubsystem.Hardware(
@@ -158,8 +164,10 @@ public class AntiTipCommandTest {
   @DisplayName("Test if robot can execute anti-tip")
   public void execute() {
     // Hardcode sensor values
-    when(m_navx.getPitch()).thenReturn((float)0.0);
-    when(m_navx.getRoll()).thenReturn((float)+35.0);
+    NavX2InputsAutoLogged inputs = new NavX2InputsAutoLogged(); 
+    inputs.rollAngle = +35.0;
+
+    when(m_navx.getInputs()).thenReturn(inputs);
 
     // Try to execute anti-tip command
     m_antiTipCommand.execute();
@@ -180,8 +188,10 @@ public class AntiTipCommandTest {
   @DisplayName("Test if robot knows when to stop anti-tip")
   public void isFinished() {
     // Hardcode sensor values
-    when(m_navx.getPitch()).thenReturn((float)0.0);
-    when(m_navx.getRoll()).thenReturn((float)+4.0);
+    NavX2InputsAutoLogged inputs = new NavX2InputsAutoLogged(); 
+    inputs.rollAngle = +4.0;
+
+    when(m_navx.getInputs()).thenReturn(inputs);
 
     // Check command finished condition
     boolean value = m_antiTipCommand.isFinished();

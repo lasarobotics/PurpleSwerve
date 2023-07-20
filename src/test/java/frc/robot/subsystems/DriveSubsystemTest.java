@@ -30,6 +30,7 @@ import frc.robot.subsystems.drive.MAXSwerveModule;
 import frc.robot.subsystems.drive.MAXSwerveModule.ModuleLocation;
 import frc.robot.subsystems.led.LEDStrip;
 import frc.robot.utils.NavX2;
+import frc.robot.utils.NavX2InputsAutoLogged;
 import frc.robot.utils.SparkMax;
 import frc.robot.utils.SparkMaxInputsAutoLogged;
 
@@ -61,16 +62,19 @@ public class DriveSubsystemTest {
     m_rRearRotateMotor = mock(SparkMax.class);
     m_ledStrip = mock(LEDStrip.class);
 
-    SparkMaxInputsAutoLogged inputs = new SparkMaxInputsAutoLogged();
+    NavX2InputsAutoLogged navxInputs = new NavX2InputsAutoLogged();
+    when(m_navx.getInputs()).thenReturn(navxInputs);
+
+    SparkMaxInputsAutoLogged sparkMaxInputs = new SparkMaxInputsAutoLogged();
     
-    when(m_lFrontDriveMotor.getInputs()).thenReturn(inputs);
-    when(m_lFrontRotateMotor.getInputs()).thenReturn(inputs);
-    when(m_rFrontDriveMotor.getInputs()).thenReturn(inputs);
-    when(m_rFrontRotateMotor.getInputs()).thenReturn(inputs);
-    when(m_lRearDriveMotor.getInputs()).thenReturn(inputs);
-    when(m_lRearRotateMotor.getInputs()).thenReturn(inputs);
-    when(m_rRearDriveMotor.getInputs()).thenReturn(inputs);
-    when(m_rRearRotateMotor.getInputs()).thenReturn(inputs);
+    when(m_lFrontDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
+    when(m_lFrontRotateMotor.getInputs()).thenReturn(sparkMaxInputs);
+    when(m_rFrontDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
+    when(m_rFrontRotateMotor.getInputs()).thenReturn(sparkMaxInputs);
+    when(m_lRearDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
+    when(m_lRearRotateMotor.getInputs()).thenReturn(sparkMaxInputs);
+    when(m_rRearDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
+    when(m_rRearRotateMotor.getInputs()).thenReturn(sparkMaxInputs);
 
     // Create hardware object using mock devices
     m_drivetrainHardware = new DriveSubsystem.Hardware(
@@ -155,10 +159,10 @@ public class DriveSubsystemTest {
   @DisplayName("Test if robot can drive forward")
   public void forward() {
     // Hardcode sensor values
-    when(m_navx.getRate()).thenReturn(0.0);
-    when(m_navx.getAngle()).thenReturn(0.0);
-    when(m_navx.getVelocityX()).thenReturn((float)0.0);
-    when(m_navx.getVelocityY()).thenReturn((float)+DriveSubsystem.DRIVE_MAX_LINEAR_SPEED);
+    NavX2InputsAutoLogged inputs = new NavX2InputsAutoLogged(); 
+    inputs.yVelocity = +DriveSubsystem.DRIVE_MAX_LINEAR_SPEED;
+
+    when(m_navx.getInputs()).thenReturn(inputs);
 
     // Try to drive forward
     m_driveSubsystem.teleopPID(+1.0, 0.0, 0.0);
@@ -179,10 +183,10 @@ public class DriveSubsystemTest {
   @DisplayName("Test if robot can drive in reverse")
   public void reverse() {
     // Hardcode sensor values
-    when(m_navx.getRate()).thenReturn(0.0);
-    when(m_navx.getAngle()).thenReturn(0.0);
-    when(m_navx.getVelocityX()).thenReturn((float)0.0);
-    when(m_navx.getVelocityY()).thenReturn((float)-DriveSubsystem.DRIVE_MAX_LINEAR_SPEED);
+    NavX2InputsAutoLogged inputs = new NavX2InputsAutoLogged(); 
+    inputs.yVelocity = -DriveSubsystem.DRIVE_MAX_LINEAR_SPEED;
+
+    when(m_navx.getInputs()).thenReturn(inputs);
 
     // Try to drive in reverse
     m_driveSubsystem.teleopPID(-1.0, 0.0, 0.0);
@@ -203,10 +207,10 @@ public class DriveSubsystemTest {
   @DisplayName("Test if robot can strafe left")
   public void strafeLeft() {
     // Hardcode sensor values
-    when(m_navx.getRate()).thenReturn(0.0);
-    when(m_navx.getAngle()).thenReturn(0.0);
-    when(m_navx.getVelocityX()).thenReturn((float)+DriveSubsystem.DRIVE_MAX_LINEAR_SPEED);
-    when(m_navx.getVelocityY()).thenReturn((float)0.0);
+    NavX2InputsAutoLogged inputs = new NavX2InputsAutoLogged(); 
+    inputs.xVelocity = +DriveSubsystem.DRIVE_MAX_LINEAR_SPEED;
+
+    when(m_navx.getInputs()).thenReturn(inputs);
 
     // Try to strafe left
     m_driveSubsystem.teleopPID(0.0, +1.0, 0.0);
@@ -227,10 +231,10 @@ public class DriveSubsystemTest {
   @DisplayName("Test if robot can strafe right")
   public void strafeRight() {
     // Hardcode sensor values
-    when(m_navx.getRate()).thenReturn(0.0);
-    when(m_navx.getAngle()).thenReturn(0.0);
-    when(m_navx.getVelocityX()).thenReturn((float)-DriveSubsystem.DRIVE_MAX_LINEAR_SPEED);
-    when(m_navx.getVelocityY()).thenReturn((float)0.0);
+    NavX2InputsAutoLogged inputs = new NavX2InputsAutoLogged(); 
+    inputs.xVelocity = -DriveSubsystem.DRIVE_MAX_LINEAR_SPEED;
+
+    when(m_navx.getInputs()).thenReturn(inputs);
 
     // Try to strafe right
     m_driveSubsystem.teleopPID(0.0, -1.0, 0.0);
@@ -251,10 +255,10 @@ public class DriveSubsystemTest {
   @DisplayName("Test if robot can rotate left")
   public void rotateLeft() {
     // Hardcode sensor values
-    when(m_navx.getRate()).thenReturn(90.0);
-    when(m_navx.getAngle()).thenReturn(0.0);
-    when(m_navx.getVelocityX()).thenReturn((float)0.0);
-    when(m_navx.getVelocityY()).thenReturn((float)0.0);
+    NavX2InputsAutoLogged inputs = new NavX2InputsAutoLogged(); 
+    inputs.yawRate = 90.0;
+
+    when(m_navx.getInputs()).thenReturn(inputs);
 
     // Try to rotate left
     m_driveSubsystem.teleopPID(0.0, 0.0, +1.0);
@@ -275,10 +279,10 @@ public class DriveSubsystemTest {
   @DisplayName("Test if robot can rotate right")
   public void rotateRight() {
     // Hardcode sensor values
-    when(m_navx.getRate()).thenReturn(90.0);
-    when(m_navx.getAngle()).thenReturn(0.0);
-    when(m_navx.getVelocityX()).thenReturn((float)0.0);
-    when(m_navx.getVelocityY()).thenReturn((float)0.0);
+    NavX2InputsAutoLogged inputs = new NavX2InputsAutoLogged(); 
+    inputs.yawRate = 90.0;
+
+    when(m_navx.getInputs()).thenReturn(inputs);
 
     // Try to rotate right
     m_driveSubsystem.teleopPID(0.0, 0.0, -1.0);
@@ -298,12 +302,6 @@ public class DriveSubsystemTest {
   @Order(7)
   @DisplayName("Test if robot can stop")
   public void stop() {
-    // Hardcode sensor values
-    when(m_navx.getRate()).thenReturn(0.0);
-    when(m_navx.getAngle()).thenReturn(0.0);
-    when(m_navx.getVelocityX()).thenReturn((float)0.0);
-    when(m_navx.getVelocityY()).thenReturn((float)0.0);
-
     // Try to stop
     m_driveSubsystem.teleopPID(0.0, 0.0, 0.0);
 
@@ -322,12 +320,6 @@ public class DriveSubsystemTest {
   @Order(8)
   @DisplayName("Test if robot can lock swerve modules")
   public void lock() {
-  // Hardcode sensor values
-    when(m_navx.getRate()).thenReturn(0.0);
-    when(m_navx.getAngle()).thenReturn(0.0);
-    when(m_navx.getVelocityX()).thenReturn((float)0.0);
-    when(m_navx.getVelocityY()).thenReturn((float)0.0);
-
     // Try to lock swerve modules
     m_driveSubsystem.lock();
 
@@ -347,10 +339,10 @@ public class DriveSubsystemTest {
   @DisplayName("Test if robot can maintain orientation")
   public void maintainOrientation() {
     // Hardcode sensor values
-    when(m_navx.getRate()).thenReturn(0.0);
-    when(m_navx.getAngle()).thenReturn(+30.0);
-    when(m_navx.getVelocityX()).thenReturn((float)0.0);
-    when(m_navx.getVelocityY()).thenReturn((float)0.0);
+    NavX2InputsAutoLogged inputs = new NavX2InputsAutoLogged(); 
+    inputs.yawAngle = +30.0;
+
+    when(m_navx.getInputs()).thenReturn(inputs);
 
     // Try to stay still
     m_driveSubsystem.teleopPID(0.0, 0.0, 0.0);
@@ -371,18 +363,13 @@ public class DriveSubsystemTest {
   @DisplayName("Test if robot can limit wheel slip")
   public void tractionControl() {
     // Hardcode sensor values
-    when(m_navx.getRate()).thenReturn(0.0);
-    when(m_navx.getAngle()).thenReturn(0.0);
-    when(m_navx.getVelocityX()).thenReturn((float)0.0);
-    when(m_navx.getVelocityY()).thenReturn((float)0.0);
+    SparkMaxInputsAutoLogged sparkMaxInputs = new SparkMaxInputsAutoLogged();
+    sparkMaxInputs.encoderVelocity = +1.0;
 
-    SparkMaxInputsAutoLogged inputs = new SparkMaxInputsAutoLogged();
-    inputs.encoderVelocity = +1.0;
-
-    when(m_lFrontDriveMotor.getInputs()).thenReturn(inputs);
-    when(m_rFrontDriveMotor.getInputs()).thenReturn(inputs);
-    when(m_lRearDriveMotor.getInputs()).thenReturn(inputs);
-    when(m_rRearDriveMotor.getInputs()).thenReturn(inputs);
+    when(m_lFrontDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
+    when(m_rFrontDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
+    when(m_lRearDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
+    when(m_rRearDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
 
     // Try to drive forward with traction control
     m_driveSubsystem.enableTractionControl();
@@ -404,18 +391,13 @@ public class DriveSubsystemTest {
   @DisplayName("Test if robot can disable traction control")
   public void disableTractionControl() {
     // Hardcode sensor values
-    when(m_navx.getRate()).thenReturn(0.0);
-    when(m_navx.getAngle()).thenReturn(0.0);
-    when(m_navx.getVelocityX()).thenReturn((float)0.0);
-    when(m_navx.getVelocityY()).thenReturn((float)0.0);
+    SparkMaxInputsAutoLogged sparkMaxInputs = new SparkMaxInputsAutoLogged();
+    sparkMaxInputs.encoderVelocity = +1.0;
 
-    SparkMaxInputsAutoLogged inputs = new SparkMaxInputsAutoLogged();
-    inputs.encoderVelocity = +1.0;
-
-    when(m_lFrontDriveMotor.getInputs()).thenReturn(inputs);
-    when(m_rFrontDriveMotor.getInputs()).thenReturn(inputs);
-    when(m_lRearDriveMotor.getInputs()).thenReturn(inputs);
-    when(m_rRearDriveMotor.getInputs()).thenReturn(inputs);
+    when(m_lFrontDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
+    when(m_rFrontDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
+    when(m_lRearDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
+    when(m_rRearDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
 
     // Try to drive forward without traction control
     m_driveSubsystem.disableTractionControl();
@@ -436,13 +418,6 @@ public class DriveSubsystemTest {
   @Order(12)
   @DisplayName("Test if robot can rotate left towards specified point")
   public void rotateLeftTowardsPoint() { 
-    // Hardcode sensor values
-    when(m_navx.getRate()).thenReturn(0.0);
-    when(m_navx.getAngle()).thenReturn(0.0);
-    when(m_navx.getVelocityX()).thenReturn((float)0.0);
-    when(m_navx.getVelocityY()).thenReturn((float)0.0);
-    when(m_navx.getRotation2d()).thenReturn(Rotation2d.fromDegrees(0.0));
-
     // Rotate left towards point
     m_driveSubsystem.resetPose(new Pose2d(Constants.Field.FIELD_LENGTH / 2, Constants.Field.FIELD_WIDTH / 2, Rotation2d.fromDegrees(0.0)));
     m_driveSubsystem.orientTowardsPoint(new Translation2d(0.0, 0.0));
@@ -462,13 +437,6 @@ public class DriveSubsystemTest {
   @Order(13)
   @DisplayName("Test if robot can rotate right towards specified point")
   public void rotateRightTowardsPoint() {
-    // Hardcode sensor values
-    when(m_navx.getRate()).thenReturn(0.0);
-    when(m_navx.getAngle()).thenReturn(0.0);
-    when(m_navx.getVelocityX()).thenReturn((float)0.0);
-    when(m_navx.getVelocityY()).thenReturn((float)0.0);
-    when(m_navx.getRotation2d()).thenReturn(Rotation2d.fromDegrees(0.0));
-
     // Rotate right towards point
     m_driveSubsystem.resetPose(new Pose2d(Constants.Field.FIELD_LENGTH / 2, Constants.Field.FIELD_WIDTH / 2, Rotation2d.fromDegrees(0.0)));
     m_driveSubsystem.orientTowardsPoint(new Translation2d(0.0, Constants.Field.FIELD_WIDTH));
@@ -490,11 +458,11 @@ public class DriveSubsystemTest {
   public void stopOrientationAtPoint() {
     // Hardcode sensor values
     double desiredAngle = Math.toDegrees(Math.atan2(-Constants.Field.FIELD_WIDTH / 2, Constants.Field.FIELD_LENGTH / 2));
-    when(m_navx.getRate()).thenReturn(0.0);
-    when(m_navx.getAngle()).thenReturn(0.0);
-    when(m_navx.getVelocityX()).thenReturn((float)0.0);
-    when(m_navx.getVelocityY()).thenReturn((float)0.0);
-    when(m_navx.getRotation2d()).thenReturn(Rotation2d.fromDegrees(desiredAngle));
+
+    NavX2InputsAutoLogged inputs = new NavX2InputsAutoLogged(); 
+    inputs.rotation2d = Rotation2d.fromDegrees(desiredAngle);
+
+    when(m_navx.getInputs()).thenReturn(inputs);
     
     // Set robot at right angle
     m_driveSubsystem.resetPose(new Pose2d(Constants.Field.FIELD_LENGTH / 2, Constants.Field.FIELD_WIDTH / 2, Rotation2d.fromDegrees(desiredAngle)));
@@ -518,11 +486,11 @@ public class DriveSubsystemTest {
     // Hardcode sensor values
     double desiredAngle = Math.toDegrees(Math.atan2(-Constants.Field.FIELD_LENGTH / 2, -Constants.Field.FIELD_WIDTH / 2));
     double actualAngle = 0.0;
-    when(m_navx.getRate()).thenReturn(0.0);
-    when(m_navx.getAngle()).thenReturn(0.0);
-    when(m_navx.getVelocityX()).thenReturn((float)0.0);
-    when(m_navx.getVelocityY()).thenReturn((float)0.0);
-    when(m_navx.getRotation2d()).thenReturn(Rotation2d.fromDegrees(actualAngle));
+
+    NavX2InputsAutoLogged inputs = new NavX2InputsAutoLogged();
+    inputs.rotation2d = Rotation2d.fromDegrees(actualAngle);
+
+    when(m_navx.getInputs()).thenReturn(inputs);
     
     // Set robot at right angle
     m_driveSubsystem.resetPose(new Pose2d(Constants.Field.FIELD_LENGTH / 2, Constants.Field.FIELD_WIDTH / 2, Rotation2d.fromDegrees(actualAngle)));
@@ -531,7 +499,9 @@ public class DriveSubsystemTest {
     while (actualAngle > desiredAngle) {
       m_driveSubsystem.orientTowardsPoint(new Translation2d(0.0, 0.0));
       actualAngle -= 0.5;
-      when(m_navx.getRotation2d()).thenReturn(Rotation2d.fromDegrees(actualAngle));
+
+      inputs.rotation2d = Rotation2d.fromDegrees(actualAngle);
+      when(m_navx.getInputs()).thenReturn(inputs);
       
       // Verify that motors are being driven with expected values
       verify(m_lFrontDriveMotor, times(invocations)).set(AdditionalMatchers.gt(0.0), ArgumentMatchers.eq(ControlType.kVelocity));
@@ -554,11 +524,11 @@ public class DriveSubsystemTest {
     // Hardcode sensor values
     double desiredAngle = Math.toDegrees(Math.atan2(-Constants.Field.FIELD_WIDTH / 2, Constants.Field.FIELD_LENGTH / 2));
     double actualAngle = 0.0;
-    when(m_navx.getRate()).thenReturn(0.0);
-    when(m_navx.getAngle()).thenReturn(0.0);
-    when(m_navx.getVelocityX()).thenReturn((float)0.0);
-    when(m_navx.getVelocityY()).thenReturn((float)0.0);
-    when(m_navx.getRotation2d()).thenReturn(Rotation2d.fromDegrees(actualAngle));
+    
+    NavX2InputsAutoLogged inputs = new NavX2InputsAutoLogged(); 
+    inputs.rotation2d = Rotation2d.fromDegrees(actualAngle);
+
+    when(m_navx.getInputs()).thenReturn(inputs);
     
     // Set robot at right angle
     m_driveSubsystem.resetPose(new Pose2d(Constants.Field.FIELD_LENGTH / 2, Constants.Field.FIELD_WIDTH / 2, Rotation2d.fromDegrees(actualAngle)));
@@ -567,7 +537,9 @@ public class DriveSubsystemTest {
     while (actualAngle > desiredAngle) {
       m_driveSubsystem.orientTowardsPoint(new Translation2d(0.0, Constants.Field.FIELD_WIDTH));
       actualAngle -= 0.5;
-      when(m_navx.getRotation2d()).thenReturn(Rotation2d.fromDegrees(actualAngle));
+
+      inputs.rotation2d = Rotation2d.fromDegrees(actualAngle);
+      when(m_navx.getInputs()).thenReturn(inputs);
       
       // Verify that motors are being driven with expected values
       verify(m_lFrontDriveMotor, times(invocations)).set(AdditionalMatchers.lt(0.0), ArgumentMatchers.eq(ControlType.kVelocity));

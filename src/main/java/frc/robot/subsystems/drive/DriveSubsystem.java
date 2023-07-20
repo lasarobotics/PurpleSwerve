@@ -360,7 +360,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     List<EstimatedRobotPose> visionEstimatedRobotPoses = VisionSubsystem.getInstance().getEstimatedGlobalPose(getPose());
 
     // Update pose based on odometry
-    m_poseEstimator.update(m_navx.getRotation2d(), getModulePositions());
+    m_poseEstimator.update(m_navx.getInputs().rotation2d, getModulePositions());
 
     // Exit if no valid vision pose estimates
     if (visionEstimatedRobotPoses.isEmpty()) return;
@@ -528,7 +528,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    */
   public void resetPose(Pose2d pose) {
     resetEncoders();
-    m_poseEstimator.resetPosition(m_navx.getRotation2d(), getModulePositions(), pose);
+    m_poseEstimator.resetPosition(m_navx.getInputs().rotation2d, getModulePositions(), pose);
   }
 
   /**
@@ -571,7 +571,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @return Inertial velocity of robot in m/s
    */
   public double getInertialVelocity() {
-    return Math.hypot(m_navx.getVelocityX(), m_navx.getVelocityY());
+    return Math.hypot(m_navx.getInputs().xVelocity, m_navx.getInputs().yVelocity);
   }
 
   /**
@@ -580,7 +580,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    */
   public double getPitch() {
     // Robot pitch axis is navX pitch axis
-    return m_navx.getPitch();
+    return m_navx.getInputs().pitchAngle;
   }
 
   /**
@@ -589,7 +589,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    */
   public double getRoll() {
     // Robot roll axis is navX roll axis
-    return m_navx.getRoll();
+    return m_navx.getInputs().rollAngle;
   }
 
   /**
@@ -597,7 +597,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @return Current angle of robot in degrees
    */
   public double getAngle() {
-    return m_navx.getAngle();
+    return m_navx.getInputs().yawAngle;
   }
 
   /**
@@ -605,7 +605,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @return Current rotate rate of robot (degrees/s)
    */
   public double getRotateRate() {
-    return m_navx.getRate();
+    return m_navx.getInputs().yawRate;
   }
 
   @Override
