@@ -24,7 +24,6 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
@@ -179,7 +178,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @return Hardware object containing all necessary devices for this subsystem
    */
   public static Hardware initializeHardware(boolean isHardwareReal) {
-    NavX2 navx = new NavX2(Constants.DriveHardware.NAVX_ID, SPI.Port.kMXP, (byte)(Constants.Global.ROBOT_LOOP_PERIOD * 2));
+    NavX2 navx = new NavX2(Constants.DriveHardware.NAVX_ID, Constants.Global.ROBOT_LOOP_HZ);
 
     MAXSwerveModule lFrontModule = new MAXSwerveModule(
       MAXSwerveModule.initializeHardware(

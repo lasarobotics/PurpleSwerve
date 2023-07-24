@@ -61,7 +61,7 @@ public class SparkMax implements AutoCloseable {
   private SparkMaxInputsAutoLogged m_inputs;
 
   /**
-   * Create a Spark Max object that is unit-testing friendly
+   * Create a Spark Max object that is unit-testing friendly and with built-in logging
    * @param deviceID The device ID
    * @param motorType The motor type connected to the controller
    */

@@ -32,7 +32,6 @@ import frc.robot.utils.NavX2;
 import frc.robot.utils.NavX2InputsAutoLogged;
 import frc.robot.utils.SparkMax;
 import frc.robot.utils.SparkMaxInputsAutoLogged;
-import frc.robot.utils.NavX2.NavX2Inputs;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class AntiTipCommandTest {
@@ -70,7 +69,6 @@ public class AntiTipCommandTest {
     when(m_navx.getInputs()).thenReturn(navxInputs);
 
     SparkMaxInputsAutoLogged sparkMaxInputs = new SparkMaxInputsAutoLogged();
-    
     when(m_lFrontDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
     when(m_lFrontRotateMotor.getInputs()).thenReturn(sparkMaxInputs);
     when(m_rFrontDriveMotor.getInputs()).thenReturn(sparkMaxInputs);

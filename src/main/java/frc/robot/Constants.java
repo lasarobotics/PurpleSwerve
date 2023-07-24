@@ -29,18 +29,19 @@ import frc.robot.utils.SparkPIDConfig;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
-  public static class Field {
-    public static final double FIELD_WIDTH = 8.1026;
-    public static final double FIELD_LENGTH = 16.4846;
-  }
-
   public static class Global {
-    public static final double ROBOT_LOOP_PERIOD = 1.0 / 50.0;
+    public static final int ROBOT_LOOP_HZ = 50;
+    public static final double ROBOT_LOOP_PERIOD = 1.0 / ROBOT_LOOP_HZ;
 
     // Motor RPMs, encoder values, and gear ratios
     public static final int NEO_MAX_RPM = 5676;
     public static final int NEO_ENCODER_TICKS_PER_ROTATION = 42;
     public static final int REV_ENCODER_TICKS_PER_ROTATION = 8192;
+  }
+
+  public static class Field {
+    public static final double FIELD_WIDTH = 8.1026;
+    public static final double FIELD_LENGTH = 16.4846;
   }
 
   public static class HID {

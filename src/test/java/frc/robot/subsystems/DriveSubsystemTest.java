@@ -66,7 +66,6 @@ public class DriveSubsystemTest {
     when(m_navx.getInputs()).thenReturn(navxInputs);
 
     SparkMaxInputsAutoLogged sparkMaxInputs = new SparkMaxInputsAutoLogged();
-    
     when(m_lFrontDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
     when(m_lFrontRotateMotor.getInputs()).thenReturn(sparkMaxInputs);
     when(m_rFrontDriveMotor.getInputs()).thenReturn(sparkMaxInputs);

@@ -38,13 +38,12 @@ public class NavX2 implements AutoCloseable {
   private NavX2InputsAutoLogged m_inputs;
 
   /**
-   * Create a NavX2 object with built in logging
-   * @param spiPortId SPI Port to use
-   * @param updateRateHZ Custom Update Rate (Hz)
+   * Create a NavX2 object with built-in logging
+   * @param updateRate Custom update rate (Hz)
    */
-  public NavX2(ID id, SPI.Port spiPortId, byte updateRateHZ) {
+  public NavX2(ID id, int updateRate) {
     this.m_name = id.name;
-    this.m_navx = new AHRS(spiPortId, updateRateHZ);
+    this.m_navx = new AHRS(SPI.Port.kMXP, (byte)updateRate);
     this.m_inputs = new NavX2InputsAutoLogged();
   }
 
