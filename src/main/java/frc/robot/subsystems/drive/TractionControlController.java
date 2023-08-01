@@ -5,6 +5,7 @@
 package frc.robot.subsystems.drive;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.LinearFilter;
 import frc.robot.Constants;
 
@@ -25,6 +26,7 @@ public class TractionControlController {
   private final double MIN_SLIP_RATIO = 0.01;
   private final double MAX_SLIP_RATIO = 0.40;
   private final int FILTER_TIME_CONSTANT_MULTIPLIER = 5;
+  private final int DEBOUNCER_TIME_CONSTANT_MULTIPLIER = 5;
 
   private double m_averageWheelSpeed = 0.0;
   private double m_optimalSlipRatio = 0.0;
@@ -34,7 +36,7 @@ public class TractionControlController {
   private State m_state = State.ENABLED;
 
   private LinearFilter m_speedFilter;
-  private LinearFilter m_outputFilter;
+  private Debouncer m_slippingDebouncer;
 
   /**
    * Create an instance of TractionControlController
@@ -48,9 +50,9 @@ public class TractionControlController {
       Constants.Global.ROBOT_LOOP_PERIOD * FILTER_TIME_CONSTANT_MULTIPLIER,
       Constants.Global.ROBOT_LOOP_PERIOD
     );
-    this.m_outputFilter = LinearFilter.singlePoleIIR(
-      Constants.Global.ROBOT_LOOP_PERIOD * FILTER_TIME_CONSTANT_MULTIPLIER,
-      Constants.Global.ROBOT_LOOP_PERIOD
+    this.m_slippingDebouncer = new Debouncer(
+      Constants.Global.ROBOT_LOOP_PERIOD * DEBOUNCER_TIME_CONSTANT_MULTIPLIER,
+      Debouncer.DebounceType.kFalling
     );
   }
 
@@ -59,10 +61,10 @@ public class TractionControlController {
     m_averageWheelSpeed = m_speedFilter.calculate(wheelSpeed);
 
     // Calculate current slip ratio
-    m_currentSlipRatio = ((wheelSpeed - m_averageWheelSpeed) / inertialVelocity) * m_state.ordinal();
+    m_currentSlipRatio = ((wheelSpeed - m_averageWheelSpeed) / inertialVelocity);
 
-    // Check if wheel is slipping
-    m_isSlipping = m_currentSlipRatio > m_optimalSlipRatio;
+    // Check if wheel is slipping, false if disabled
+    m_isSlipping = m_slippingDebouncer.calculate(m_currentSlipRatio > m_optimalSlipRatio) & isEnabled();
   }
 
   /**
@@ -82,12 +84,8 @@ public class TractionControlController {
     // Apply basic traction control
     // Limit wheel speed if slipping excessively
     updateSlipRatio(wheelSpeed, inertialVelocity);
-    if (m_isSlipping) 
+    if (isSlipping())
       velocityOutput = Math.copySign(m_optimalSlipRatio * inertialVelocity + m_averageWheelSpeed, velocityRequest);
-
-    // Filter velocity output if TC enabled
-    velocityOutput = (m_state.ordinal() & 1) * m_outputFilter.calculate(velocityOutput) 
-                   + (~m_state.ordinal() & 1) * velocityOutput;
 
     // Return corrected velocity output, clamping to max linear speed
     return MathUtil.clamp(velocityOutput, -m_maxLinearSpeed, +m_maxLinearSpeed);
@@ -107,7 +105,6 @@ public class TractionControlController {
   public void toggleTractionControl() {
     m_state = m_state.toggle();
     m_speedFilter.reset();
-    m_outputFilter.reset();
   }
 
   /**
@@ -116,7 +113,6 @@ public class TractionControlController {
   public void enableTractionControl() {
     m_state = State.ENABLED;
     m_speedFilter.reset();
-    m_outputFilter.reset();
   }
 
   /**
@@ -125,7 +121,6 @@ public class TractionControlController {
   public void disableTractionControl() {
     m_state = State.DISABLED;
     m_speedFilter.reset();
-    m_outputFilter.reset();
   }
 
   /**
