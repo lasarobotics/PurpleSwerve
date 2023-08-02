@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import frc.robot.subsystems.drive.DriveSubsystem;
+import frc.robot.subsystems.led.LEDStrip;
 import frc.robot.utils.NavX2;
 import frc.robot.utils.PIDConstants;
 import frc.robot.utils.SparkMax;
@@ -113,19 +114,16 @@ public final class Constants {
   }
 
   public static class DriveHardware {
-    public static final SparkMax.ID LEFT_FRONT_DRIVE_MOTOR_ID = new SparkMax.ID(2, "DriveHardware/Swerve/LeftFront/Drive");
-    public static final SparkMax.ID LEFT_FRONT_ROTATE_MOTOR_ID = new SparkMax.ID(3, "DriveHardware/Swerve/LeftFront/Rotate");
-    public static final SparkMax.ID RIGHT_FRONT_DRIVE_MOTOR_ID = new SparkMax.ID(4, "DriveHardware/Swerve/RightFront/Drive");
-    public static final SparkMax.ID RIGHT_FRONT_ROTATE_MOTOR_ID = new SparkMax.ID(5, "DriveHardware/Swerve/RightFront/Rotate");
-    public static final SparkMax.ID LEFT_REAR_DRIVE_MOTOR_ID = new SparkMax.ID(6, "DriveHardware/Swerve/LeftRear/Drive");
-    public static final SparkMax.ID LEFT_REAR_ROTATE_MOTOR_ID = new SparkMax.ID(7, "DriveHardware/Swerve/LeftRear/Rotate");
-    public static final SparkMax.ID RIGHT_REAR_DRIVE_MOTOR_ID = new SparkMax.ID(8, "DriveHardware/Swerve/RightRear/Drive");
-    public static final SparkMax.ID RIGHT_REAR_ROTATE_MOTOR_ID = new SparkMax.ID(9, "DriveHardware/Swerve/RightRear/Rotate");
-
     public static final NavX2.ID NAVX_ID = new NavX2.ID("DriveHardware/NavX2");
-
-    public static final int LED_STRIP_PORT = 0;
-    public static final int LED_STRIP_LENGTH = 200;
+    public static final SparkMax.ID LEFT_FRONT_DRIVE_MOTOR_ID = new SparkMax.ID("DriveHardware/Swerve/LeftFront/Drive", 2);
+    public static final SparkMax.ID LEFT_FRONT_ROTATE_MOTOR_ID = new SparkMax.ID("DriveHardware/Swerve/LeftFront/Rotate", 3);
+    public static final SparkMax.ID RIGHT_FRONT_DRIVE_MOTOR_ID = new SparkMax.ID("DriveHardware/Swerve/RightFront/Drive", 4);
+    public static final SparkMax.ID RIGHT_FRONT_ROTATE_MOTOR_ID = new SparkMax.ID("DriveHardware/Swerve/RightFront/Rotate", 5);
+    public static final SparkMax.ID LEFT_REAR_DRIVE_MOTOR_ID = new SparkMax.ID("DriveHardware/Swerve/LeftRear/Drive", 6);
+    public static final SparkMax.ID LEFT_REAR_ROTATE_MOTOR_ID = new SparkMax.ID("DriveHardware/Swerve/LeftRear/Rotate", 7);
+    public static final SparkMax.ID RIGHT_REAR_DRIVE_MOTOR_ID = new SparkMax.ID("DriveHardware/Swerve/RightRear/Drive", 8);
+    public static final SparkMax.ID RIGHT_REAR_ROTATE_MOTOR_ID = new SparkMax.ID("DriveHardware/Swerve/RightRear/Rotate", 9);
+    public static final LEDStrip.ID LED_STRIP_ID = new LEDStrip.ID("DriveHardware/LEDStrip", 0, 200);
   }
 
   public static class VisionHardware {

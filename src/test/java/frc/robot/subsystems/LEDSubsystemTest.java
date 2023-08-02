@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,10 +19,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.mockito.ArgumentCaptor;
 
-import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.util.Color;
 import frc.robot.subsystems.led.LEDStrip;
+import frc.robot.subsystems.led.LEDStrip.AddressableLED;
 import frc.robot.subsystems.led.LEDStrip.Hardware;
 import frc.robot.subsystems.led.LEDStrip.Pattern;
 import frc.robot.subsystems.led.LEDStrip.Section;
@@ -47,9 +48,13 @@ public class LEDSubsystemTest {
     m_leds1 = mock(AddressableLED.class);
     m_leds2 = mock(AddressableLED.class);
 
+    // Return length for unit tests
+    when(m_leds1.getLength()).thenReturn(LENGTH);
+    when(m_leds2.getLength()).thenReturn(LENGTH);
+
     // Create LED strip objects
-    m_ledStrip1 = new LEDStrip(new Hardware(MOCK_HARDWARE, m_leds1), LENGTH);
-    m_ledStrip2 = new LEDStrip(new Hardware(MOCK_HARDWARE, m_leds2), LENGTH);
+    m_ledStrip1 = new LEDStrip(new Hardware(MOCK_HARDWARE, m_leds1));
+    m_ledStrip2 = new LEDStrip(new Hardware(MOCK_HARDWARE, m_leds2));
 
     // Create LEDSubsystem object
     m_ledSubsystem = LEDSubsystem.getInstance();

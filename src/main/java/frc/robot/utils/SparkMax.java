@@ -26,9 +26,9 @@ public class SparkMax implements AutoCloseable {
     public final int deviceID;
     public final String name;
 
-    public ID(int deviceID, String name) {
-      this.deviceID = deviceID;
+    public ID(String name, int deviceID) {
       this.name = name;
+      this.deviceID = deviceID;
     }
   }
 

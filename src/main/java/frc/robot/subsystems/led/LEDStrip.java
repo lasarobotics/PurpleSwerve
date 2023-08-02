@@ -8,7 +8,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 
-import edu.wpi.first.wpilibj.AddressableLED;
+import org.littletonrobotics.junction.Logger;
+
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.util.Color;
@@ -16,6 +17,18 @@ import edu.wpi.first.wpilibj.util.Color;
 /** LED Strip */
 public class LEDStrip implements AutoCloseable {
   public static final Color TEAM_COLOR = new Color(0x66, 0x33, 0x99);
+
+  public static class ID {
+    public final String name;
+    public final int port;
+    public final int length;
+
+    public ID(String name, int port, int length) {
+      this.name = name;
+      this.port = port;
+      this.length = length;
+    }
+  }
 
   public static class Hardware {
     boolean isHardwareReal;
@@ -193,6 +206,23 @@ public class LEDStrip implements AutoCloseable {
     SOLID, STROBE, BREATHE, WAVE, RAINBOW;
   }
 
+  public static class AddressableLED extends edu.wpi.first.wpilibj.AddressableLED {
+    private final String m_name;
+    private final int m_length;
+
+    public AddressableLED(String name, int port, int length) {
+      super(port);
+      this.m_name = name;
+      this.m_length = length;
+
+      setLength(length);
+    }
+
+    public String getName() { return m_name; }
+
+    public int getLength() { return m_length; }
+  }
+
   private AddressableLED m_leds;
   private AddressableLEDBuffer m_buffer;
   private HashMap<Section[], Pattern> m_sectionLEDPatterns, m_tempLEDPatterns;
@@ -208,11 +238,11 @@ public class LEDStrip implements AutoCloseable {
   /**
    * Create an instance of an LED strip
    * @param ledStripHardware Hardware devices required by LED strip
-   * @param length Number of LEDs in strip
+   * @param m_length Number of LEDs in strip
    */
-  public LEDStrip(Hardware ledStripHardware, int length) {
+  public LEDStrip(Hardware ledStripHardware) {
     this.m_leds = ledStripHardware.ledStrip;
-    this.m_buffer = new AddressableLEDBuffer(length);
+    this.m_buffer = new AddressableLEDBuffer(m_leds.getLength());
     this.m_sectionLEDPatterns = new HashMap<Section[], Pattern>();
     this.m_tempLEDPatterns = new HashMap<Section[], Pattern>();
 
@@ -223,10 +253,10 @@ public class LEDStrip implements AutoCloseable {
    * Initialize hardware devices for LED strip
    * 
    * @param ledStripPort PWM port for LED strip
-   * @return Hardware object containing all necessary devices for this subsystem
+   * @return Hardware object containing all necessary devices
    */
-  public static Hardware initializeHardware(boolean isHardwareReal, int ledStripPort) {
-    Hardware ledStripHardware = new Hardware(isHardwareReal, new AddressableLED(ledStripPort));
+  public static Hardware initializeHardware(boolean isHardwareReal, ID id) {
+    Hardware ledStripHardware = new Hardware(isHardwareReal, new AddressableLED(id.name, id.port, id.length));
 
     return ledStripHardware;
   }
@@ -332,29 +362,6 @@ public class LEDStrip implements AutoCloseable {
   }
 
   /**
-   * Set pattern and color of LED strip
-   * @param pattern Desired pattern
-   */
-  public void set(Pattern pattern) {
-    set(pattern, Section.FULL);
-  }
-
-  /**
-   * Set pattern and color of LED strip sections
-   * @param pattern Desired pattern
-   * @param sections LED strip sections to set
-   */
-  public void set(Pattern pattern, Section... sections) {
-    // Remove all conflicting scheduled LED patterns
-    m_sectionLEDPatterns.entrySet().removeIf(
-      (entry) -> !Collections.disjoint(Arrays.asList(entry.getKey()), Arrays.asList(sections))
-    );
-
-    // Schedule LED pattern
-    m_sectionLEDPatterns.put(sections, pattern);
-  }
-
-  /**
    * Update LED strip pattern
    */
   protected void update() {
@@ -379,6 +386,41 @@ public class LEDStrip implements AutoCloseable {
   protected void endOverride() {
     m_sectionLEDPatterns.clear();
     m_sectionLEDPatterns.putAll(m_tempLEDPatterns);
+  }
+
+  /**
+   * Get latest LED buffer
+   * @return Addressable LED buffer
+   */
+  public AddressableLEDBuffer getBuffer() {
+    return m_buffer;
+  }
+
+  /**
+   * Set pattern and color of LED strip
+   * @param pattern Desired pattern
+   */
+  public void set(Pattern pattern) {
+    set(pattern, Section.FULL);
+  }
+
+  /**
+   * Set pattern and color of LED strip sections
+   * @param pattern Desired pattern
+   * @param sections LED strip sections to set
+   */
+  public void set(Pattern pattern, Section... sections) {
+    // Remove all conflicting scheduled LED patterns
+    m_sectionLEDPatterns.entrySet().removeIf(
+      (entry) -> !Collections.disjoint(Arrays.asList(entry.getKey()), Arrays.asList(sections))
+    );
+
+    // Schedule LED pattern
+    m_sectionLEDPatterns.put(sections, pattern);
+
+    // Log patterns
+    for (Section section : sections)
+      Logger.getInstance().recordOutput(String.join("/", m_leds.getName(), section.name()), pattern.name());
   }
 
   /**

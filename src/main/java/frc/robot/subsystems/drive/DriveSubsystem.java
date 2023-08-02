@@ -249,8 +249,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     );
 
     LEDStrip ledStrip = new LEDStrip(
-      LEDStrip.initializeHardware(isHardwareReal, Constants.DriveHardware.LED_STRIP_PORT),
-      Constants.DriveHardware.LED_STRIP_LENGTH
+      LEDStrip.initializeHardware(isHardwareReal, Constants.DriveHardware.LED_STRIP_ID)
     );
 
     Hardware drivetrainHardware = new Hardware(isHardwareReal, navx, lFrontModule, rFrontModule, lRearModule, rRearModule, ledStrip);
