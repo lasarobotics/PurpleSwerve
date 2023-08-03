@@ -7,7 +7,6 @@ package frc.robot.subsystems.drive;
 import java.util.List;
 
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
-import org.photonvision.EstimatedRobotPose;
 
 import com.pathplanner.lib.PathPoint;
 
@@ -355,7 +354,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    */
   private void updatePose() {
     // Get estimated poses from VisionSubsystem
-    List<EstimatedRobotPose> visionEstimatedRobotPoses = VisionSubsystem.getInstance().getEstimatedGlobalPose(getPose());
+    var visionEstimatedRobotPoses = VisionSubsystem.getInstance().getEstimatedGlobalPose();
 
     // Update pose based on odometry
     m_poseEstimator.update(m_navx.getInputs().rotation2d, getModulePositions());
@@ -364,7 +363,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     if (visionEstimatedRobotPoses.isEmpty()) return;
 
     // Add vision measurements to pose estimator
-    for (EstimatedRobotPose visionEstimatedRobotPose : visionEstimatedRobotPoses)
+    for (var visionEstimatedRobotPose : visionEstimatedRobotPoses)
       m_poseEstimator.addVisionMeasurement(visionEstimatedRobotPose.estimatedPose.toPose2d(), visionEstimatedRobotPose.timestampSeconds);
   }
 

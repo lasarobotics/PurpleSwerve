@@ -4,23 +4,18 @@
 
 package frc.robot.subsystems.vision;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.photonvision.EstimatedRobotPose;
-import org.photonvision.PhotonPoseEstimator;
-import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.wpilibj.Notifier;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
-public class VisionSubsystem {
+public class VisionSubsystem extends SubsystemBase implements AutoCloseable {
   public static class Hardware {
-    private VisionCamera[] cameras;
+    VisionCamera[] cameras;
 
     public Hardware(VisionCamera... cameras) {
       this.cameras = cameras;
@@ -29,10 +24,8 @@ public class VisionSubsystem {
 
   private static VisionSubsystem m_subsystem;
 
-  private AprilTagFieldLayout m_fieldLayout;
-
   private VisionCamera[] m_cameras;
-  private PhotonPoseEstimator[] m_poseEstimators;
+  private Notifier m_cameraNotifier;
 
   /**
    * Create a new vision subsystem
@@ -40,21 +33,26 @@ public class VisionSubsystem {
    */
   private VisionSubsystem(Hardware visionHardware) {
     this.m_cameras = visionHardware.cameras;
-
-    // Attempt to load AprilTag field layout
-    try {
-      m_fieldLayout = AprilTagFields.k2023ChargedUp.loadAprilTagLayoutField();
-    } catch (IOException e) { e.printStackTrace(); }
-
-    // Initialize pose estimators for all cameras
-    for (int i = 0; i < m_cameras.length; i++) {
-      m_poseEstimators[i] = new PhotonPoseEstimator(m_fieldLayout, PoseStrategy.MULTI_TAG_PNP, m_cameras[i].getCamera(), m_cameras[i].getTransform());
-      m_poseEstimators[i].setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
-    }
+  
+    // Setup camera pose estimation threads
+    this.m_cameraNotifier = new Notifier(() -> {
+      for (var camera : m_cameras) camera.run();
+    });
 
     // Set all cameras to primary pipeline
-    for (VisionCamera camera : m_cameras) 
-      camera.getCamera().setPipelineIndex(0);
+    for (var camera : m_cameras) camera.setPipelineIndex(0);
+
+    // Start camera threads
+    m_cameraNotifier.setName(getClass().getSimpleName());
+    m_cameraNotifier.startPeriodic(Constants.Global.ROBOT_LOOP_PERIOD);
+  }
+
+  public static Hardware initializeHardware() {
+    Hardware visionHardware = new Hardware( 
+      new VisionCamera(Constants.VisionHardware.CAMERA_0_NAME, Constants.VisionHardware.CAMERA_0_LOCATION)
+    );
+
+    return visionHardware;
   }
 
   public static VisionSubsystem getInstance() {
@@ -62,35 +60,29 @@ public class VisionSubsystem {
     return m_subsystem;
   }
 
-  /**
-   * Get AprilTag field layout
-   * @return field layout
-   */
-  public AprilTagFieldLayout getAprilTagFieldLayout() {
-    return this.m_fieldLayout;
-  }
-
-  public static Hardware initializeHardware() {
-    Hardware visionHardware = new Hardware(new VisionCamera(Constants.VisionHardware.CAMERA_0_NAME, Constants.VisionHardware.CAMERA_0_LOCATION));
-
-    return visionHardware;
+  @Override
+  public void periodic() {
+    // This method will be called once per scheduler run
   }
 
   /**
    * Get currently estimated robot pose
-   * @param prevEstimatedRobotPose The current best guess at robot pose
    * @return  an EstimatedRobotPose with an estimated pose, the timestamp, and targets used to create the estimate
    */
-  public List<EstimatedRobotPose> getEstimatedGlobalPose(Pose2d prevEstimatedRobotPose) {
+  public List<EstimatedRobotPose> getEstimatedGlobalPose() {
     List<EstimatedRobotPose> estimatedPoses = new ArrayList<EstimatedRobotPose>();
 
-    for (int i = 0; i < m_poseEstimators.length; i++) {
-      Optional<EstimatedRobotPose> result;
-      m_poseEstimators[i].setReferencePose(prevEstimatedRobotPose);
-      result = m_poseEstimators[i].update();
-      if (result.isPresent()) estimatedPoses.add(result.get());
+    for (var camera : m_cameras) {
+      var result = camera.getLatestEstimatedPose();
+      if (result != null) estimatedPoses.add(result);
     }
    
     return estimatedPoses;
+  }
+
+  @Override
+  public void close() {
+    for (var camera : m_cameras) camera.close();
+    m_cameraNotifier.close();
   }
 }
