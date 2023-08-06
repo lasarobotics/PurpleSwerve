@@ -59,6 +59,7 @@ public class SparkMax implements AutoCloseable {
 
   private String m_name;
   private SparkMaxInputsAutoLogged m_inputs;
+  private FeedbackSensor m_feedbackSensor;
 
   /**
    * Create a Spark Max object that is unit-testing friendly and with built-in logging
@@ -194,8 +195,9 @@ public class SparkMax implements AutoCloseable {
    */
   public void initializeSparkPID(SparkPIDConfig config, FeedbackSensor feedbackSensor,
                                  boolean forwardLimitSwitch, boolean reverseLimitSwitch) {
+    m_feedbackSensor = feedbackSensor;
     MotorFeedbackSensor selectedSensor;
-    switch (feedbackSensor) {
+    switch (m_feedbackSensor) {
       case NEO_ENCODER:
         selectedSensor = m_spark.getEncoder();
         break;
