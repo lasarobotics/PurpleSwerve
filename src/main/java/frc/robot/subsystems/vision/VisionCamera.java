@@ -59,9 +59,8 @@ import frc.robot.Constants;
     // Return if camera or field layout failed to load
     if (m_poseEstimator == null || m_camera == null) return;
     
-    // Update inputs
-    var result = m_camera.getLatestResult();
-    m_inputs.pipelineResult = result;
+    // Update and log inputs
+    m_inputs.pipelineResult = m_camera.getLatestResult();
     Logger.getInstance().processInputs(m_camera.getName(), m_inputs);
 
     // Return if result is non-existent or invalid
