@@ -4,6 +4,8 @@
 
 package frc.robot.utils;
 
+import java.util.function.Function;
+
 import org.littletonrobotics.junction.AutoLog;
 import org.littletonrobotics.junction.Logger;
 
@@ -18,7 +20,9 @@ import com.revrobotics.SparkMaxAnalogSensor;
 import com.revrobotics.SparkMaxLimitSwitch;
 import com.revrobotics.SparkMaxPIDController;
 
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.Timer;
 
 public class SparkMax implements AutoCloseable {
 
@@ -59,6 +63,14 @@ public class SparkMax implements AutoCloseable {
 
   private String m_name;
   private SparkMaxInputsAutoLogged m_inputs;
+
+  private boolean m_enableSmoothMotion = false;
+  private Timer m_motionTimer;
+  private Function<TrapezoidProfile.State, Double> m_feedforwardSupplier;
+
+  private TrapezoidProfile m_motionProfile;
+  private TrapezoidProfile.Constraints m_motionConstraint;
+  private SparkPIDConfig m_positionConfig;
   private FeedbackSensor m_feedbackSensor;
 
   /**
@@ -73,6 +85,26 @@ public class SparkMax implements AutoCloseable {
 
     m_spark.restoreFactoryDefaults();
     m_spark.enableVoltageCompensation(MAX_VOLTAGE);
+  }
+
+  /**
+   * Create a Spark Max object that is unit-testing friendly with built-in logging and PID config
+   * @param deviceID The device ID
+   * @param motorType The motor type connected to the controller
+   * @param config PID config for spark max
+   * @param feedbackSensor Feedback device to use for Spark PID
+   */
+  public SparkMax(ID id, MotorType motorType, SparkPIDConfig config, FeedbackSensor feedbackSensor) {
+    this.m_name = id.name;
+    this.m_spark = new CANSparkMax(id.deviceID, motorType);
+    this.m_inputs = new SparkMaxInputsAutoLogged();
+
+    m_spark.restoreFactoryDefaults();
+    m_spark.enableVoltageCompensation(MAX_VOLTAGE);
+
+    this.m_positionConfig = config;
+    this.m_motionTimer = new Timer();
+    initializeSparkPID(m_positionConfig, feedbackSensor);
   }
 
   /**
@@ -171,11 +203,32 @@ public class SparkMax implements AutoCloseable {
   }
 
   /**
+   * Handle the smooth motion for the spark max
+   */
+  public void handleSmoothMotion() {
+    if (m_enableSmoothMotion) {
+      TrapezoidProfile.State motionProfileState = m_motionProfile.calculate(m_motionTimer.get());
+      set(
+        motionProfileState.position,
+        ControlType.kPosition,
+        m_feedforwardSupplier.apply(motionProfileState),
+        SparkMaxPIDController.ArbFFUnits.kVoltage
+      );
+
+      if (m_motionProfile.isFinished(m_motionTimer.get())) { // If motion completed, flip boolean to false
+        m_enableSmoothMotion = false;
+      }
+    }
+  }
+
+  /**
    * Call this method periodically
    */
   public void periodic() {
     updateInputs();
     Logger.getInstance().processInputs(m_name, m_inputs);
+
+    handleSmoothMotion();
   }
 
   /**
@@ -310,6 +363,40 @@ public class SparkMax implements AutoCloseable {
       default:
         break;
     }
+  }
+
+  /**
+   * Enable smooth motion for the spark max
+   * @param value The target value for the motor
+   * @param motionConstraint The constraints for the motor
+   * @param feedForwardSupplier Lambda function to calculate feed forward
+   */
+  public void setSmoothMotion(double value, TrapezoidProfile.Constraints motionConstraint, Function<TrapezoidProfile.State, Double> feedforwardSupplier) {
+    this.m_enableSmoothMotion = true;
+    this.m_feedforwardSupplier = feedforwardSupplier;
+    this.m_motionConstraint = motionConstraint;
+
+    // Generate states
+    TrapezoidProfile.State desiredState = new TrapezoidProfile.State(value, 0.0);
+    TrapezoidProfile.State currentState;
+    switch (m_feedbackSensor) {
+      case NEO_ENCODER:
+        currentState = new TrapezoidProfile.State(getInputs().encoderPosition, getInputs().encoderVelocity);
+        break;
+      case ANALOG:
+        currentState = new TrapezoidProfile.State(getInputs().analogPosition, getInputs().analogVelocity);
+        break;
+      case THROUGH_BORE_ENCODER:
+        currentState = new TrapezoidProfile.State(getInputs().absoluteEncoderPosition, getInputs().absoluteEncoderVelocity);
+        break;
+      default:
+        currentState = new TrapezoidProfile.State(getInputs().encoderPosition, getInputs().encoderVelocity);
+        break;
+    }
+
+    // Generate motion profile
+    m_motionTimer.reset();
+    m_motionProfile = new TrapezoidProfile(m_motionConstraint, desiredState, currentState);
   }
 
   /**
