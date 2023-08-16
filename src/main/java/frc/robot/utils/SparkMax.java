@@ -216,8 +216,8 @@ public class SparkMax implements AutoCloseable {
    * Handle the smooth motion for the spark max
    */
   private void handleSmoothMotion() {
-    m_isSmoothMotionEnabled = !isSmoothMotionFinished();
     if (m_isSmoothMotionEnabled) {
+      m_isSmoothMotionEnabled = !isSmoothMotionFinished();
       TrapezoidProfile.State motionProfileState = m_motionProfile.calculate(m_motionTimer.get());
       set(
         motionProfileState.position,
@@ -367,9 +367,9 @@ public class SparkMax implements AutoCloseable {
    * @param feedForwardSupplier Lambda function to calculate feed forward
    */
   public void setSmoothMotion(double value, TrapezoidProfile.Constraints motionConstraint, Function<TrapezoidProfile.State, Double> feedforwardSupplier) {
-    this.m_isSmoothMotionEnabled = true;
-    this.m_feedforwardSupplier = feedforwardSupplier;
-    this.m_motionConstraint = motionConstraint;
+    m_isSmoothMotionEnabled = true;
+    m_feedforwardSupplier = feedforwardSupplier;
+    m_motionConstraint = motionConstraint;
 
     // Generate states
     TrapezoidProfile.State desiredState = new TrapezoidProfile.State(value, 0.0);
