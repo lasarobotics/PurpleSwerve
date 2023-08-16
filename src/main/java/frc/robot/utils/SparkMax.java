@@ -57,6 +57,7 @@ public class SparkMax implements AutoCloseable {
   private static final String VALUE_LOG_ENTRY = "/OutputValue";
   private static final String MODE_LOG_ENTRY = "/OutputMode";
   private static final String CURRENT_LOG_ENTRY = "/Current";
+  private static final String MOTION_LOG_ENTRY = "/SmoothMotion";
   private static final String ENCODER_RESET_MESSAGE = "/EncoderReset";
   
   private CANSparkMax m_spark;
@@ -64,7 +65,7 @@ public class SparkMax implements AutoCloseable {
   private String m_name;
   private SparkMaxInputsAutoLogged m_inputs;
 
-  private boolean m_enableSmoothMotion = false;
+  private boolean m_isSmoothMotionEnabled = false;
   private Timer m_motionTimer;
   private Function<TrapezoidProfile.State, Double> m_feedforwardSupplier;
 
@@ -116,6 +117,7 @@ public class SparkMax implements AutoCloseable {
     Logger.getInstance().recordOutput(m_name + VALUE_LOG_ENTRY, value);
     Logger.getInstance().recordOutput(m_name + MODE_LOG_ENTRY, ctrl.name());
     Logger.getInstance().recordOutput(m_name + CURRENT_LOG_ENTRY, m_spark.getOutputCurrent());
+    Logger.getInstance().recordOutput(m_name + MOTION_LOG_ENTRY, m_isSmoothMotionEnabled);
   }
 
   /**
@@ -189,6 +191,14 @@ public class SparkMax implements AutoCloseable {
   }
 
   /**
+   * Check if motion is complete
+   * @return True if smooth motion is complete
+   */
+  public boolean isSmoothMotionFinished() {
+    return m_motionProfile.isFinished(m_motionTimer.get());
+  }
+
+  /**
    * Update sensor input readings
    */
   private void updateInputs() {
@@ -205,8 +215,9 @@ public class SparkMax implements AutoCloseable {
   /**
    * Handle the smooth motion for the spark max
    */
-  public void handleSmoothMotion() {
-    if (m_enableSmoothMotion) {
+  private void handleSmoothMotion() {
+    m_isSmoothMotionEnabled = !isSmoothMotionFinished();
+    if (m_isSmoothMotionEnabled) {
       TrapezoidProfile.State motionProfileState = m_motionProfile.calculate(m_motionTimer.get());
       set(
         motionProfileState.position,
@@ -214,10 +225,6 @@ public class SparkMax implements AutoCloseable {
         m_feedforwardSupplier.apply(motionProfileState),
         SparkMaxPIDController.ArbFFUnits.kVoltage
       );
-
-      if (m_motionProfile.isFinished(m_motionTimer.get())) { // If motion completed, flip boolean to false
-        m_enableSmoothMotion = false;
-      }
     }
   }
 
@@ -305,19 +312,7 @@ public class SparkMax implements AutoCloseable {
    * @param arbFFUnits Feed forward units
    */
   public void set(double value, ControlType ctrl, double arbFeedforward, SparkMaxPIDController.ArbFFUnits arbFFUnits) {
-    set(value, ctrl, arbFeedforward, arbFFUnits, PID_SLOT);
-  }
-
-  /**
-   * Set motor output value with arbitrary feed forward
-   * @param value Value to set
-   * @param ctrl Desired control mode
-   * @param arbFeedforward Feed forward value
-   * @param arbFFUnits Feed forward units
-   * @param pidSlot PID slot to use
-   */
-  public void set(double value, ControlType ctrl, double arbFeedforward, SparkMaxPIDController.ArbFFUnits arbFFUnits, int pidSlot) {
-    m_spark.getPIDController().setReference(value, ctrl, pidSlot, arbFeedforward, arbFFUnits);
+    m_spark.getPIDController().setReference(value, ctrl, PID_SLOT, arbFeedforward, arbFFUnits);
     logOutputs(value, ctrl);
   }
 
@@ -372,7 +367,7 @@ public class SparkMax implements AutoCloseable {
    * @param feedForwardSupplier Lambda function to calculate feed forward
    */
   public void setSmoothMotion(double value, TrapezoidProfile.Constraints motionConstraint, Function<TrapezoidProfile.State, Double> feedforwardSupplier) {
-    this.m_enableSmoothMotion = true;
+    this.m_isSmoothMotionEnabled = true;
     this.m_feedforwardSupplier = feedforwardSupplier;
     this.m_motionConstraint = motionConstraint;
 
