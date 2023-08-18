@@ -71,8 +71,9 @@ public class SparkMax implements AutoCloseable {
 
   private TrapezoidProfile m_motionProfile;
   private TrapezoidProfile.Constraints m_motionConstraint;
-  private SparkPIDConfig m_positionConfig;
+  private SparkPIDConfig m_config;
   private FeedbackSensor m_feedbackSensor;
+  private SparkMaxLimitSwitch.Type m_limitSwitchType = SparkMaxLimitSwitch.Type.kNormallyOpen;
 
   /**
    * Create a Spark Max object that is unit-testing friendly and with built-in logging
@@ -103,9 +104,9 @@ public class SparkMax implements AutoCloseable {
     m_spark.restoreFactoryDefaults();
     m_spark.enableVoltageCompensation(MAX_VOLTAGE);
 
-    this.m_positionConfig = config;
+    this.m_config = config;
     this.m_motionTimer = new Timer();
-    initializeSparkPID(m_positionConfig, feedbackSensor);
+    initializeSparkPID(m_config, feedbackSensor);
   }
 
   /**
@@ -208,8 +209,8 @@ public class SparkMax implements AutoCloseable {
     m_inputs.analogVelocity = getAnalogVelocity();
     m_inputs.absoluteEncoderPosition = getAbsoluteEncoderPosition();
     m_inputs.absoluteEncoderVelocity = getAbsoluteEncoderVelocity();
-    m_inputs.forwardLimitSwitch = m_spark.getForwardLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen).isPressed();
-    m_inputs.reverseLimitSwitch = m_spark.getReverseLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen).isPressed();
+    m_inputs.forwardLimitSwitch = m_spark.getForwardLimitSwitch(m_limitSwitchType).isPressed();
+    m_inputs.reverseLimitSwitch = m_spark.getReverseLimitSwitch(m_limitSwitchType).isPressed();
   }
 
   /**
@@ -314,6 +315,14 @@ public class SparkMax implements AutoCloseable {
   public void set(double value, ControlType ctrl, double arbFeedforward, SparkMaxPIDController.ArbFFUnits arbFFUnits) {
     m_spark.getPIDController().setReference(value, ctrl, PID_SLOT, arbFeedforward, arbFFUnits);
     logOutputs(value, ctrl);
+  }
+
+  /**
+   * Change the limit switch type
+   * @param type The desired limit switch type
+   */
+  public void setLimitSwitchType(SparkMaxLimitSwitch.Type type) {
+    m_limitSwitchType = type;
   }
 
   /**
