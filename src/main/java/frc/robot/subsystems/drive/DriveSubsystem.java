@@ -16,6 +16,7 @@ import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -257,6 +258,29 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   }
 
   /**
+   * Correct chassis speeds for 2nd order kinematics
+   * @param requestedSpeeds Requested chassis speeds
+   * @return Corrected chassis speeds
+   */
+  private static ChassisSpeeds correctForDynamics(ChassisSpeeds requestedSpeeds) {
+    Pose2d futureRobotPose = new Pose2d(
+      requestedSpeeds.vxMetersPerSecond * Constants.Global.ROBOT_LOOP_PERIOD,
+      requestedSpeeds.vyMetersPerSecond * Constants.Global.ROBOT_LOOP_PERIOD,
+      Rotation2d.fromRadians(requestedSpeeds.omegaRadiansPerSecond * Constants.Global.ROBOT_LOOP_PERIOD)
+    );
+
+    Twist2d twistForPose = PoseGeometry.log(futureRobotPose);
+
+    ChassisSpeeds correctedSpeeds = new ChassisSpeeds(
+      twistForPose.dx / Constants.Global.ROBOT_LOOP_PERIOD,
+      twistForPose.dy / Constants.Global.ROBOT_LOOP_PERIOD,
+      twistForPose.dtheta / Constants.Global.ROBOT_LOOP_PERIOD
+    );
+
+    return correctedSpeeds;
+}
+
+  /**
    * Set swerve modules
    * @param moduleStates Array of calculated module states
    */
@@ -289,9 +313,13 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @param rotateRate Current robot rotate rate (degrees/s)
    */
   private void drive(double xRequest, double yRequest, double rotateRequest, double inertialVelocity, double rotateRate) {
+    // Get requested chassis speeds, correcting for 2nd order kinematics
+    ChassisSpeeds desiredChassisSpeeds = correctForDynamics(
+      new ChassisSpeeds(xRequest, yRequest, Math.toRadians(rotateRequest))
+    );
+
     // Convert speeds to module states
-    SwerveModuleState[] moduleStates = 
-      m_kinematics.toSwerveModuleStates(new ChassisSpeeds(xRequest, yRequest, Math.toRadians(rotateRequest)));
+    SwerveModuleState[] moduleStates = m_kinematics.toSwerveModuleStates(desiredChassisSpeeds);
 
     // Desaturate drive speeds
     SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, DRIVE_MAX_LINEAR_SPEED);
@@ -307,9 +335,13 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @param rotateRequest Desired rotate rate (degrees/s)
    */
   private void drive(double xRequest, double yRequest, double rotateRequest) {
+     // Get requested chassis speeds, correcting for 2nd order kinematics
+    ChassisSpeeds desiredChassisSpeeds = correctForDynamics(
+      new ChassisSpeeds(xRequest, yRequest, Math.toRadians(rotateRequest))
+    );
+
     // Convert speeds to module states
-    SwerveModuleState[] moduleStates = 
-      m_kinematics.toSwerveModuleStates(new ChassisSpeeds(xRequest, yRequest, Math.toRadians(rotateRequest)));
+    SwerveModuleState[] moduleStates = m_kinematics.toSwerveModuleStates(desiredChassisSpeeds);
 
     // Desaturate drive speeds
     SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, DRIVE_MAX_LINEAR_SPEED);
