@@ -7,6 +7,7 @@ package frc.robot.subsystems.drive;
 import java.util.List;
 
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
+import org.opencv.core.Point;
 
 import com.pathplanner.lib.PathPoint;
 
@@ -15,8 +16,6 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -79,6 +78,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private TurnPIDController m_turnPIDController;
   private SwerveDriveKinematics m_kinematics;
   private SwerveDrivePoseEstimator m_poseEstimator;
+  private AdvancedSwerveKinematics m_advancedKinematics;
 
   private NavX2 m_navx;
   private MAXSwerveModule m_lFrontModule;
@@ -151,6 +151,12 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
                                              m_rFrontModule.getModuleCoordinate(),
                                              m_lRearModule.getModuleCoordinate(),
                                              m_rRearModule.getModuleCoordinate());
+
+    // Define advanced drivetrain kinematics
+    m_advancedKinematics = new AdvancedSwerveKinematics(m_lFrontModule.getModuleCoordinate(),
+                                                        m_rFrontModule.getModuleCoordinate(),
+                                                        m_lRearModule.getModuleCoordinate(),
+                                                        m_rRearModule.getModuleCoordinate());
 
     // Initialise pose estimator
     m_poseEstimator = new SwerveDrivePoseEstimator(
@@ -258,29 +264,6 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   }
 
   /**
-   * Correct chassis speeds for 2nd order kinematics
-   * @param requestedSpeeds Requested chassis speeds
-   * @return Corrected chassis speeds
-   */
-  private static ChassisSpeeds correctForDynamics(ChassisSpeeds requestedSpeeds) {
-    Pose2d futureRobotPose = new Pose2d(
-      requestedSpeeds.vxMetersPerSecond * Constants.Global.ROBOT_LOOP_PERIOD,
-      requestedSpeeds.vyMetersPerSecond * Constants.Global.ROBOT_LOOP_PERIOD,
-      Rotation2d.fromRadians(requestedSpeeds.omegaRadiansPerSecond * Constants.Global.ROBOT_LOOP_PERIOD)
-    );
-
-    Twist2d twistForPose = PoseGeometry.log(futureRobotPose);
-
-    ChassisSpeeds correctedSpeeds = new ChassisSpeeds(
-      twistForPose.dx / Constants.Global.ROBOT_LOOP_PERIOD,
-      twistForPose.dy / Constants.Global.ROBOT_LOOP_PERIOD,
-      twistForPose.dtheta / Constants.Global.ROBOT_LOOP_PERIOD
-    );
-
-    return correctedSpeeds;
-}
-
-  /**
    * Set swerve modules
    * @param moduleStates Array of calculated module states
    */
@@ -313,13 +296,16 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @param rotateRate Current robot rotate rate (degrees/s)
    */
   private void drive(double xRequest, double yRequest, double rotateRequest, double inertialVelocity, double rotateRate) {
-    // Get requested chassis speeds, correcting for 2nd order kinematics
-    ChassisSpeeds desiredChassisSpeeds = correctForDynamics(
+    // Get requested chassis speeds, correcting for second order kinematics
+    ChassisSpeeds desiredChassisSpeeds = AdvancedSwerveKinematics.correctForDynamics(
       new ChassisSpeeds(xRequest, yRequest, Math.toRadians(rotateRequest))
     );
 
-    // Convert speeds to module states
-    SwerveModuleState[] moduleStates = m_kinematics.toSwerveModuleStates(desiredChassisSpeeds);
+    // Convert speeds to module states, correcting for 2nd order kinematics
+    SwerveModuleState[] moduleStates = m_advancedKinematics.toSwerveModuleStates(
+      desiredChassisSpeeds,
+      getPose().getRotation()
+    );
 
     // Desaturate drive speeds
     SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, DRIVE_MAX_LINEAR_SPEED);
@@ -335,13 +321,16 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @param rotateRequest Desired rotate rate (degrees/s)
    */
   private void drive(double xRequest, double yRequest, double rotateRequest) {
-     // Get requested chassis speeds, correcting for 2nd order kinematics
-    ChassisSpeeds desiredChassisSpeeds = correctForDynamics(
+     // Get requested chassis speeds, correcting for second order kinematics
+    ChassisSpeeds desiredChassisSpeeds = AdvancedSwerveKinematics.correctForDynamics(
       new ChassisSpeeds(xRequest, yRequest, Math.toRadians(rotateRequest))
     );
 
-    // Convert speeds to module states
-    SwerveModuleState[] moduleStates = m_kinematics.toSwerveModuleStates(desiredChassisSpeeds);
+    // Convert speeds to module states, correcting for 2nd order kinematics
+    SwerveModuleState[] moduleStates = m_advancedKinematics.toSwerveModuleStates(
+      desiredChassisSpeeds,
+      getPose().getRotation()
+    );
 
     // Desaturate drive speeds
     SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, DRIVE_MAX_LINEAR_SPEED);
@@ -476,14 +465,14 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @param yRequest Desired Y axis (sideways) speed [-1.0, +1.0]
    * @param point Target point
    */
-  public void orientTowardsPoint(double xRequest, double yRequest, Translation2d point) {
+  public void orientTowardsPoint(double xRequest, double yRequest, Point point) {
     double moveRequest = Math.hypot(xRequest, yRequest);
     double moveDirection = Math.atan2(yRequest, xRequest);
     double velocityOutput = m_throttleMap.throttleLookup(moveRequest);
     
     Pose2d currentPose = getPose();
     double currentAngle = currentPose.getRotation().getDegrees();
-    double desiredAngle = Math.toDegrees(Math.atan2(currentPose.getY() - point.getY(), currentPose.getX() - point.getX()));
+    double desiredAngle = Math.toDegrees(Math.atan2(point.y - currentPose.getY(), point.x - currentPose.getX()));
     double rotateOutput = m_turnPIDController.calculate(currentAngle, desiredAngle);
 
     drive(velocityOutput * Math.cos(moveDirection), velocityOutput * Math.sin(moveDirection), rotateOutput);
@@ -493,7 +482,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * Orient robot towards a desired point on the field (without any strafing)
    * @param pose Destination point
    */
-  public void orientTowardsPoint(Translation2d point) {
+  public void orientTowardsPoint(Point point) {
     orientTowardsPoint(0.0, 0.0, point);
   }
 

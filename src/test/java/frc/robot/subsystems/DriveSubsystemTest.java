@@ -18,12 +18,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.mockito.AdditionalMatchers;
 import org.mockito.ArgumentMatchers;
+import org.opencv.core.Point;
 
 import com.revrobotics.CANSparkMax.ControlType;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.Constants;
 import frc.robot.subsystems.drive.DriveSubsystem;
 import frc.robot.subsystems.drive.MAXSwerveModule;
@@ -419,7 +419,7 @@ public class DriveSubsystemTest {
   public void rotateLeftTowardsPoint() { 
     // Rotate left towards point
     m_driveSubsystem.resetPose(new Pose2d(Constants.Field.FIELD_LENGTH / 2, Constants.Field.FIELD_WIDTH / 2, Rotation2d.fromDegrees(0.0)));
-    m_driveSubsystem.orientTowardsPoint(new Translation2d(0.0, 0.0));
+    m_driveSubsystem.orientTowardsPoint(new Point(0.0, Constants.Field.FIELD_WIDTH));
 
     // Verify that motors are being driven with expected values
     verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.gt(0.0), ArgumentMatchers.eq(ControlType.kVelocity));
@@ -438,7 +438,7 @@ public class DriveSubsystemTest {
   public void rotateRightTowardsPoint() {
     // Rotate right towards point
     m_driveSubsystem.resetPose(new Pose2d(Constants.Field.FIELD_LENGTH / 2, Constants.Field.FIELD_WIDTH / 2, Rotation2d.fromDegrees(0.0)));
-    m_driveSubsystem.orientTowardsPoint(new Translation2d(0.0, Constants.Field.FIELD_WIDTH));
+    m_driveSubsystem.orientTowardsPoint(new Point(0.0, 0.0));
 
     // Verify that motors are being driven with expected values
     verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.lt(0.0), ArgumentMatchers.eq(ControlType.kVelocity));
@@ -456,26 +456,27 @@ public class DriveSubsystemTest {
   @DisplayName("Test if robot can stop when oriented towards point")
   public void stopOrientationAtPoint() {
     // Hardcode sensor values
-    double desiredAngle = Math.toDegrees(Math.atan2(-Constants.Field.FIELD_WIDTH / 2, Constants.Field.FIELD_LENGTH / 2));
+    double desiredAngle = 90;
 
     NavX2InputsAutoLogged inputs = new NavX2InputsAutoLogged(); 
+    inputs.yawAngle = desiredAngle;
     inputs.rotation2d = Rotation2d.fromDegrees(desiredAngle);
 
     when(m_navx.getInputs()).thenReturn(inputs);
     
     // Set robot at right angle
-    m_driveSubsystem.resetPose(new Pose2d(Constants.Field.FIELD_LENGTH / 2, Constants.Field.FIELD_WIDTH / 2, Rotation2d.fromDegrees(desiredAngle)));
-    m_driveSubsystem.orientTowardsPoint(new Translation2d(0.0, Constants.Field.FIELD_WIDTH));
+    m_driveSubsystem.resetPose(new Pose2d(0.0, 0.0, Rotation2d.fromDegrees(desiredAngle)));
+    m_driveSubsystem.orientTowardsPoint(new Point(0.0, Constants.Field.FIELD_WIDTH));
 
     // Verify that motors are being driven with expected values
     verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
-    verify(m_lFrontRotateMotor, times(1)).set(AdditionalMatchers.eq(-Math.PI / 2, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
+    verify(m_lFrontRotateMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
     verify(m_rFrontDriveMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
-    verify(m_rFrontRotateMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
+    verify(m_rFrontRotateMotor, times(1)).set(AdditionalMatchers.eq(-Math.PI / 2, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
     verify(m_lRearDriveMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
-    verify(m_lRearRotateMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
+    verify(m_lRearRotateMotor, times(1)).set(AdditionalMatchers.eq(+Math.PI / 2, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
     verify(m_rRearDriveMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
-    verify(m_rRearRotateMotor, times(1)).set(AdditionalMatchers.eq(+Math.PI / 2, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
+    verify(m_rRearRotateMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
   }
 
   @Test
@@ -496,7 +497,7 @@ public class DriveSubsystemTest {
 
     int invocations = 1;
     while (actualAngle > desiredAngle) {
-      m_driveSubsystem.orientTowardsPoint(new Translation2d(0.0, 0.0));
+      m_driveSubsystem.orientTowardsPoint(new Point(0.0, Constants.Field.FIELD_WIDTH));
       actualAngle -= 0.5;
 
       inputs.rotation2d = Rotation2d.fromDegrees(actualAngle);
@@ -534,7 +535,7 @@ public class DriveSubsystemTest {
 
     int invocations = 1;
     while (actualAngle > desiredAngle) {
-      m_driveSubsystem.orientTowardsPoint(new Translation2d(0.0, Constants.Field.FIELD_WIDTH));
+      m_driveSubsystem.orientTowardsPoint(new Point(0.0, 0.0));
       actualAngle -= 0.5;
 
       inputs.rotation2d = Rotation2d.fromDegrees(actualAngle);
