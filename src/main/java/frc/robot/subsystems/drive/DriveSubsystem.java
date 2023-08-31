@@ -7,6 +7,7 @@ package frc.robot.subsystems.drive;
 import java.util.List;
 
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
+import org.littletonrobotics.junction.Logger;
 import org.opencv.core.Point;
 
 import com.pathplanner.lib.PathPoint;
@@ -92,6 +93,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private final double BALANCED_THRESHOLD = 5.0;
   private final Matrix<N3, N1> ODOMETRY_STDDEV = VecBuilder.fill(0.03, 0.03, Units.degreesToRadians(1));
   private final Matrix<N3, N1> VISION_STDDEV = VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(40));
+
+  private final String POSE_LOG_ENTRY = "Pose";
 
   private boolean m_isTractionControlEnabled = true;
 
@@ -350,14 +353,6 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   }
 
   /**
-   * Reset DriveSubsystem PID
-   */
-  public void resetTurnPID() {
-    m_turnPIDController.setSetpoint(getAngle());
-    m_turnPIDController.reset();
-  }
-
-  /**
    * Get current module positions
    * @return Array of swerve module positions
    */
@@ -388,6 +383,13 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
       m_poseEstimator.addVisionMeasurement(visionEstimatedRobotPose.estimatedPose.toPose2d(), visionEstimatedRobotPose.timestampSeconds);
   }
 
+  /**
+   * Log DriveSubsystem outputs
+   */
+  private void logOutputs() {
+    Logger.getInstance().recordOutput(POSE_LOG_ENTRY, getPose());
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
@@ -399,6 +401,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     
     updatePose();
     smartDashboard();
+    logOutputs();
   }
 
   /**
@@ -484,6 +487,14 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    */
   public void orientTowardsPoint(Point point) {
     orientTowardsPoint(0.0, 0.0, point);
+  }
+
+  /**
+   * Reset DriveSubsystem turn PID
+   */
+  public void resetTurnPID() {
+    m_turnPIDController.setSetpoint(getAngle());
+    m_turnPIDController.reset();
   }
 
   /**
