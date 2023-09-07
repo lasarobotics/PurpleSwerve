@@ -97,7 +97,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private final Matrix<N3, N1> ODOMETRY_STDDEV = VecBuilder.fill(0.03, 0.03, Units.degreesToRadians(1));
   private final Matrix<N3, N1> VISION_STDDEV = VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(40));
 
-  private final String POSE_LOG_ENTRY = "Pose"; 
+  private final String POSE_LOG_ENTRY = "/Pose"; 
 
   private NetworkTable m_table;
   private DoubleArrayPublisher m_posePub;
@@ -190,7 +190,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
     // Setup NetworkTables
     m_table = NetworkTableInstance.getDefault().getTable(getName());
-    m_posePub = m_table.getDoubleArrayTopic(POSE_LOG_ENTRY).publish();
+    m_posePub = m_table.getDoubleArrayTopic("Pose").publish();
   }
 
   /**
