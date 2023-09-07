@@ -24,6 +24,9 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.DoubleArrayPublisher;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
@@ -94,9 +97,13 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private final Matrix<N3, N1> ODOMETRY_STDDEV = VecBuilder.fill(0.03, 0.03, Units.degreesToRadians(1));
   private final Matrix<N3, N1> VISION_STDDEV = VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(40));
 
-  private final String POSE_LOG_ENTRY = "Pose";
+  private final String POSE_LOG_ENTRY = "Pose"; 
+
+  private NetworkTable m_table;
+  private DoubleArrayPublisher m_posePub;
 
   private boolean m_isTractionControlEnabled = true;
+
 
   public final Command ANTI_TIP_COMMAND = new FunctionalCommand(
     () -> m_ledStrip.set(Pattern.RED_STROBE),
@@ -130,6 +137,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   public DriveSubsystem(Hardware drivetrainHardware, double kP, double kD,
                         double turnScalar, double deadband, double lookAhead, double slipRatio,
                         PolynomialSplineFunction throttleInputCurve, PolynomialSplineFunction turnInputCurve) {
+    setSubsystem(getClass().getSimpleName());
     m_throttleMap = new ThrottleMap(throttleInputCurve, deadband, DRIVE_MAX_LINEAR_SPEED);
     m_turnPIDController = new TurnPIDController(kP, kD, turnScalar, deadband, lookAhead, turnInputCurve);
 
@@ -179,6 +187,10 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
     // Set LED strip to team color
     m_ledStrip.set(Pattern.TEAM_COLOR_SOLID);
+
+    // Setup NetworkTables
+    m_table = NetworkTableInstance.getDefault().getTable(getName());
+    m_posePub = m_table.getDoubleArrayTopic(POSE_LOG_ENTRY).publish();
   }
 
   /**
@@ -387,7 +399,23 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * Log DriveSubsystem outputs
    */
   private void logOutputs() {
-    Logger.getInstance().recordOutput(POSE_LOG_ENTRY, getPose());
+    Logger.getInstance().recordOutput(getName() + POSE_LOG_ENTRY, getPose());
+  }
+
+  /**
+   * SmartDashboard indicators
+   */
+  public void smartDashboard() {
+    SmartDashboard.putBoolean("TC", m_isTractionControlEnabled);
+  }
+
+  /*
+   * Set the values for the network table publishers
+   */
+  private void setPublishers() {
+    Pose2d currentPose = getPose();
+    double[] poseArray = {currentPose.getX(), currentPose.getY(), currentPose.getRotation().getDegrees()};
+    m_posePub.set(poseArray);
   }
 
   @Override
@@ -398,17 +426,11 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     m_rFrontModule.periodic();
     m_lRearModule.periodic();
     m_rRearModule.periodic();
-    
+
     updatePose();
     smartDashboard();
+    setPublishers();
     logOutputs();
-  }
-
-  /**
-   * SmartDashboard indicators
-   */
-  public void smartDashboard() {
-    SmartDashboard.putBoolean("TC", m_isTractionControlEnabled);
   }
 
   /**
@@ -643,5 +665,6 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     m_lRearModule.close();
     m_rRearModule.close();
     m_navx.close();
+    m_posePub.close();
   }
 }
