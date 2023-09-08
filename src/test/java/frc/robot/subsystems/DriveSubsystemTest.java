@@ -18,12 +18,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.mockito.AdditionalMatchers;
 import org.mockito.ArgumentMatchers;
-import org.opencv.core.Point;
 
 import com.revrobotics.CANSparkMax.ControlType;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.Constants;
 import frc.robot.subsystems.drive.DriveSubsystem;
 import frc.robot.subsystems.drive.MAXSwerveModule;
@@ -419,7 +419,7 @@ public class DriveSubsystemTest {
   public void rotateLeftTowardsPoint() { 
     // Rotate left towards point
     m_driveSubsystem.resetPose(new Pose2d(Constants.Field.FIELD_LENGTH / 2, Constants.Field.FIELD_WIDTH / 2, Rotation2d.fromDegrees(0.0)));
-    m_driveSubsystem.orientTowardsPoint(new Point(0.0, Constants.Field.FIELD_WIDTH));
+    m_driveSubsystem.orientTowardsPoint(new Translation2d(0.0, Constants.Field.FIELD_WIDTH));
 
     // Verify that motors are being driven with expected values
     verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.gt(0.0), ArgumentMatchers.eq(ControlType.kVelocity));
@@ -438,7 +438,7 @@ public class DriveSubsystemTest {
   public void rotateRightTowardsPoint() {
     // Rotate right towards point
     m_driveSubsystem.resetPose(new Pose2d(Constants.Field.FIELD_LENGTH / 2, Constants.Field.FIELD_WIDTH / 2, Rotation2d.fromDegrees(0.0)));
-    m_driveSubsystem.orientTowardsPoint(new Point(0.0, 0.0));
+    m_driveSubsystem.orientTowardsPoint(new Translation2d(0.0, 0.0));
 
     // Verify that motors are being driven with expected values
     verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.lt(0.0), ArgumentMatchers.eq(ControlType.kVelocity));
@@ -466,7 +466,7 @@ public class DriveSubsystemTest {
     
     // Set robot at right angle
     m_driveSubsystem.resetPose(new Pose2d(0.0, 0.0, Rotation2d.fromDegrees(desiredAngle)));
-    m_driveSubsystem.orientTowardsPoint(new Point(0.0, Constants.Field.FIELD_WIDTH));
+    m_driveSubsystem.orientTowardsPoint(new Translation2d(0.0, Constants.Field.FIELD_WIDTH));
 
     // Verify that motors are being driven with expected values
     verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
@@ -497,7 +497,7 @@ public class DriveSubsystemTest {
 
     int invocations = 1;
     while (actualAngle > desiredAngle) {
-      m_driveSubsystem.orientTowardsPoint(new Point(0.0, Constants.Field.FIELD_WIDTH));
+      m_driveSubsystem.orientTowardsPoint(new Translation2d(0.0, Constants.Field.FIELD_WIDTH));
       actualAngle -= 0.5;
 
       inputs.rotation2d = Rotation2d.fromDegrees(actualAngle);
@@ -535,7 +535,7 @@ public class DriveSubsystemTest {
 
     int invocations = 1;
     while (actualAngle > desiredAngle) {
-      m_driveSubsystem.orientTowardsPoint(new Point(0.0, 0.0));
+      m_driveSubsystem.orientTowardsPoint(new Translation2d(0.0, 0.0));
       actualAngle -= 0.5;
 
       inputs.rotation2d = Rotation2d.fromDegrees(actualAngle);

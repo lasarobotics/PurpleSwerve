@@ -8,7 +8,6 @@ import java.util.List;
 
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 import org.littletonrobotics.junction.Logger;
-import org.opencv.core.Point;
 
 import com.pathplanner.lib.PathPoint;
 
@@ -17,6 +16,7 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -97,10 +97,10 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private final Matrix<N3, N1> ODOMETRY_STDDEV = VecBuilder.fill(0.03, 0.03, Units.degreesToRadians(1));
   private final Matrix<N3, N1> VISION_STDDEV = VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(40));
 
-  private final String POSE_LOG_ENTRY = "/Pose"; 
+  private final String POSE_LOG_ENTRY = "Pose"; 
 
   private NetworkTable m_table;
-  private DoubleArrayPublisher m_posePub;
+  private DoubleArrayPublisher m_posePublisher;
 
   private boolean m_isTractionControlEnabled = true;
 
@@ -190,7 +190,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
     // Setup NetworkTables
     m_table = NetworkTableInstance.getDefault().getTable(getName());
-    m_posePub = m_table.getDoubleArrayTopic("Pose").publish();
+    m_posePublisher = m_table.getDoubleArrayTopic(POSE_LOG_ENTRY).publish();
   }
 
   /**
@@ -399,7 +399,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * Log DriveSubsystem outputs
    */
   private void logOutputs() {
-    Logger.getInstance().recordOutput(getName() + POSE_LOG_ENTRY, getPose());
+    Logger.getInstance().recordOutput(String.join("/", getName(), POSE_LOG_ENTRY), getPose());
   }
 
   /**
@@ -409,13 +409,13 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     SmartDashboard.putBoolean("TC", m_isTractionControlEnabled);
   }
 
-  /*
-   * Set the values for the network table publishers
+  /**
+   * Publish data to network tables
    */
-  private void setPublishers() {
+  private void publishData() {
     Pose2d currentPose = getPose();
-    double[] poseArray = {currentPose.getX(), currentPose.getY(), currentPose.getRotation().getDegrees()};
-    m_posePub.set(poseArray);
+    double[] poseArray = { currentPose.getX(), currentPose.getY(), currentPose.getRotation().getDegrees() };
+    m_posePublisher.set(poseArray);
   }
 
   @Override
@@ -429,7 +429,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
     updatePose();
     smartDashboard();
-    setPublishers();
+    publishData();
     logOutputs();
   }
 
@@ -490,14 +490,14 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @param yRequest Desired Y axis (sideways) speed [-1.0, +1.0]
    * @param point Target point
    */
-  public void orientTowardsPoint(double xRequest, double yRequest, Point point) {
+  public void orientTowardsPoint(double xRequest, double yRequest, Translation2d point) {
     double moveRequest = Math.hypot(xRequest, yRequest);
     double moveDirection = Math.atan2(yRequest, xRequest);
     double velocityOutput = m_throttleMap.throttleLookup(moveRequest);
     
     Pose2d currentPose = getPose();
     double currentAngle = currentPose.getRotation().getDegrees();
-    double desiredAngle = Math.toDegrees(Math.atan2(point.y - currentPose.getY(), point.x - currentPose.getX()));
+    double desiredAngle = Math.toDegrees(Math.atan2(point.getY() - currentPose.getY(), point.getX() - currentPose.getX()));
     double rotateOutput = m_turnPIDController.calculate(currentAngle, desiredAngle);
 
     drive(velocityOutput * Math.cos(moveDirection), velocityOutput * Math.sin(moveDirection), rotateOutput);
@@ -505,9 +505,9 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
   /**
    * Orient robot towards a desired point on the field (without any strafing)
-   * @param pose Destination point
+   * @param point Destination point
    */
-  public void orientTowardsPoint(Point point) {
+  public void orientTowardsPoint(Translation2d point) {
     orientTowardsPoint(0.0, 0.0, point);
   }
 
@@ -665,6 +665,6 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     m_lRearModule.close();
     m_rRearModule.close();
     m_navx.close();
-    m_posePub.close();
+    m_posePublisher.close();
   }
 }
