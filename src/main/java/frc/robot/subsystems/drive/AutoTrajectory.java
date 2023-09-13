@@ -19,6 +19,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.Constants;
 
 public class AutoTrajectory {
@@ -108,7 +109,7 @@ public class AutoTrajectory {
    * Get Ramsete command to run
    * @return Ramsete command that will stop when complete
    */
-  public Command getCommandAndStop() {
+  public SequentialCommandGroup getCommandAndStop() {
     return m_swerveCommand.andThen(() -> {
             m_driveSubsystem.resetTurnPID();
             m_driveSubsystem.lock();
@@ -121,7 +122,7 @@ public class AutoTrajectory {
    * @param isFirstPath true if path is the first one in autonomous
    * @return Ramsete command that will stop when complete
    */
-  public Command getCommandAndStop(boolean isFirstPath) {
+  public SequentialCommandGroup getCommandAndStop(boolean isFirstPath) {
     if (isFirstPath) {
       return new InstantCommand(() -> resetOdometry())
                  .andThen(m_swerveCommand)
@@ -140,7 +141,7 @@ public class AutoTrajectory {
    *     following command.
    * @return Command to execute actions in autonomous
    */
-  public Command getCommandAndStopWithEvents(HashMap<String, Command> eventMap) {
+  public SequentialCommandGroup getCommandAndStopWithEvents(HashMap<String, Command> eventMap) {
     return new FollowPathWithEvents(m_swerveCommand, m_trajectory.getMarkers(), eventMap)
                .andThen(() -> {
                   m_driveSubsystem.resetTurnPID();
@@ -157,7 +158,7 @@ public class AutoTrajectory {
    *     following command.
    * @return Command to execute actions in autonomous
    */
-  public Command getCommandAndStopWithEvents(boolean isFirstPath, HashMap<String, Command> eventMap) {
+  public SequentialCommandGroup getCommandAndStopWithEvents(boolean isFirstPath, HashMap<String, Command> eventMap) {
     if (isFirstPath) {
       return new InstantCommand(() -> resetOdometry())
                  .andThen(new FollowPathWithEvents(m_swerveCommand, m_trajectory.getMarkers(), eventMap))
@@ -173,7 +174,7 @@ public class AutoTrajectory {
    * Get auto command to execute path
    * @return Ramsete command that does NOT stop when complete
    */
-  public Command getCommand() {
+  public SequentialCommandGroup getCommand() {
     return m_swerveCommand.andThen(() -> m_driveSubsystem.resetTurnPID());
   }
 
@@ -182,7 +183,7 @@ public class AutoTrajectory {
    * @param isFirstPath true if path is first one in autonomous
    * @return Ramsete command that does NOT stop when complete
    */
-  public Command getCommand(boolean isFirstPath) {
+  public SequentialCommandGroup getCommand(boolean isFirstPath) {
     if (isFirstPath) {
       return new InstantCommand(() -> resetOdometry())
                  .andThen(m_swerveCommand)

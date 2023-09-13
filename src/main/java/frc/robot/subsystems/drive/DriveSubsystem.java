@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems.drive;
 
+import java.time.Instant;
 import java.util.List;
 
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
@@ -385,7 +386,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     var visionEstimatedRobotPoses = VisionSubsystem.getInstance().getEstimatedGlobalPose();
 
     // Update pose based on odometry
-    m_poseEstimator.update(m_navx.getInputs().rotation2d, getModulePositions());
+    m_poseEstimator.updateWithTime(Instant.now().getEpochSecond(), m_navx.getInputs().rotation2d, getModulePositions());
 
     // Exit if no valid vision pose estimates
     if (visionEstimatedRobotPoses.isEmpty()) return;

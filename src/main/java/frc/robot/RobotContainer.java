@@ -5,10 +5,12 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.commands.TimeSyncCommand;
 import frc.robot.subsystems.drive.DriveSubsystem;
 
 public class RobotContainer {
@@ -29,6 +31,9 @@ public class RobotContainer {
   private static final CommandXboxController PRIMARY_CONTROLLER = new CommandXboxController(Constants.HID.PRIMARY_CONTROLLER_PORT);
 
   public RobotContainer() {
+    // Make sure time is synced to DS
+    CommandScheduler.getInstance().schedule(new TimeSyncCommand());
+
     // Set drive command
     DRIVE_SUBSYSTEM.setDefaultCommand(
       new RunCommand(
@@ -37,6 +42,7 @@ public class RobotContainer {
       )
     );
 
+    // Bind buttons and triggers
     configureBindings();
   }
 
