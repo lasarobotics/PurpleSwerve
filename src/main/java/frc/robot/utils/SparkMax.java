@@ -21,7 +21,6 @@ import com.revrobotics.SparkMaxLimitSwitch;
 import com.revrobotics.SparkMaxPIDController;
 
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.Timer;
 
 public class SparkMax implements AutoCloseable {
@@ -399,7 +398,7 @@ public class SparkMax implements AutoCloseable {
     }
 
     // Generate motion profile
-    m_motionTimer.reset();
+    m_motionTimer.restart();
     m_motionProfile = new TrapezoidProfile(m_motionConstraint, desiredState, currentState);
   }
 
@@ -408,7 +407,7 @@ public class SparkMax implements AutoCloseable {
    */
   public void resetEncoder() {
     m_spark.getEncoder().setPosition(0.0);
-    DataLogManager.log(m_name + ENCODER_RESET_MESSAGE);
+    System.out.println(m_name + ENCODER_RESET_MESSAGE);
   }
 
   /**
@@ -461,6 +460,7 @@ public class SparkMax implements AutoCloseable {
    */
   public void stopMotor() {
     m_spark.stopMotor();
+    logOutputs(0.0, ControlType.kDutyCycle);
   }
 
   /**
