@@ -20,6 +20,7 @@ import frc.robot.Constants;
 
 
 public class AdvancedSwerveKinematics {
+  private static final double EPS = 1E-9;
   private Translation2d[] m_moduleLocations;
 
   /**
@@ -37,6 +38,48 @@ public class AdvancedSwerveKinematics {
   }
 
   /**
+   * Obtain a new pose from a constant curvature velocity
+   * @param delta Velocity 
+   * @return Pose
+   */
+  public static Pose2d exp(final Twist2d delta) {
+    double sin_theta = Math.sin(delta.dtheta);
+    double cos_theta = Math.cos(delta.dtheta);
+    double s, c;
+    if (Math.abs(delta.dtheta) < EPS) {
+      s = 1.0 - 1.0 / 6.0 * delta.dtheta * delta.dtheta;
+      c = .5 * delta.dtheta;
+    } else {
+      s = sin_theta / delta.dtheta;
+      c = (1.0 - cos_theta) / delta.dtheta;
+    }
+    return new Pose2d(
+      new Translation2d(delta.dx * s - delta.dy * c, delta.dx * c + delta.dy * s),
+      new Rotation2d(cos_theta, sin_theta)
+    );
+  }
+
+  /**
+   * Obtain constant curvature velocity given pose
+   * @param transform Pose
+   * @return Velocity
+   */
+  private static Twist2d log(final Pose2d transform) {
+    final double dtheta = transform.getRotation().getRadians();
+    final double half_dtheta = 0.5 * dtheta;
+    final double cos_minus_one = Math.cos(transform.getRotation().getRadians()) - 1.0;
+    double halftheta_by_tan_of_halfdtheta;
+    if (Math.abs(cos_minus_one) < EPS) {
+      halftheta_by_tan_of_halfdtheta = 1.0 - 1.0 / 12.0 * dtheta * dtheta;
+    } else {
+      halftheta_by_tan_of_halfdtheta = -(half_dtheta * Math.sin(transform.getRotation().getRadians())) / cos_minus_one;
+    }
+    final Translation2d translation_part =
+      transform.getTranslation().rotateBy(new Rotation2d(halftheta_by_tan_of_halfdtheta, -half_dtheta));
+    return new Twist2d(translation_part.getX(), translation_part.getY(), dtheta);
+  }
+
+  /**
    * Correct chassis speeds for second order kinematics
    * @param requestedSpeeds Requested chassis speeds
    * @return Corrected chassis speeds
@@ -48,7 +91,7 @@ public class AdvancedSwerveKinematics {
       Rotation2d.fromRadians(requestedSpeeds.omegaRadiansPerSecond * Constants.Global.ROBOT_LOOP_PERIOD)
     );
 
-    Twist2d twistForPose = PoseGeometry.log(futureRobotPose);
+    Twist2d twistForPose = log(futureRobotPose);
 
     ChassisSpeeds correctedSpeeds = new ChassisSpeeds(
       twistForPose.dx / Constants.Global.ROBOT_LOOP_PERIOD,
