@@ -9,7 +9,6 @@ import org.littletonrobotics.junction.Logger;
 
 import com.kauailabs.navx.frc.AHRS;
 
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.SPI;
 
 public class NavX2 implements AutoCloseable {
@@ -29,7 +28,6 @@ public class NavX2 implements AutoCloseable {
     public double xVelocity = 0.0;
     public double yVelocity = 0.0;
     public double yawRate = 0.0;
-    public Rotation2d rotation2d = new Rotation2d();
   }
 
   private AHRS m_navx;
@@ -121,24 +119,6 @@ public class NavX2 implements AutoCloseable {
   private double getRate() {
     return m_navx.getRate();
   }
-  
-  /**
-   * Return the heading of the robot as a {@link edu.wpi.first.math.geometry.Rotation2d}.
-   *
-   * <p>The angle is continuous, that is it will continue from 360 to 361 degrees. This allows
-   * algorithms that wouldn't want to see a discontinuity in the gyro output as it sweeps past from
-   * 360 to 0 on the second time around.
-   *
-   * <p>The angle is expected to increase as the gyro turns counterclockwise when looked at from the
-   * top. It needs to follow the NWU axis convention.
-   *
-   * <p>This heading is based on integration of the returned rate from the gyro.
-   *
-   * @return the current heading of the robot as a {@link edu.wpi.first.math.geometry.Rotation2d}.
-   */
-  private Rotation2d getRotation2d() {
-    return m_navx.getRotation2d();
-  }
 
   /**
    * Update NavX input readings
@@ -150,7 +130,6 @@ public class NavX2 implements AutoCloseable {
     m_inputs.xVelocity = getVelocityX();
     m_inputs.yVelocity = getVelocityY();
     m_inputs.yawRate = getRate();
-    m_inputs.rotation2d = getRotation2d();
   }
 
   /**

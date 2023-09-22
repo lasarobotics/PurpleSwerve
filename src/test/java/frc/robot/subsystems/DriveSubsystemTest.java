@@ -460,7 +460,6 @@ public class DriveSubsystemTest {
 
     NavX2InputsAutoLogged inputs = new NavX2InputsAutoLogged(); 
     inputs.yawAngle = desiredAngle;
-    inputs.rotation2d = Rotation2d.fromDegrees(desiredAngle);
 
     when(m_navx.getInputs()).thenReturn(inputs);
     
@@ -488,7 +487,7 @@ public class DriveSubsystemTest {
     double actualAngle = 0.0;
 
     NavX2InputsAutoLogged inputs = new NavX2InputsAutoLogged();
-    inputs.rotation2d = Rotation2d.fromDegrees(actualAngle);
+    inputs.yawAngle = actualAngle;
 
     when(m_navx.getInputs()).thenReturn(inputs);
     
@@ -500,7 +499,7 @@ public class DriveSubsystemTest {
       m_driveSubsystem.orientTowardsPoint(new Translation2d(0.0, Constants.Field.FIELD_WIDTH));
       actualAngle -= 0.5;
 
-      inputs.rotation2d = Rotation2d.fromDegrees(actualAngle);
+      inputs.yawAngle = actualAngle;
       when(m_navx.getInputs()).thenReturn(inputs);
       
       // Verify that motors are being driven with expected values
@@ -526,7 +525,7 @@ public class DriveSubsystemTest {
     double actualAngle = 0.0;
     
     NavX2InputsAutoLogged inputs = new NavX2InputsAutoLogged(); 
-    inputs.rotation2d = Rotation2d.fromDegrees(actualAngle);
+    inputs.yawAngle = actualAngle;
 
     when(m_navx.getInputs()).thenReturn(inputs);
     
@@ -538,7 +537,7 @@ public class DriveSubsystemTest {
       m_driveSubsystem.orientTowardsPoint(new Translation2d(0.0, 0.0));
       actualAngle -= 0.5;
 
-      inputs.rotation2d = Rotation2d.fromDegrees(actualAngle);
+      inputs.yawAngle = actualAngle;
       when(m_navx.getInputs()).thenReturn(inputs);
       
       // Verify that motors are being driven with expected values

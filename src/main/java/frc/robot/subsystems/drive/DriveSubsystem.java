@@ -386,7 +386,11 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     var visionEstimatedRobotPoses = VisionSubsystem.getInstance().getEstimatedGlobalPose();
 
     // Update pose based on odometry
-    m_poseEstimator.updateWithTime(Instant.now().getEpochSecond(), m_navx.getInputs().rotation2d, getModulePositions());
+    m_poseEstimator.updateWithTime(
+      Instant.now().getEpochSecond(),
+      getRotation2d(),
+      getModulePositions()
+    );
 
     // Exit if no valid vision pose estimates
     if (visionEstimatedRobotPoses.isEmpty()) return;
@@ -579,7 +583,11 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    */
   public void resetPose(Pose2d pose) {
     resetEncoders();
-    m_poseEstimator.resetPosition(m_navx.getInputs().rotation2d, getModulePositions(), pose);
+    m_poseEstimator.resetPosition(
+      getRotation2d(),
+      getModulePositions(),
+      pose
+    );
   }
 
   /**
@@ -644,8 +652,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   }
 
   /**
-   * Get angle of robot
-   * @return Current angle of robot in degrees
+   * Return the heading of the robot in degrees
+   * @return Current heading of the robot in degrees
    */
   public double getAngle() {
     return m_navx.getInputs().yawAngle;
@@ -657,6 +665,18 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    */
   public double getRotateRate() {
     return m_navx.getInputs().yawRate;
+  }
+
+  /**
+   * Return the heading of the robot as a Rotation2d.
+   *
+   * <p>The angle is expected to increase as the gyro turns counterclockwise when looked at from the
+   * top. It needs to follow the NWU axis convention.
+   *
+   * @return Current heading of the robot as a Rotation2d.
+   */
+  public Rotation2d getRotation2d() {
+    return Rotation2d.fromDegrees(-m_navx.getInputs().yawAngle);
   }
 
   @Override
