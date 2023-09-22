@@ -215,6 +215,9 @@ public class LEDStrip implements AutoCloseable {
       this.m_name = name;
       this.m_length = length;
 
+      if (length < Section.SMALL_SECTION_LENGTH * 2 + 1) 
+        throw new IllegalArgumentException("Length is too short, must be at least " + Section.SMALL_SECTION_LENGTH * 2 + 1);
+
       setLength(length);
     }
 
