@@ -14,6 +14,7 @@ import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
@@ -87,7 +88,7 @@ public class AdvancedTrajectory {
    * @param isFirstPath true if path is the first one in autonomous
    * @return Ramsete command that will stop when complete
    */
-  public SequentialCommandGroup getCommandAndStop(boolean isFirstPath) {
+  public Command getCommandAndStop(boolean isFirstPath) {
     if (isFirstPath) {
       return new InstantCommand(() -> resetOdometry())
                  .andThen(m_swerveCommand)
@@ -103,7 +104,7 @@ public class AdvancedTrajectory {
    * Get auto command to execute path
    * @return Ramsete command that does NOT stop when complete
    */
-  public SequentialCommandGroup getCommand() {
+  public Command getCommand() {
     return m_swerveCommand.andThen(() -> m_driveSubsystem.resetTurnPID());
   }
 
@@ -112,7 +113,7 @@ public class AdvancedTrajectory {
    * @param isFirstPath true if path is first one in autonomous
    * @return Ramsete command that does NOT stop when complete
    */
-  public SequentialCommandGroup getCommand(boolean isFirstPath) {
+  public Command getCommand(boolean isFirstPath) {
     if (isFirstPath) {
       return new InstantCommand(() -> resetOdometry())
                  .andThen(m_swerveCommand)

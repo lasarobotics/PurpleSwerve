@@ -141,7 +141,7 @@ public class AutoTrajectory {
    *     following command.
    * @return Command to execute actions in autonomous
    */
-  public SequentialCommandGroup getCommandAndStopWithEvents(HashMap<String, Command> eventMap) {
+  public Command getCommandAndStopWithEvents(HashMap<String, Command> eventMap) {
     return new FollowPathWithEvents(m_swerveCommand, m_trajectory.getMarkers(), eventMap)
                .andThen(() -> {
                   m_driveSubsystem.resetTurnPID();
@@ -158,7 +158,7 @@ public class AutoTrajectory {
    *     following command.
    * @return Command to execute actions in autonomous
    */
-  public SequentialCommandGroup getCommandAndStopWithEvents(boolean isFirstPath, HashMap<String, Command> eventMap) {
+  public Command getCommandAndStopWithEvents(boolean isFirstPath, HashMap<String, Command> eventMap) {
     if (isFirstPath) {
       return new InstantCommand(() -> resetOdometry())
                  .andThen(new FollowPathWithEvents(m_swerveCommand, m_trajectory.getMarkers(), eventMap))
@@ -174,7 +174,7 @@ public class AutoTrajectory {
    * Get auto command to execute path
    * @return Ramsete command that does NOT stop when complete
    */
-  public SequentialCommandGroup getCommand() {
+  public Command getCommand() {
     return m_swerveCommand.andThen(() -> m_driveSubsystem.resetTurnPID());
   }
 
@@ -183,7 +183,7 @@ public class AutoTrajectory {
    * @param isFirstPath true if path is first one in autonomous
    * @return Ramsete command that does NOT stop when complete
    */
-  public SequentialCommandGroup getCommand(boolean isFirstPath) {
+  public Command getCommand(boolean isFirstPath) {
     if (isFirstPath) {
       return new InstantCommand(() -> resetOdometry())
                  .andThen(m_swerveCommand)
