@@ -46,6 +46,7 @@ public class MAXSwerveModule implements AutoCloseable {
   }
 
   private final double LOCK_POSITION = Math.PI / 4;
+  private final double EPSILON = 2e-3;
   private final int DRIVE_MOTOR_CURRENT_LIMIT = 50;
   private final int ROTATE_MOTOR_CURRENT_LIMIT = 20;
 
@@ -57,6 +58,7 @@ public class MAXSwerveModule implements AutoCloseable {
   private double m_driveGearRatio;
   private double m_driveWheelDiameter;
   private double m_radius;
+  private boolean m_autoLock;
 
   private TractionControlController m_tractionControlController;
 
@@ -83,6 +85,7 @@ public class MAXSwerveModule implements AutoCloseable {
     this.m_location = location;
     this.m_driveGearRatio = driveGearRatio;
     this.m_driveWheelDiameter = driveWheelDiameter;
+    this.m_autoLock = true;
     this.m_tractionControlController =  new TractionControlController(slipRatio, maxLinearSpeed);
 
     // Set drive motor to coast
@@ -94,6 +97,9 @@ public class MAXSwerveModule implements AutoCloseable {
     // Set current limits
     m_driveMotor.setSmartCurrentLimit(DRIVE_MOTOR_CURRENT_LIMIT);
     m_rotateMotor.setSmartCurrentLimit(ROTATE_MOTOR_CURRENT_LIMIT);
+
+    // Reset encoder
+    resetDriveEncoder();
 
     // Only do this stuff if hardware is real
     if (swerveHardware.isHardwareReal) {
@@ -148,8 +154,8 @@ public class MAXSwerveModule implements AutoCloseable {
   public static Hardware initializeHardware(boolean isHardwareReal, SparkMax.ID driveMotorID, SparkMax.ID rotateMotorID) {
     Hardware swerveModuleHardware = new Hardware(
       isHardwareReal, 
-      new SparkMax(driveMotorID, MotorType.kBrushless),
-      new SparkMax(rotateMotorID, MotorType.kBrushless)
+      new SparkMax(driveMotorID, MotorType.kBrushless, isHardwareReal),
+      new SparkMax(rotateMotorID, MotorType.kBrushless, isHardwareReal)
     );
 
     return swerveModuleHardware;
@@ -178,6 +184,12 @@ public class MAXSwerveModule implements AutoCloseable {
    * @param state Desired swerve module state
    */
   public void set(SwerveModuleState state) {
+    // Auto lock modules if enabled and speed not requested
+    if (m_autoLock && state.speedMetersPerSecond < EPSILON) {
+      state.speedMetersPerSecond = 0.0;
+      state.angle = Rotation2d.fromRadians(LOCK_POSITION - m_location.offset);
+    }
+
     // Apply chassis angular offset to the requested state.
     SwerveModuleState desiredState = new SwerveModuleState(
       state.speedMetersPerSecond,
