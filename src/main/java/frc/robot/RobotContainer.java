@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -17,9 +18,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.drive.DriveSubsystem;
 
 public class RobotContainer {
-  public static final boolean REAL_HARDWARE = true;
   private static final DriveSubsystem DRIVE_SUBSYSTEM = new DriveSubsystem(
-    DriveSubsystem.initializeHardware(REAL_HARDWARE),
+    DriveSubsystem.initializeHardware(RobotBase.isReal()),
     Constants.Drive.DRIVE_TURN_PID.kP,
     Constants.Drive.DRIVE_TURN_PID.kD,
     Constants.Drive.DRIVE_TURN_SCALAR,
@@ -58,6 +58,7 @@ public class RobotContainer {
    * Wait until RoboRIO syncs time with DS
    */
   private void syncTime() {
+    if (RobotBase.isSimulation()) return;
     int WAIT_TIME = (int)(6 / Constants.Global.ROBOT_LOOP_PERIOD);
     Timer dsConnectedTimer = new Timer();
     ZoneId UTC = ZoneId.of("UTC");
@@ -85,6 +86,10 @@ public class RobotContainer {
     System.out.println("Time synced!");
   }
 
+  /**
+   * Get currently selected autonomous command
+   * @return Autonomous command
+   */
   public Command getAutonomousCommand() {
     return Commands.print("No autonomous command configured");
   }

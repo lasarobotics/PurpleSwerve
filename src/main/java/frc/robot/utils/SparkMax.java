@@ -15,11 +15,13 @@ import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.MotorFeedbackSensor;
+import com.revrobotics.REVPhysicsSim;
 import com.revrobotics.SparkMaxAbsoluteEncoder;
 import com.revrobotics.SparkMaxAnalogSensor;
 import com.revrobotics.SparkMaxLimitSwitch;
 import com.revrobotics.SparkMaxPIDController;
 
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.Timer;
 
@@ -63,6 +65,7 @@ public class SparkMax implements AutoCloseable {
 
   private String m_name;
   private SparkMaxInputsAutoLogged m_inputs;
+  private boolean m_isHardwareReal;
 
   private boolean m_isSmoothMotionEnabled = false;
   private Timer m_motionTimer;
@@ -79,10 +82,11 @@ public class SparkMax implements AutoCloseable {
    * @param deviceID The device ID
    * @param motorType The motor type connected to the controller
    */
-  public SparkMax(ID id, MotorType motorType) {
+  public SparkMax(ID id, MotorType motorType, boolean isHardwareReal) {
     this.m_name = id.name;
     this.m_spark = new CANSparkMax(id.deviceID, motorType);
     this.m_inputs = new SparkMaxInputsAutoLogged();
+    this.m_isHardwareReal = isHardwareReal;
 
     m_spark.restoreFactoryDefaults();
     m_spark.enableVoltageCompensation(MAX_VOLTAGE);
@@ -226,6 +230,11 @@ public class SparkMax implements AutoCloseable {
         SparkMaxPIDController.ArbFFUnits.kVoltage
       );
     }
+  }
+
+  public void addToSimulation(DCMotor motor) {
+    if (m_isHardwareReal) return;
+    REVPhysicsSim.getInstance().addSparkMax(m_spark, motor);
   }
 
   /**
