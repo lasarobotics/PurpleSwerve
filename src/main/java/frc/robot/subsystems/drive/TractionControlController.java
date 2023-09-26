@@ -25,6 +25,7 @@ public class TractionControlController {
 
   private final double MIN_SLIP_RATIO = 0.01;
   private final double MAX_SLIP_RATIO = 0.40;
+  private final double EPSILON = 1e-3;
   private final int FILTER_TIME_CONSTANT_MULTIPLIER = 5;
   private final int DEBOUNCER_TIME_CONSTANT_MULTIPLIER = 5;
 
@@ -32,6 +33,7 @@ public class TractionControlController {
   private double m_optimalSlipRatio = 0.0;
   private double m_currentSlipRatio = 0.0;
   private double m_maxLinearSpeed = 0.0;
+  private double m_prevVelocityRequest = 0.0;
   private boolean m_isSlipping = false;
   private State m_state = State.ENABLED;
 
@@ -75,6 +77,11 @@ public class TractionControlController {
    * @return Optimal motor speed output (m/s)
    */
   public double calculate(double velocityRequest, double inertialVelocity, double wheelSpeed) {
+    // If velocity request has changed or is near zero, reset speed filter
+    if (Math.abs(velocityRequest) < EPSILON || Math.abs(m_prevVelocityRequest - velocityRequest) > EPSILON)
+       m_speedFilter.reset();
+
+    // Initialize velocity output to requested velocity
     double velocityOutput = velocityRequest;
 
     // Make sure wheel speed and inertial velocity are positive
@@ -86,6 +93,9 @@ public class TractionControlController {
     updateSlipRatio(wheelSpeed, inertialVelocity);
     if (isSlipping())
       velocityOutput = Math.copySign(m_optimalSlipRatio * inertialVelocity + m_averageWheelSpeed, velocityRequest);
+
+    // Save velocity request
+    m_prevVelocityRequest = velocityRequest;
 
     // Return corrected velocity output, clamping to max linear speed
     return MathUtil.clamp(velocityOutput, -m_maxLinearSpeed, +m_maxLinearSpeed);
