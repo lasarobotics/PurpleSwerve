@@ -297,6 +297,8 @@ public class MAXSwerveModule implements AutoCloseable {
    */
   public void toggleTractionControl() {
     m_tractionControlController.toggleTractionControl();
+    if (m_tractionControlController.isEnabled()) m_driveMotor.setIdleMode(IdleMode.kCoast);
+    else m_driveMotor.setIdleMode(IdleMode.kBrake);
   }
 
   /**
@@ -304,6 +306,7 @@ public class MAXSwerveModule implements AutoCloseable {
    */
   public void enableTractionControl() {
     m_tractionControlController.enableTractionControl();
+    m_driveMotor.setIdleMode(IdleMode.kCoast);
   }
 
   /**
@@ -311,6 +314,7 @@ public class MAXSwerveModule implements AutoCloseable {
    */
   public void disableTractionControl() {
     m_tractionControlController.disableTractionControl();
+    m_driveMotor.setIdleMode(IdleMode.kBrake);
   }
 
   /**
