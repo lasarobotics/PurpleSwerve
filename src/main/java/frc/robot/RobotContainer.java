@@ -7,6 +7,8 @@ package frc.robot;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
+import com.revrobotics.REVPhysicsSim;
+
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
@@ -19,7 +21,7 @@ import frc.robot.subsystems.drive.DriveSubsystem;
 
 public class RobotContainer {
   private static final DriveSubsystem DRIVE_SUBSYSTEM = new DriveSubsystem(
-    DriveSubsystem.initializeHardware(RobotBase.isReal()),
+    DriveSubsystem.initializeHardware(),
     Constants.Drive.DRIVE_TURN_PID.kP,
     Constants.Drive.DRIVE_TURN_PID.kD,
     Constants.Drive.DRIVE_TURN_SCALAR,
@@ -41,7 +43,7 @@ public class RobotContainer {
     // Set drive command
     DRIVE_SUBSYSTEM.setDefaultCommand(
       new RunCommand(
-        () -> DRIVE_SUBSYSTEM.teleopPID(PRIMARY_CONTROLLER.getLeftY(), PRIMARY_CONTROLLER.getLeftX(), PRIMARY_CONTROLLER.getRightX()), 
+        () -> DRIVE_SUBSYSTEM.teleopPID(-PRIMARY_CONTROLLER.getLeftY(), PRIMARY_CONTROLLER.getLeftX(), PRIMARY_CONTROLLER.getRightX()), 
         DRIVE_SUBSYSTEM
       )
     );
@@ -84,6 +86,13 @@ public class RobotContainer {
       }
     }
     System.out.println("Time synced!");
+  }
+
+  /**
+   * Run simlation related methods
+   */
+  public void simulationPeriodic() {
+    REVPhysicsSim.getInstance().run();
   }
 
   /**

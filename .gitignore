@@ -170,6 +170,9 @@ out/
 
 # Simulation GUI and other tools window save file
 *-window.json
+networktables.json
+simgui.json
+simgui-ds.json
 
 # BuildConstants
 src/main/java/frc/robot/BuildConstants.java

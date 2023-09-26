@@ -37,7 +37,6 @@ import frc.robot.utils.SparkMaxInputsAutoLogged;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class DriveSubsystemTest {
   private final double DELTA = 5e-3;
-  private final boolean MOCK_HARDWARE = false;
   private DriveSubsystem m_driveSubsystem;
   private DriveSubsystem.Hardware m_drivetrainHardware;
 
@@ -77,10 +76,9 @@ public class DriveSubsystemTest {
 
     // Create hardware object using mock devices
     m_drivetrainHardware = new DriveSubsystem.Hardware(
-      MOCK_HARDWARE,
       m_navx,
       new MAXSwerveModule(
-        new MAXSwerveModule.Hardware(MOCK_HARDWARE, m_lFrontDriveMotor, m_lFrontRotateMotor),
+        new MAXSwerveModule.Hardware(m_lFrontDriveMotor, m_lFrontRotateMotor),
         ModuleLocation.LeftFront, 
         Constants.Drive.DRIVE_VELOCITY_CONFIG,
         Constants.Drive.DRIVE_ROTATE_CONFIG,
@@ -92,7 +90,7 @@ public class DriveSubsystemTest {
         DriveSubsystem.DRIVE_WHEEL_DIAMETER_METERS
       ),
       new MAXSwerveModule(
-        new MAXSwerveModule.Hardware(MOCK_HARDWARE, m_rFrontDriveMotor, m_rFrontRotateMotor),
+        new MAXSwerveModule.Hardware(m_rFrontDriveMotor, m_rFrontRotateMotor),
         ModuleLocation.RightFront, 
         Constants.Drive.DRIVE_VELOCITY_CONFIG,
         Constants.Drive.DRIVE_ROTATE_CONFIG,
@@ -104,7 +102,7 @@ public class DriveSubsystemTest {
         DriveSubsystem.DRIVE_WHEEL_DIAMETER_METERS
       ),
       new MAXSwerveModule(
-        new MAXSwerveModule.Hardware(MOCK_HARDWARE, m_lRearDriveMotor, m_lRearRotateMotor),
+        new MAXSwerveModule.Hardware(m_lRearDriveMotor, m_lRearRotateMotor),
         ModuleLocation.LeftRear, 
         Constants.Drive.DRIVE_VELOCITY_CONFIG,
         Constants.Drive.DRIVE_ROTATE_CONFIG,
@@ -116,7 +114,7 @@ public class DriveSubsystemTest {
         DriveSubsystem.DRIVE_WHEEL_DIAMETER_METERS
       ),
       new MAXSwerveModule(
-        new MAXSwerveModule.Hardware(MOCK_HARDWARE, m_rRearDriveMotor, m_rRearRotateMotor),
+        new MAXSwerveModule.Hardware(m_rRearDriveMotor, m_rRearRotateMotor),
         ModuleLocation.RightRear,
         Constants.Drive.DRIVE_VELOCITY_CONFIG,
         Constants.Drive.DRIVE_ROTATE_CONFIG,

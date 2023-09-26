@@ -28,6 +28,8 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
@@ -42,7 +44,6 @@ import frc.robot.utils.NavX2;
 
 public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   public static class Hardware {
-    boolean isHardwareReal;
     NavX2 navx;
     MAXSwerveModule lFrontModule;
     MAXSwerveModule rFrontModule;
@@ -50,14 +51,12 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     MAXSwerveModule rRearModule;
     LEDStrip ledStrip;
 
-    public Hardware(boolean isHardwareReal,
-                    NavX2 navx,
+    public Hardware(NavX2 navx,
                     MAXSwerveModule lFrontModule,
                     MAXSwerveModule rFrontModule,
                     MAXSwerveModule lRearModule,
                     MAXSwerveModule rRearModule,
                     LEDStrip ledStrip) {
-      this.isHardwareReal = isHardwareReal;
       this.navx = navx;
       this.lFrontModule = lFrontModule;
       this.rFrontModule = rFrontModule;
@@ -100,11 +99,11 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
   private final String POSE_LOG_ENTRY = "Pose"; 
 
+  private Field2d m_field;
   private NetworkTable m_table;
   private DoubleArrayPublisher m_posePublisher;
 
   private boolean m_isTractionControlEnabled = true;
-
 
   public final Command ANTI_TIP_COMMAND = new FunctionalCommand(
     () -> m_ledStrip.set(Pattern.RED_STROBE),
@@ -189,6 +188,9 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     // Set LED strip to team color
     m_ledStrip.set(Pattern.TEAM_COLOR_SOLID);
 
+    // Initialize field
+    m_field = new Field2d();
+
     // Setup NetworkTables
     m_table = NetworkTableInstance.getDefault().getTable(getName());
     m_posePublisher = m_table.getDoubleArrayTopic(POSE_LOG_ENTRY).publish();
@@ -196,15 +198,13 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
   /**
    * Initialize hardware devices for drive subsystem
-   * @param isHardwareReal True if hardware is real
    * @return Hardware object containing all necessary devices for this subsystem
    */
-  public static Hardware initializeHardware(boolean isHardwareReal) {
+  public static Hardware initializeHardware() {
     NavX2 navx = new NavX2(Constants.DriveHardware.NAVX_ID, Constants.Global.ROBOT_LOOP_HZ);
 
     MAXSwerveModule lFrontModule = new MAXSwerveModule(
       MAXSwerveModule.initializeHardware(
-        isHardwareReal,
         Constants.DriveHardware.LEFT_FRONT_DRIVE_MOTOR_ID,
         Constants.DriveHardware.LEFT_FRONT_ROTATE_MOTOR_ID
       ),
@@ -221,7 +221,6 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
     MAXSwerveModule rFrontModule = new MAXSwerveModule(
       MAXSwerveModule.initializeHardware(
-        isHardwareReal,
         Constants.DriveHardware.RIGHT_FRONT_DRIVE_MOTOR_ID,
         Constants.DriveHardware.RIGHT_FRONT_ROTATE_MOTOR_ID
       ),
@@ -238,7 +237,6 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
     MAXSwerveModule lRearModule = new MAXSwerveModule(
       MAXSwerveModule.initializeHardware(
-        isHardwareReal,
         Constants.DriveHardware.LEFT_REAR_DRIVE_MOTOR_ID,
         Constants.DriveHardware.LEFT_REAR_ROTATE_MOTOR_ID
       ),
@@ -255,7 +253,6 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
     MAXSwerveModule rRearModule = new MAXSwerveModule(
       MAXSwerveModule.initializeHardware(
-        isHardwareReal,
         Constants.DriveHardware.RIGHT_REAR_DRIVE_MOTOR_ID,
         Constants.DriveHardware.RIGHT_REAR_ROTATE_MOTOR_ID
       ),
@@ -270,11 +267,9 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
       DRIVE_WHEEL_DIAMETER_METERS
     );
 
-    LEDStrip ledStrip = new LEDStrip(
-      LEDStrip.initializeHardware(isHardwareReal, Constants.DriveHardware.LED_STRIP_ID)
-    );
+    LEDStrip ledStrip = new LEDStrip(LEDStrip.initializeHardware(Constants.DriveHardware.LED_STRIP_ID));
 
-    Hardware drivetrainHardware = new Hardware(isHardwareReal, navx, lFrontModule, rFrontModule, lRearModule, rRearModule, ledStrip);
+    Hardware drivetrainHardware = new Hardware(navx, lFrontModule, rFrontModule, lRearModule, rRearModule, ledStrip);
 
     return drivetrainHardware;  
   }
@@ -382,15 +377,18 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * Update robot pose
    */
   private void updatePose() {
-    // Get estimated poses from VisionSubsystem
-    var visionEstimatedRobotPoses = VisionSubsystem.getInstance().getEstimatedGlobalPose();
-
     // Update pose based on odometry
     m_poseEstimator.updateWithTime(
       Instant.now().getEpochSecond(),
       getRotation2d(),
       getModulePositions()
     );
+
+    // Skip vision pose estimation if running in simulation
+    if (RobotBase.isSimulation()) return;
+
+    // Get estimated poses from VisionSubsystem
+    var visionEstimatedRobotPoses = VisionSubsystem.getInstance().getEstimatedGlobalPose();
 
     // Exit if no valid vision pose estimates
     if (visionEstimatedRobotPoses.isEmpty()) return;
@@ -412,6 +410,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    */
   public void smartDashboard() {
     SmartDashboard.putBoolean("TC", m_isTractionControlEnabled);
+    SmartDashboard.putData("Field", m_field);
   }
 
   /**
@@ -421,6 +420,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     Pose2d currentPose = getPose();
     double[] poseArray = { currentPose.getX(), currentPose.getY(), currentPose.getRotation().getDegrees() };
     m_posePublisher.set(poseArray);
+    m_field.setRobotPose(currentPose);
   }
 
   @Override
@@ -436,6 +436,11 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     smartDashboard();
     publishData();
     logOutputs();
+  }
+
+  @Override
+  public void simulationPeriodic() {
+    m_navx.setSimAngle(getPose().getRotation().getDegrees());
   }
 
   /**

@@ -9,6 +9,8 @@ import org.littletonrobotics.junction.Logger;
 
 import com.kauailabs.navx.frc.AHRS;
 
+import edu.wpi.first.hal.SimDouble;
+import edu.wpi.first.hal.simulation.SimDeviceDataJNI;
 import edu.wpi.first.wpilibj.SPI;
 
 public class NavX2 implements AutoCloseable {
@@ -31,6 +33,7 @@ public class NavX2 implements AutoCloseable {
   }
 
   private AHRS m_navx;
+  private SimDouble m_simNavX;
 
   private String m_name;
   private NavX2InputsAutoLogged m_inputs;
@@ -43,6 +46,7 @@ public class NavX2 implements AutoCloseable {
     this.m_name = id.name;
     this.m_navx = new AHRS(SPI.Port.kMXP, (byte)updateRate);
     this.m_inputs = new NavX2InputsAutoLogged();
+    this.m_simNavX = new SimDouble(SimDeviceDataJNI.getSimValueHandle(SimDeviceDataJNI.getSimDeviceHandle("navX-Sensor[0]"), "Yaw"));
   }
 
   /**
@@ -184,6 +188,14 @@ public class NavX2 implements AutoCloseable {
    */
   public void reset() {
     m_navx.reset();
+  }
+
+  /**
+   * Set yaw angle for simulator
+   * @param angle Angle to set in degrees
+   */
+  public void setSimAngle(double angle) {
+    m_simNavX.set(angle);
   }
 
   /**

@@ -31,11 +31,9 @@ public class LEDStrip implements AutoCloseable {
   }
 
   public static class Hardware {
-    boolean isHardwareReal;
     AddressableLED ledStrip;
 
-    public Hardware(boolean isHardwareReal, AddressableLED ledStrip) {
-      this.isHardwareReal = isHardwareReal;
+    public Hardware(AddressableLED ledStrip) {
       this.ledStrip = ledStrip;
     }
   }
@@ -258,8 +256,8 @@ public class LEDStrip implements AutoCloseable {
    * @param ledStripPort PWM port for LED strip
    * @return Hardware object containing all necessary devices
    */
-  public static Hardware initializeHardware(boolean isHardwareReal, ID id) {
-    Hardware ledStripHardware = new Hardware(isHardwareReal, new AddressableLED(id.name, id.port, id.length));
+  public static Hardware initializeHardware(ID id) {
+    Hardware ledStripHardware = new Hardware(new AddressableLED(id.name, id.port, id.length));
 
     return ledStripHardware;
   }

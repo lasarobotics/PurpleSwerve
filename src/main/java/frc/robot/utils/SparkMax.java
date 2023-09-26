@@ -65,7 +65,6 @@ public class SparkMax implements AutoCloseable {
 
   private String m_name;
   private SparkMaxInputsAutoLogged m_inputs;
-  private boolean m_isHardwareReal;
 
   private boolean m_isSmoothMotionEnabled = false;
   private Timer m_motionTimer;
@@ -82,11 +81,10 @@ public class SparkMax implements AutoCloseable {
    * @param deviceID The device ID
    * @param motorType The motor type connected to the controller
    */
-  public SparkMax(ID id, MotorType motorType, boolean isHardwareReal) {
+  public SparkMax(ID id, MotorType motorType) {
     this.m_name = id.name;
     this.m_spark = new CANSparkMax(id.deviceID, motorType);
     this.m_inputs = new SparkMaxInputsAutoLogged();
-    this.m_isHardwareReal = isHardwareReal;
 
     m_spark.restoreFactoryDefaults();
     m_spark.enableVoltageCompensation(MAX_VOLTAGE);
@@ -125,7 +123,7 @@ public class SparkMax implements AutoCloseable {
   }
 
   /**
-   * Get the position of the motor. This returns the native units of 'rotations' by default, and can
+   * Get the position of the motor encoder. This returns the native units of 'rotations' by default, and can
    * be changed by a scale factor using setPositionConversionFactor().
    * @return Number of rotations of the motor
    */
@@ -134,7 +132,7 @@ public class SparkMax implements AutoCloseable {
   }
 
   /**
-   * Get the velocity of the motor. This returns the native units of 'RPM' by default, and can be
+   * Get the velocity of the motor encoder. This returns the native units of 'RPM' by default, and can be
    * changed by a scale factor using setVelocityConversionFactor().
    * @return Number the RPM of the motor
    */
@@ -151,7 +149,7 @@ public class SparkMax implements AutoCloseable {
   }
 
   /**
-   * Get position of the motor. This returns the native units 'volt' by default, and can
+   * Get position of the analog sensor. This returns the native units 'volt' by default, and can
    * be changed by a scale factor using setPositionConversionFactor().
    * @return Volts on the sensor
    */
@@ -160,7 +158,7 @@ public class SparkMax implements AutoCloseable {
   }
 
   /**
-   * Get the velocity of the motor. This returns the native units of 'volts per second' by default, and can be
+   * Get the velocity of the analog sensor. This returns the native units of 'volts per second' by default, and can be
    * changed by a scale factor using setVelocityConversionFactor().
    * @return Volts per second on the sensor
    */
@@ -177,7 +175,7 @@ public class SparkMax implements AutoCloseable {
   }
 
   /**
-   * Get position of the motor. This returns the native units 'rotations' by default, and can
+   * Get position of the absolute encoder. This returns the native units 'rotations' by default, and can
    * be changed by a scale factor using setPositionConversionFactor().
    * @return Number of rotations of the motor
    */
@@ -186,7 +184,7 @@ public class SparkMax implements AutoCloseable {
   }
 
   /**
-   * Get the velocity of the motor. This returns the native units of 'RPM' by default, and can be
+   * Get the velocity of the absolute encoder. This returns the native units of 'RPM' by default, and can be
    * changed by a scale factor using setVelocityConversionFactor().
    * @return Number the RPM of the motor
    */
@@ -233,7 +231,6 @@ public class SparkMax implements AutoCloseable {
   }
 
   public void addToSimulation(DCMotor motor) {
-    if (m_isHardwareReal) return;
     REVPhysicsSim.getInstance().addSparkMax(m_spark, motor);
   }
 

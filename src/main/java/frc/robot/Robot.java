@@ -35,10 +35,15 @@ public class Robot extends LoggedRobot {
       Logger.getInstance().addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
       new PowerDistribution(1, ModuleType.kRev); // Enables power distribution logging
     } else {
-      setUseTiming(false); // Run as fast as possible
-      String logPath = LogFileUtil.findReplayLog(); // Pull the replay log from AdvantageScope (or prompt the user)
-      Logger.getInstance().setReplaySource(new WPILOGReader(logPath)); // Read replay log
-      Logger.getInstance().addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim"))); // Save outputs to a new log
+      String replay = System.getenv(Constants.Global.REPLAY_ENVIRONMENT_VAR);
+      if (replay == null || replay.isBlank()) {
+        Logger.getInstance().addDataReceiver(new NT4Publisher());
+      } else {
+        setUseTiming(false); // Run as fast as possible
+        String logPath = LogFileUtil.findReplayLog(); // Pull the replay log from AdvantageScope (or prompt the user)
+        Logger.getInstance().setReplaySource(new WPILOGReader(logPath)); // Read replay log
+        Logger.getInstance().addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim"))); // Save outputs to a new log
+      }
     }
     
     Logger.getInstance().start(); // Start logging! No more data receivers, replay sources, or metadata values may be added.
@@ -87,6 +92,11 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void teleopExit() {}
+
+  @Override
+  public void simulationPeriodic() {
+    m_robotContainer.simulationPeriodic();
+  }
 
   @Override
   public void testInit() {

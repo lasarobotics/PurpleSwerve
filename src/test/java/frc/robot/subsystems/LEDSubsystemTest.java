@@ -30,7 +30,6 @@ import frc.robot.subsystems.led.LEDSubsystem;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class LEDSubsystemTest {
-  private final boolean MOCK_HARDWARE = false;
   private final int LENGTH = 30;
   private final int MIDDLE_START = 10;
   private final int MIDDLE_END = 20;
@@ -53,8 +52,8 @@ public class LEDSubsystemTest {
     when(m_leds2.getLength()).thenReturn(LENGTH);
 
     // Create LED strip objects
-    m_ledStrip1 = new LEDStrip(new Hardware(MOCK_HARDWARE, m_leds1));
-    m_ledStrip2 = new LEDStrip(new Hardware(MOCK_HARDWARE, m_leds2));
+    m_ledStrip1 = new LEDStrip(new Hardware(m_leds1));
+    m_ledStrip2 = new LEDStrip(new Hardware(m_leds2));
 
     // Create LEDSubsystem object
     m_ledSubsystem = LEDSubsystem.getInstance();

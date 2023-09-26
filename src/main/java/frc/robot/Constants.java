@@ -38,6 +38,8 @@ public final class Constants {
     public static final int NEO_MAX_RPM = 5676;
     public static final int NEO_ENCODER_TICKS_PER_ROTATION = 42;
     public static final int REV_ENCODER_TICKS_PER_ROTATION = 8192;
+
+    public static final String REPLAY_ENVIRONMENT_VAR = "ROBOT_REPLAY";
   }
 
   public static class Field {

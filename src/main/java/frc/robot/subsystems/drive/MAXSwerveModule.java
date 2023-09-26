@@ -12,6 +12,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.system.plant.DCMotor;
 import frc.robot.utils.SparkMax;
 import frc.robot.utils.SparkPIDConfig;
 
@@ -20,12 +21,10 @@ import frc.robot.utils.SparkPIDConfig;
  */
 public class MAXSwerveModule implements AutoCloseable {
   public static class Hardware {
-    private boolean isHardwareReal;
     private SparkMax driveMotor;
     private SparkMax rotateMotor;
 
-    public Hardware(boolean isHardwareReal, SparkMax driveMotor, SparkMax rotateMotor) {
-      this.isHardwareReal = isHardwareReal;
+    public Hardware(SparkMax driveMotor, SparkMax rotateMotor) {
       this.driveMotor = driveMotor;
       this.rotateMotor = rotateMotor;
     }
@@ -101,25 +100,26 @@ public class MAXSwerveModule implements AutoCloseable {
     // Reset encoder
     resetDriveEncoder();
 
-    // Only do this stuff if hardware is real
-    if (swerveHardware.isHardwareReal) {
-      // Initialize PID
-      m_driveMotor.initializeSparkPID(driveMotorConfig, SparkMax.FeedbackSensor.NEO_ENCODER);
-      m_rotateMotor.initializeSparkPID(rotateMotorConfig, SparkMax.FeedbackSensor.THROUGH_BORE_ENCODER);
+    // Initialize PID
+    m_driveMotor.initializeSparkPID(driveMotorConfig, SparkMax.FeedbackSensor.NEO_ENCODER);
+    m_rotateMotor.initializeSparkPID(rotateMotorConfig, SparkMax.FeedbackSensor.THROUGH_BORE_ENCODER);
 
-      // Set drive encoder conversion factor
-      double driveConversionFactor = m_driveWheelDiameter * Math.PI / m_driveGearRatio;
-      m_driveMotor.setPositionConversionFactor(SparkMax.FeedbackSensor.NEO_ENCODER, driveConversionFactor);
-      m_driveMotor.setVelocityConversionFactor(SparkMax.FeedbackSensor.NEO_ENCODER, driveConversionFactor / 60);
+    // Set drive encoder conversion factor
+    double driveConversionFactor = m_driveWheelDiameter * Math.PI / m_driveGearRatio;
+    m_driveMotor.setPositionConversionFactor(SparkMax.FeedbackSensor.NEO_ENCODER, driveConversionFactor);
+    m_driveMotor.setVelocityConversionFactor(SparkMax.FeedbackSensor.NEO_ENCODER, driveConversionFactor / 60);
 
-      // Set rotate encoder conversion factor
-      double rotateConversionFactor = 2 * Math.PI;
-      m_rotateMotor.setPositionConversionFactor(SparkMax.FeedbackSensor.THROUGH_BORE_ENCODER, rotateConversionFactor);
-      m_rotateMotor.setVelocityConversionFactor(SparkMax.FeedbackSensor.THROUGH_BORE_ENCODER, rotateConversionFactor / 60);
+    // Set rotate encoder conversion factor
+    double rotateConversionFactor = 2 * Math.PI;
+    m_rotateMotor.setPositionConversionFactor(SparkMax.FeedbackSensor.THROUGH_BORE_ENCODER, rotateConversionFactor);
+    m_rotateMotor.setVelocityConversionFactor(SparkMax.FeedbackSensor.THROUGH_BORE_ENCODER, rotateConversionFactor / 60);
 
-      // Enable PID wrapping
-      m_rotateMotor.enablePIDWrapping(0.0, 2 * Math.PI);
-    }
+    // Enable PID wrapping
+    m_rotateMotor.enablePIDWrapping(0.0, 2 * Math.PI);
+  
+    // Add motors to REVPhysicsSim
+    m_driveMotor.addToSimulation(DCMotor.getNEO(1));
+    m_rotateMotor.addToSimulation(DCMotor.getNeo550(1));
 
     // Calculate module coordinate
     switch (location) {
@@ -146,16 +146,14 @@ public class MAXSwerveModule implements AutoCloseable {
 
   /**
    * Initialize hardware devices for MAXSwerve module
-   * @param isHardwareReal True if hardware is real
    * @param driveMotorID Drive motor ID
    * @param rotateMotorID Rotate motor ID
    * @return Hardware object containing all necessary objects for a MAXSwerve module
    */
-  public static Hardware initializeHardware(boolean isHardwareReal, SparkMax.ID driveMotorID, SparkMax.ID rotateMotorID) {
+  public static Hardware initializeHardware(SparkMax.ID driveMotorID, SparkMax.ID rotateMotorID) {
     Hardware swerveModuleHardware = new Hardware(
-      isHardwareReal, 
-      new SparkMax(driveMotorID, MotorType.kBrushless, isHardwareReal),
-      new SparkMax(rotateMotorID, MotorType.kBrushless, isHardwareReal)
+      new SparkMax(driveMotorID, MotorType.kBrushless),
+      new SparkMax(rotateMotorID, MotorType.kBrushless)
     );
 
     return swerveModuleHardware;
