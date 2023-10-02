@@ -22,7 +22,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Constants;
 
 /** Create a camera */
- public class VisionCamera implements Runnable, AutoCloseable {
+public class VisionCamera implements Runnable, AutoCloseable {
   private final double APRILTAG_POSE_AMBIGUITY_THRESHOLD = 0.2;
 
   @AutoLog
