@@ -80,6 +80,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
   private ThrottleMap m_throttleMap;
   private TurnPIDController m_turnPIDController;
+  private TurnPIDController m_autoAimPIDController;
   private SwerveDriveKinematics m_kinematics;
   private SwerveDrivePoseEstimator m_poseEstimator;
   private AdvancedSwerveKinematics m_advancedKinematics;
@@ -195,6 +196,10 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
     // Initialize field
     m_field = new Field2d();
+
+    // Setup auto-aim PID controller
+    m_autoAimPIDController = m_turnPIDController;
+    m_autoAimPIDController.enableContinuousInput(-180.0, +180.0);
 
     // Setup NetworkTables
     m_table = NetworkTableInstance.getDefault().getTable(getName());
@@ -516,12 +521,12 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   }
 
   /**
-   * Orient robot towards a desired point on the field
+   * Aim robot at a desired point on the field
    * @param xRequest Desired X axis (forward) speed [-1.0, +1.0]
    * @param yRequest Desired Y axis (sideways) speed [-1.0, +1.0]
    * @param point Target point
    */
-  public void orientTowardsPoint(double xRequest, double yRequest, Translation2d point) {
+  public void aimAtPoint(double xRequest, double yRequest, Translation2d point) {
     double moveRequest = Math.hypot(xRequest, yRequest);
     double moveDirection = Math.atan2(yRequest, xRequest);
     double velocityOutput = m_throttleMap.throttleLookup(moveRequest);
@@ -529,17 +534,17 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     Pose2d currentPose = getPose();
     double currentAngle = currentPose.getRotation().getDegrees();
     double desiredAngle = Math.toDegrees(Math.atan2(point.getY() - currentPose.getY(), point.getX() - currentPose.getX()));
-    double rotateOutput = m_turnPIDController.calculate(currentAngle, desiredAngle);
+    double rotateOutput = m_autoAimPIDController.calculate(currentAngle, desiredAngle);
 
     drive(velocityOutput * Math.cos(moveDirection), velocityOutput * Math.sin(moveDirection), -rotateOutput);
   }
 
   /**
-   * Orient robot towards a desired point on the field (without any strafing)
+   * Aim robot at a desired point on the field (without any strafing)
    * @param point Destination point
    */
-  public void orientTowardsPoint(Translation2d point) {
-    orientTowardsPoint(0.0, 0.0, point);
+  public void aimAtPoint(Translation2d point) {
+    aimAtPoint(0.0, 0.0, point);
   }
 
   /**

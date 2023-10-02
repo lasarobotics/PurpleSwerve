@@ -9,6 +9,7 @@ import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import frc.robot.subsystems.drive.DriveSubsystem;
 import frc.robot.subsystems.led.LEDStrip;
@@ -45,6 +46,8 @@ public final class Constants {
   public static class Field {
     public static final double FIELD_WIDTH = 8.1026;
     public static final double FIELD_LENGTH = 16.4846;
+
+    public static final Translation2d CENTER = new Translation2d(FIELD_LENGTH / 2, FIELD_WIDTH / 2);
   }
 
   public static class HID {
