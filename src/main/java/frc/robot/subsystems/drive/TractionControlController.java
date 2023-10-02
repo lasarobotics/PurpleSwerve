@@ -26,7 +26,7 @@ public class TractionControlController {
   private final double MIN_SLIP_RATIO = 0.01;
   private final double MAX_SLIP_RATIO = 0.40;
   private final double EPSILON = 1e-3;
-  private final int FILTER_TIME_CONSTANT_MULTIPLIER = 5;
+  private final int FILTER_TIME_CONSTANT_MULTIPLIER = 10;
   private final int DEBOUNCER_TIME_CONSTANT_MULTIPLIER = 5;
 
   private double m_averageWheelSpeed = 0.0;
@@ -63,7 +63,7 @@ public class TractionControlController {
     m_averageWheelSpeed = m_speedFilter.calculate(wheelSpeed);
 
     // Calculate current slip ratio
-    m_currentSlipRatio = ((wheelSpeed - m_averageWheelSpeed) / inertialVelocity);
+    m_currentSlipRatio = ((m_averageWheelSpeed - inertialVelocity) / inertialVelocity);
 
     // Check if wheel is slipping, false if disabled
     m_isSlipping = m_slippingDebouncer.calculate(m_currentSlipRatio > m_optimalSlipRatio) & isEnabled();
@@ -79,7 +79,7 @@ public class TractionControlController {
   public double calculate(double velocityRequest, double inertialVelocity, double wheelSpeed) {
     // If velocity request has changed or is near zero, reset speed filter
     if (Math.abs(velocityRequest) < EPSILON || Math.abs(m_prevVelocityRequest - velocityRequest) > EPSILON)
-       m_speedFilter.reset();
+      m_speedFilter.reset();
 
     // Initialize velocity output to requested velocity
     double velocityOutput = velocityRequest;
