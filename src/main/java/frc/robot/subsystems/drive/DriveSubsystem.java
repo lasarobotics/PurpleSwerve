@@ -176,7 +176,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
       m_kinematics,
       Rotation2d.fromDegrees(getAngle()),
       getModulePositions(), 
-      new Pose2d(Constants.Field.FIELD_LENGTH / 2, Constants.Field.FIELD_WIDTH / 2, Rotation2d.fromDegrees(0.0)),
+      new Pose2d(),
       ODOMETRY_STDDEV,
       VISION_STDDEV
     );
@@ -338,13 +338,13 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    */
   private void drive(double xRequest, double yRequest, double rotateRequest) {
      // Get requested chassis speeds, correcting for second order kinematics
-    ChassisSpeeds desiredChassisSpeeds = AdvancedSwerveKinematics.correctForDynamics(
+    m_desiredChassisSpeeds = AdvancedSwerveKinematics.correctForDynamics(
       new ChassisSpeeds(xRequest, yRequest, Math.toRadians(rotateRequest))
     );
 
     // Convert speeds to module states, correcting for 2nd order kinematics
     SwerveModuleState[] moduleStates = m_advancedKinematics.toSwerveModuleStates(
-      desiredChassisSpeeds,
+      m_desiredChassisSpeeds,
       getPose().getRotation()
     );
 
@@ -531,7 +531,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     double desiredAngle = Math.toDegrees(Math.atan2(point.getY() - currentPose.getY(), point.getX() - currentPose.getX()));
     double rotateOutput = m_turnPIDController.calculate(currentAngle, desiredAngle);
 
-    drive(velocityOutput * Math.cos(moveDirection), velocityOutput * Math.sin(moveDirection), rotateOutput);
+    drive(velocityOutput * Math.cos(moveDirection), velocityOutput * Math.sin(moveDirection), -rotateOutput);
   }
 
   /**

@@ -9,6 +9,7 @@ import java.time.ZoneId;
 
 import com.revrobotics.REVPhysicsSim;
 
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
@@ -54,6 +55,16 @@ public class RobotContainer {
 
   private void configureBindings() {
     PRIMARY_CONTROLLER.start().onTrue(new InstantCommand(() -> DRIVE_SUBSYSTEM.toggleTractionControl(), DRIVE_SUBSYSTEM));
+    PRIMARY_CONTROLLER.leftBumper().whileTrue(
+      new RunCommand(
+        () -> DRIVE_SUBSYSTEM.orientTowardsPoint(
+          -PRIMARY_CONTROLLER.getLeftY(),
+          -PRIMARY_CONTROLLER.getLeftX(),
+          new Translation2d(Constants.Field.FIELD_LENGTH / 2, Constants.Field.FIELD_WIDTH / 2)
+        ), 
+        DRIVE_SUBSYSTEM
+      )
+    ).onFalse(new InstantCommand(() -> DRIVE_SUBSYSTEM.resetTurnPID(), DRIVE_SUBSYSTEM));
   }
 
   /**
