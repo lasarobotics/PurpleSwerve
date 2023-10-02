@@ -188,6 +188,7 @@ public class NavX2 implements AutoCloseable {
    */
   public void reset() {
     m_navx.reset();
+    m_simNavX.set(0.0);
   }
 
   /**
@@ -196,6 +197,14 @@ public class NavX2 implements AutoCloseable {
    */
   public void setSimAngle(double angle) {
     m_simNavX.set(angle);
+  }
+
+  /**
+   * Get yaw angle for simulator
+   * @return Simulated angle that was set
+   */
+  public double getSimAngle() {
+    return m_simNavX.get();
   }
 
   /**

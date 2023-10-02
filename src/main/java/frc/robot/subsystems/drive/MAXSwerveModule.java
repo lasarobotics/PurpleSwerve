@@ -13,6 +13,8 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.wpilibj.RobotBase;
+import frc.robot.Constants;
 import frc.robot.utils.SparkMax;
 import frc.robot.utils.SparkPIDConfig;
 
@@ -56,6 +58,10 @@ public class MAXSwerveModule implements AutoCloseable {
 
   private double m_driveGearRatio;
   private double m_driveWheelDiameter;
+  private double m_driveConversionFactor;
+  private double m_rotateConversionFactor;
+  private double m_simDrivePosition;
+  private double m_simRotatePosition;
   private double m_radius;
   private boolean m_autoLock;
 
@@ -85,6 +91,8 @@ public class MAXSwerveModule implements AutoCloseable {
     this.m_driveGearRatio = driveGearRatio;
     this.m_driveWheelDiameter = driveWheelDiameter;
     this.m_autoLock = true;
+    this.m_simDrivePosition = 0.0;
+    this.m_simRotatePosition = 0.0;
     this.m_tractionControlController =  new TractionControlController(slipRatio, maxLinearSpeed);
 
     // Set drive motor to coast
@@ -105,14 +113,14 @@ public class MAXSwerveModule implements AutoCloseable {
     m_rotateMotor.initializeSparkPID(rotateMotorConfig, SparkMax.FeedbackSensor.THROUGH_BORE_ENCODER);
 
     // Set drive encoder conversion factor
-    double driveConversionFactor = m_driveWheelDiameter * Math.PI / m_driveGearRatio;
-    m_driveMotor.setPositionConversionFactor(SparkMax.FeedbackSensor.NEO_ENCODER, driveConversionFactor);
-    m_driveMotor.setVelocityConversionFactor(SparkMax.FeedbackSensor.NEO_ENCODER, driveConversionFactor / 60);
+    m_driveConversionFactor = m_driveWheelDiameter * Math.PI / m_driveGearRatio;
+    m_driveMotor.setPositionConversionFactor(SparkMax.FeedbackSensor.NEO_ENCODER, m_driveConversionFactor);
+    m_driveMotor.setVelocityConversionFactor(SparkMax.FeedbackSensor.NEO_ENCODER, m_driveConversionFactor / 60);
 
     // Set rotate encoder conversion factor
-    double rotateConversionFactor = 2 * Math.PI;
-    m_rotateMotor.setPositionConversionFactor(SparkMax.FeedbackSensor.THROUGH_BORE_ENCODER, rotateConversionFactor);
-    m_rotateMotor.setVelocityConversionFactor(SparkMax.FeedbackSensor.THROUGH_BORE_ENCODER, rotateConversionFactor / 60);
+    m_rotateConversionFactor = 2 * Math.PI;
+    m_rotateMotor.setPositionConversionFactor(SparkMax.FeedbackSensor.THROUGH_BORE_ENCODER, m_rotateConversionFactor);
+    m_rotateMotor.setVelocityConversionFactor(SparkMax.FeedbackSensor.THROUGH_BORE_ENCODER, m_rotateConversionFactor / 60);
 
     // Enable PID wrapping
     m_rotateMotor.enablePIDWrapping(0.0, 2 * Math.PI);
@@ -203,6 +211,12 @@ public class MAXSwerveModule implements AutoCloseable {
     
     // Set drive motor speed
     m_driveMotor.set(desiredState.speedMetersPerSecond, ControlType.kVelocity);
+
+    // Save drive and rotate position for simulation purposes only
+    if (RobotBase.isSimulation()) {
+      m_simDrivePosition += desiredState.speedMetersPerSecond * Constants.Global.ROBOT_LOOP_PERIOD;
+      m_simRotatePosition = desiredState.angle.getRadians();
+    }
   }
 
   /**
@@ -253,11 +267,18 @@ public class MAXSwerveModule implements AutoCloseable {
    * Get current module state
    * @return Current module state
    */
-  public SwerveModuleState getCurrentState() {
-    return new SwerveModuleState(
-      getDriveVelocity(),
-      Rotation2d.fromRadians(m_rotateMotor.getInputs().absoluteEncoderPosition - m_location.offset)
-    );
+  public SwerveModuleState getState() {
+    if (RobotBase.isReal()) {
+      return new SwerveModuleState(
+        getDriveVelocity(),
+        Rotation2d.fromRadians(m_rotateMotor.getInputs().absoluteEncoderPosition - m_location.offset)
+      );
+    } else {
+       return new SwerveModuleState(
+        getDriveVelocity(),
+        Rotation2d.fromRadians(m_simRotatePosition - m_location.offset)
+      );
+    }
   }
 
   /**
@@ -265,10 +286,17 @@ public class MAXSwerveModule implements AutoCloseable {
    * @return Current module position
    */
   public SwerveModulePosition getPosition() {
-    return new SwerveModulePosition(
-      m_driveMotor.getInputs().encoderPosition,
-      Rotation2d.fromRadians(m_rotateMotor.getInputs().absoluteEncoderPosition - m_location.offset)
-    );
+    if (RobotBase.isReal()) {
+      return new SwerveModulePosition(
+        m_driveMotor.getInputs().encoderPosition,
+        Rotation2d.fromRadians(m_rotateMotor.getInputs().absoluteEncoderPosition - m_location.offset)
+      );
+    } else {
+      return new SwerveModulePosition(
+        m_simDrivePosition,
+        Rotation2d.fromRadians(m_simRotatePosition - m_location.offset)
+      );
+    }
   }
 
   /**
@@ -276,6 +304,7 @@ public class MAXSwerveModule implements AutoCloseable {
    */
   public void resetDriveEncoder() {
     m_driveMotor.resetEncoder();
+    m_simDrivePosition = 0.0;
   }
 
   /**

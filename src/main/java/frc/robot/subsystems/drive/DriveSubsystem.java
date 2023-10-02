@@ -98,7 +98,9 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private final Matrix<N3, N1> VISION_STDDEV = VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(40));
 
   private final String POSE_LOG_ENTRY = "Pose"; 
+  private final String SWERVE_STATE_LOG_ENTRY = "Swerve";
 
+  private ChassisSpeeds m_desiredChassisSpeeds;
   private Field2d m_field;
   private NetworkTable m_table;
   private DoubleArrayPublisher m_posePublisher;
@@ -174,10 +176,13 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
       m_kinematics,
       Rotation2d.fromDegrees(getAngle()),
       getModulePositions(), 
-      new Pose2d(),
+      new Pose2d(Constants.Field.FIELD_LENGTH / 2, Constants.Field.FIELD_WIDTH / 2, Rotation2d.fromDegrees(0.0)),
       ODOMETRY_STDDEV,
       VISION_STDDEV
     );
+
+    // Initialise chassis speeds
+    m_desiredChassisSpeeds = new ChassisSpeeds();
 
     // Setup anti-tip command
     new Trigger(this::isTipping).onTrue(ANTI_TIP_COMMAND);
@@ -308,13 +313,13 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    */
   private void drive(double xRequest, double yRequest, double rotateRequest, double inertialVelocity, double rotateRate) {
     // Get requested chassis speeds, correcting for second order kinematics
-    ChassisSpeeds desiredChassisSpeeds = AdvancedSwerveKinematics.correctForDynamics(
+    m_desiredChassisSpeeds = AdvancedSwerveKinematics.correctForDynamics(
       new ChassisSpeeds(xRequest, yRequest, Math.toRadians(rotateRequest))
     );
 
     // Convert speeds to module states, correcting for 2nd order kinematics
     SwerveModuleState[] moduleStates = m_advancedKinematics.toSwerveModuleStates(
-      desiredChassisSpeeds,
+      m_desiredChassisSpeeds,
       getPose().getRotation()
     );
 
@@ -361,6 +366,19 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   }
 
   /**
+   * Get current module states
+   * @return Array of swerve module states
+   */
+  private SwerveModuleState[] getModuleStates() {
+     return new SwerveModuleState[] {
+      m_lFrontModule.getState(),
+      m_rFrontModule.getState(),
+      m_lRearModule.getState(),
+      m_rRearModule.getState()
+    };
+  }
+
+  /**
    * Get current module positions
    * @return Array of swerve module positions
    */
@@ -403,6 +421,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    */
   private void logOutputs() {
     Logger.getInstance().recordOutput(String.join("/", getName(), POSE_LOG_ENTRY), getPose());
+    Logger.getInstance().recordOutput(String.join("/", getName(), SWERVE_STATE_LOG_ENTRY), getModuleStates());
   }
 
   /**
@@ -440,7 +459,9 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
   @Override
   public void simulationPeriodic() {
-    m_navx.setSimAngle(getPose().getRotation().getDegrees());
+    // This method will be called once per scheduler run in simulation
+    double angle = m_navx.getSimAngle() + Math.toDegrees(m_desiredChassisSpeeds.omegaRadiansPerSecond) * Constants.Global.ROBOT_LOOP_PERIOD;
+    m_navx.setSimAngle(angle);
   }
 
   /**
