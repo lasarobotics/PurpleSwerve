@@ -183,6 +183,11 @@ public class MAXSwerveModule implements AutoCloseable {
   public void periodic() {
     m_driveMotor.periodic();  
     m_rotateMotor.periodic();
+
+    if (RobotBase.isSimulation()) {
+      m_driveMotor.getInputs().encoderPosition = m_simDrivePosition;
+      m_rotateMotor.getInputs().absoluteEncoderPosition = m_simRotatePosition;
+    }
   }
 
   /**
@@ -213,10 +218,9 @@ public class MAXSwerveModule implements AutoCloseable {
     m_driveMotor.set(desiredState.speedMetersPerSecond, ControlType.kVelocity);
 
     // Save drive and rotate position for simulation purposes only
-    if (RobotBase.isSimulation()) {
-      m_simDrivePosition += desiredState.speedMetersPerSecond * Constants.Global.ROBOT_LOOP_PERIOD;
-      m_simRotatePosition = desiredState.angle.getRadians();
-    }
+    m_simDrivePosition += desiredState.speedMetersPerSecond * Constants.Global.ROBOT_LOOP_PERIOD;
+    m_simRotatePosition = desiredState.angle.getRadians();
+    
   }
 
   /**
@@ -268,17 +272,10 @@ public class MAXSwerveModule implements AutoCloseable {
    * @return Current module state
    */
   public SwerveModuleState getState() {
-    if (RobotBase.isReal()) {
-      return new SwerveModuleState(
-        getDriveVelocity(),
-        Rotation2d.fromRadians(m_rotateMotor.getInputs().absoluteEncoderPosition - m_location.offset)
-      );
-    } else {
-       return new SwerveModuleState(
-        getDriveVelocity(),
-        Rotation2d.fromRadians(m_simRotatePosition - m_location.offset)
-      );
-    }
+    return new SwerveModuleState(
+      getDriveVelocity(),
+      Rotation2d.fromRadians(m_rotateMotor.getInputs().absoluteEncoderPosition - m_location.offset)
+    );
   }
 
   /**
@@ -286,17 +283,10 @@ public class MAXSwerveModule implements AutoCloseable {
    * @return Current module position
    */
   public SwerveModulePosition getPosition() {
-    if (RobotBase.isReal()) {
-      return new SwerveModulePosition(
-        m_driveMotor.getInputs().encoderPosition,
-        Rotation2d.fromRadians(m_rotateMotor.getInputs().absoluteEncoderPosition - m_location.offset)
-      );
-    } else {
-      return new SwerveModulePosition(
-        m_simDrivePosition,
-        Rotation2d.fromRadians(m_simRotatePosition - m_location.offset)
-      );
-    }
+    return new SwerveModulePosition(
+      m_driveMotor.getInputs().encoderPosition,
+      Rotation2d.fromRadians(m_rotateMotor.getInputs().absoluteEncoderPosition - m_location.offset)
+    );
   }
 
   /**

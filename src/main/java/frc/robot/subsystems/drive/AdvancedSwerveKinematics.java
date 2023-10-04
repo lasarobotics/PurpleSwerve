@@ -21,16 +21,18 @@ import frc.robot.Constants;
 
 public class AdvancedSwerveKinematics {
   private static final double EPS = 1E-9;
+  private int m_isFieldCentric;
   private Translation2d[] m_moduleLocations;
 
   /**
     * Create a SecondOrderSwerveKinematics object
     * <p>
     * Corrects for path drift when the robot is rotating
-    *
+    * @param isFieldCentric True for field centric control
     * @param wheelMeters Location of all 4 swerve modules, LF/RF/LR/RR
     */
-  public AdvancedSwerveKinematics(Translation2d... wheelsMeters) {
+  public AdvancedSwerveKinematics(boolean isFieldCentric, Translation2d... wheelsMeters) {
+    this.m_isFieldCentric = (isFieldCentric) ? 1 : 0;
     if (wheelsMeters.length < 2) {
       throw new IllegalArgumentException("A swerve drive requires at least two modules");
     }
@@ -102,15 +104,12 @@ public class AdvancedSwerveKinematics {
     return correctedSpeeds;
   }
 
-   /**
-    * Convert chassis speed to states of individual modules using second order kinematics, robot centric
-    *
-    * @param desiredSpeed Desired translation and rotation speed of the robot
-    * @param robotHeading Heading of the robot relative to the field
-    * @return Array of the speed direction of the swerve modules
-    */
-  public SwerveModuleState[] toSwerveModuleStates(ChassisSpeeds desiredSpeed, Rotation2d robotHeading) {
-    return toSwerveModuleStates(desiredSpeed, robotHeading, false);
+  /**
+   * Set field centric control
+   * @param isFieldCentric True for field centric control
+   */
+  public void setFieldCentric(boolean isFieldCentric) {
+    m_isFieldCentric = (isFieldCentric) ? 1 : 0;
   }
 
   /**
@@ -121,7 +120,7 @@ public class AdvancedSwerveKinematics {
     * @param isFieldCentric True if field centric drive 
     * @return Array of the speed direction of the swerve modules
     */
-  public SwerveModuleState[] toSwerveModuleStates(ChassisSpeeds desiredSpeed, Rotation2d robotHeading, boolean isFieldCentric) {
+  public SwerveModuleState[] toSwerveModuleStates(ChassisSpeeds desiredSpeed, Rotation2d robotHeading) {
     Matrix<N3, N1> firstOrderInputMatrix = new Matrix<>(N3(),N1());
     Matrix<N2, N3> firstOrderMatrix = new Matrix<>(N2(),N3());
     Matrix<N4, N1> secondOrderInputMatrix = new Matrix<>(N4(),N1());
@@ -146,10 +145,10 @@ public class AdvancedSwerveKinematics {
     for (int i = 0; i < m_moduleLocations.length; i++) {
       // Angle that the module location vector makes with respect to the robot
       Rotation2d moduleAngle = new Rotation2d(Math.atan2(m_moduleLocations[i].getY(), m_moduleLocations[i].getX())); 
-      // Angle that the module location vector makes with respect to the field
-      Rotation2d moduleAngleFieldCentric = moduleAngle.plus(robotHeading);
-      double moduleX = m_moduleLocations[i].getNorm() * Math.cos(moduleAngleFieldCentric.getRadians());
-      double moduleY = m_moduleLocations[i].getNorm() * Math.sin(moduleAngleFieldCentric.getRadians());
+      // Angle that the module location vector makes with respect to the field for field centric
+      moduleAngle = Rotation2d.fromRadians(moduleAngle.getRadians() + robotHeading.getRadians() * m_isFieldCentric);
+      double moduleX = m_moduleLocations[i].getNorm() * Math.cos(moduleAngle.getRadians());
+      double moduleY = m_moduleLocations[i].getNorm() * Math.sin(moduleAngle.getRadians());
       // -r_y
       firstOrderMatrix.set(0, 2, -moduleY);
       // +r_x 
@@ -172,7 +171,8 @@ public class AdvancedSwerveKinematics {
 
       Matrix<N2,N1> secondOrderOutput = rotationMatrix.times(secondOrderMatrix.times(secondOrderInputMatrix));
 
-      moduleHeading = (isFieldCentric) ? Rotation2d.fromRadians(moduleHeading).minus(robotHeading).getRadians() : moduleHeading;
+      // Correct module heading for field centric
+      moduleHeading -= robotHeading.getRadians() * m_isFieldCentric;
       swerveModuleStates[i] = new SwerveModuleState(moduleSpeed, Rotation2d.fromRadians(moduleHeading));
       moduleTurnSpeeds[i] = secondOrderOutput.get(1, 0) / moduleSpeed - desiredSpeed.omegaRadiansPerSecond;
     }

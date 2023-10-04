@@ -167,7 +167,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
                                              m_rRearModule.getModuleCoordinate());
 
     // Define advanced drivetrain kinematics
-    m_advancedKinematics = new AdvancedSwerveKinematics(m_lFrontModule.getModuleCoordinate(),
+    m_advancedKinematics = new AdvancedSwerveKinematics(false,
+                                                        m_lFrontModule.getModuleCoordinate(),
                                                         m_rFrontModule.getModuleCoordinate(),
                                                         m_lRearModule.getModuleCoordinate(),
                                                         m_rRearModule.getModuleCoordinate());
@@ -541,7 +542,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
   /**
    * Aim robot at a desired point on the field (without any strafing)
-   * @param point Destination point
+   * @param point Target point
    */
   public void aimAtPoint(Translation2d point) {
     aimAtPoint(0.0, 0.0, point);
