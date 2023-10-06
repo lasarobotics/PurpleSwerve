@@ -12,6 +12,7 @@ import org.littletonrobotics.junction.Logger;
 
 import com.pathplanner.lib.PathPoint;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
@@ -167,7 +168,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
                                              m_rRearModule.getModuleCoordinate());
 
     // Define advanced drivetrain kinematics
-    m_advancedKinematics = new AdvancedSwerveKinematics(false,
+    m_advancedKinematics = new AdvancedSwerveKinematics(true,
                                                         m_lFrontModule.getModuleCoordinate(),
                                                         m_rFrontModule.getModuleCoordinate(),
                                                         m_lRearModule.getModuleCoordinate(),
@@ -499,10 +500,10 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    */
   public void antiTip() {
     // Calculate direction of tip
-    double direction = Math.atan2(getPitch(), getRoll());
+    double direction = Math.atan2(getRoll(), getPitch());
 
     // Drive to counter tipping motion
-    drive(DRIVE_MAX_LINEAR_SPEED / 2 * Math.cos(direction), DRIVE_MAX_LINEAR_SPEED / 2 * Math.sin(direction), 0.0);
+    drive(DRIVE_MAX_LINEAR_SPEED / 4 * Math.cos(direction), DRIVE_MAX_LINEAR_SPEED / 4 * Math.sin(direction), 0.0);
   }
 
   /**
@@ -535,7 +536,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     Pose2d currentPose = getPose();
     double currentAngle = currentPose.getRotation().getDegrees();
     double desiredAngle = Math.toDegrees(Math.atan2(point.getY() - currentPose.getY(), point.getX() - currentPose.getX()));
-    double rotateOutput = m_autoAimPIDController.calculate(currentAngle, desiredAngle);
+    double rotateOutput = MathUtil.clamp(m_autoAimPIDController.calculate(currentAngle, desiredAngle), -360.0, +360.0);
 
     drive(velocityOutput * Math.cos(moveDirection), velocityOutput * Math.sin(moveDirection), -rotateOutput);
   }

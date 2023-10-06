@@ -112,6 +112,10 @@ public class AdvancedSwerveKinematics {
     m_isFieldCentric = (isFieldCentric) ? 1 : 0;
   }
 
+  public int isFieldCentric() {
+    return m_isFieldCentric;
+  }
+
   /**
     * Convert chassis speed to states of individual modules using second order kinematics
     *
