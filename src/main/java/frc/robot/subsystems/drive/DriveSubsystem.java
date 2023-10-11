@@ -4,17 +4,17 @@
 
 package frc.robot.subsystems.drive;
 
-import java.time.Instant;
 import java.util.List;
 
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
+import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
 import org.littletonrobotics.junction.Logger;
 
 import com.pathplanner.lib.PathPoint;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -25,6 +25,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.NetworkTable;
@@ -81,7 +82,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
   private ThrottleMap m_throttleMap;
   private TurnPIDController m_turnPIDController;
-  private TurnPIDController m_autoAimPIDController;
+  private ProfiledPIDController m_autoAimPIDController;
   private SwerveDriveKinematics m_kinematics;
   private SwerveDrivePoseEstimator m_poseEstimator;
   private AdvancedSwerveKinematics m_advancedKinematics;
@@ -98,6 +99,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private final double BALANCED_THRESHOLD = 5.0;
   private final Matrix<N3, N1> ODOMETRY_STDDEV = VecBuilder.fill(0.03, 0.03, Units.degreesToRadians(1));
   private final Matrix<N3, N1> VISION_STDDEV = VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(40));
+  private final TrapezoidProfile.Constraints AIM_PID_CONSTRAINT = new TrapezoidProfile.Constraints(1080.0, 1440.0);
 
   private final String POSE_LOG_ENTRY = "Pose"; 
   private final String SWERVE_STATE_LOG_ENTRY = "Swerve";
@@ -108,6 +110,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private DoubleArrayPublisher m_posePublisher;
 
   private boolean m_isTractionControlEnabled = true;
+  private Pose2d m_previousPose;
+  private Rotation2d m_currentHeading;
 
   public final Command ANTI_TIP_COMMAND = new FunctionalCommand(
     () -> m_ledStrip.set(Pattern.RED_STROBE),
@@ -196,12 +200,16 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     // Set LED strip to team color
     m_ledStrip.set(Pattern.TEAM_COLOR_SOLID);
 
-    // Initialize field
+    // Initialise field
     m_field = new Field2d();
 
     // Setup auto-aim PID controller
-    m_autoAimPIDController = m_turnPIDController;
+    m_autoAimPIDController = new ProfiledPIDController(kP, 0.0, kD, AIM_PID_CONSTRAINT, Constants.Global.ROBOT_LOOP_PERIOD);
     m_autoAimPIDController.enableContinuousInput(-180.0, +180.0);
+
+    // Initialise other variables
+    m_previousPose = new Pose2d();
+    m_currentHeading = new Rotation2d();
 
     // Setup NetworkTables
     m_table = NetworkTableInstance.getDefault().getTable(getName());
@@ -402,12 +410,14 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * Update robot pose
    */
   private void updatePose() {
+    // Save previous pose
+    m_previousPose = getPose();
+
     // Update pose based on odometry
-    m_poseEstimator.updateWithTime(
-      Instant.now().getEpochSecond(),
-      getRotation2d(),
-      getModulePositions()
-    );
+    m_poseEstimator.update(getRotation2d(), getModulePositions());
+
+    // Update current heading
+    m_currentHeading = new Rotation2d(getPose().getX() - m_previousPose.getX(), getPose().getY() - m_previousPose.getY());
 
     // Skip vision pose estimation if running in simulation
     if (RobotBase.isSimulation()) return;
@@ -484,6 +494,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     double velocityOutput = m_throttleMap.throttleLookup(moveRequest);
     double rotateOutput = m_turnPIDController.calculate(getAngle(), getRotateRate(), rotateRequest);
 
+    m_autoAimPIDController.calculate(getPose().getRotation().getDegrees(), getPose().getRotation().getDegrees());
+
     drive(velocityOutput * Math.cos(moveDirection), velocityOutput * Math.sin(moveDirection), rotateOutput, getInertialVelocity(), getRotateRate());
   }
 
@@ -529,15 +541,35 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @param point Target point
    */
   public void aimAtPoint(double xRequest, double yRequest, Translation2d point) {
+    // Calculate desired robot velocity
     double moveRequest = Math.hypot(xRequest, yRequest);
     double moveDirection = Math.atan2(yRequest, xRequest);
     double velocityOutput = m_throttleMap.throttleLookup(moveRequest);
-    
-    Pose2d currentPose = getPose();
-    double currentAngle = currentPose.getRotation().getDegrees();
-    double desiredAngle = Math.toDegrees(Math.atan2(point.getY() - currentPose.getY(), point.getX() - currentPose.getX()));
-    double rotateOutput = MathUtil.clamp(m_autoAimPIDController.calculate(currentAngle, desiredAngle), -360.0, +360.0);
 
+    // Get current pose
+    Pose2d currentPose = getPose();
+    // Angle to target point
+    Rotation2d targetAngle = new Rotation2d(point.getX() - currentPose.getX(), point.getY() - currentPose.getY());
+    // Movement vector of robot
+    Vector2D robotVector = new Vector2D(velocityOutput * m_currentHeading.getCos(), velocityOutput * m_currentHeading.getSin());
+    // Aim point
+    Translation2d aimPoint = point.minus(new Translation2d(robotVector.getX(), robotVector.getY()));
+    // Vector from robot to target
+    Vector2D targetVector = new Vector2D(currentPose.getTranslation().getDistance(point) * targetAngle.getCos(), currentPose.getTranslation().getDistance(point) * targetAngle.getSin());
+    // Parallel component of robot's motion to target vector
+    Vector2D parallelRobotVector = targetVector.scalarMultiply(robotVector.dotProduct(targetVector) / targetVector.getNormSq());
+    // Perpendicular component of robot's motion to target vector
+    Vector2D perpendicularRobotVector = robotVector.subtract(parallelRobotVector);
+    // Adjust aim point using calculated vector
+    Translation2d adjustedPoint = point.minus(new Translation2d(perpendicularRobotVector.getX(), perpendicularRobotVector.getY()));
+    // Calculate new angle using adjusted point
+    Rotation2d adjustedAngle = new Rotation2d(adjustedPoint.getX() - currentPose.getX(), adjustedPoint.getY() - currentPose.getY());
+    // Calculate necessary rotate rate
+    double rotateOutput = m_autoAimPIDController.calculate(currentPose.getRotation().getDegrees(), adjustedAngle.getDegrees());
+
+    Logger.getInstance().recordOutput(getName() + "/AimPoint", new Pose2d(aimPoint, new Rotation2d()));
+
+    // Drive robot accordingly
     drive(velocityOutput * Math.cos(moveDirection), velocityOutput * Math.sin(moveDirection), -rotateOutput);
   }
 
