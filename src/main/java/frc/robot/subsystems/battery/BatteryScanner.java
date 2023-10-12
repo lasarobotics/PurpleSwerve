@@ -19,7 +19,10 @@ public class BatteryScanner {
   private static final int BAUD_RATE = 9600;
   private static final double TIMEOUT = 1.5;
 
-  public static String scanBattery() { // This method is used by the BatterTracker class to scan current battery
+  /**
+   * Scan current battery
+   */
+  public static String scanBattery() {
     String m_batteryName = "";
 
     try (SerialPort port = new SerialPort(BAUD_RATE, SerialPort.Port.kUSB)) {

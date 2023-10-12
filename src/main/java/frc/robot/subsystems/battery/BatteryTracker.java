@@ -14,7 +14,10 @@ import java.nio.file.Paths;
 public class BatteryTracker {
   private static final String LAST_BATTERY_PATH = "last-battery.txt";
 
-  public static Boolean isBatteryReused() { // Checks if the battery is reused based on the last battery on file, run only if hardware real?
+  /**
+   * Check if battery is reused based on last battery on file
+   */
+  public static Boolean isBatteryReused() {
     File file = new File(LAST_BATTERY_PATH);
 
     if (file.exists()) {
@@ -39,7 +42,10 @@ public class BatteryTracker {
     return false;
   }
 
-  public static void writeCurrentBattery() { // Write current battery, only if hardware real and battery attached?
+  /**
+   * Write current battery
+   */
+  public static void writeCurrentBattery() {
     try {
       FileWriter fileWriter = new FileWriter(LAST_BATTERY_PATH);
       fileWriter.write(BatteryScanner.scanBattery());
