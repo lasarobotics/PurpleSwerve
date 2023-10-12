@@ -33,7 +33,7 @@ public class NavX2 implements AutoCloseable {
   }
 
   private AHRS m_navx;
-  private SimDouble m_simNavX;
+  private SimDouble m_simNavXYaw;
 
   private String m_name;
   private NavX2InputsAutoLogged m_inputs;
@@ -46,7 +46,7 @@ public class NavX2 implements AutoCloseable {
     this.m_name = id.name;
     this.m_navx = new AHRS(SPI.Port.kMXP, (byte)updateRate);
     this.m_inputs = new NavX2InputsAutoLogged();
-    this.m_simNavX = new SimDouble(SimDeviceDataJNI.getSimValueHandle(SimDeviceDataJNI.getSimDeviceHandle("navX-Sensor[0]"), "Yaw"));
+    this.m_simNavXYaw = new SimDouble(SimDeviceDataJNI.getSimValueHandle(SimDeviceDataJNI.getSimDeviceHandle("navX-Sensor[0]"), "Yaw"));
   }
 
   /**
@@ -188,7 +188,7 @@ public class NavX2 implements AutoCloseable {
    */
   public void reset() {
     m_navx.reset();
-    m_simNavX.set(0.0);
+    m_simNavXYaw.set(0.0);
   }
 
   /**
@@ -196,7 +196,7 @@ public class NavX2 implements AutoCloseable {
    * @param angle Angle to set in degrees
    */
   public void setSimAngle(double angle) {
-    m_simNavX.set(angle);
+    m_simNavXYaw.set(angle);
   }
 
   /**
@@ -204,7 +204,7 @@ public class NavX2 implements AutoCloseable {
    * @return Simulated angle that was set
    */
   public double getSimAngle() {
-    return m_simNavX.get();
+    return m_simNavXYaw.get();
   }
 
   /**

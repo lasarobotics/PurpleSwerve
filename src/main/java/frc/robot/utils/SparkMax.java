@@ -218,16 +218,16 @@ public class SparkMax implements AutoCloseable {
    * Handle the smooth motion for the spark max
    */
   private void handleSmoothMotion() {
-    if (m_isSmoothMotionEnabled) {
-      m_isSmoothMotionEnabled = !isSmoothMotionFinished();
-      TrapezoidProfile.State motionProfileState = m_motionProfile.calculate(m_motionTimer.get());
-      set(
-        motionProfileState.position,
-        ControlType.kPosition,
-        m_feedforwardSupplier.apply(motionProfileState),
-        SparkMaxPIDController.ArbFFUnits.kVoltage
-      );
-    }
+    if (!m_isSmoothMotionEnabled) return;
+    
+    m_isSmoothMotionEnabled = !isSmoothMotionFinished();
+    TrapezoidProfile.State motionProfileState = m_motionProfile.calculate(m_motionTimer.get());
+    set(
+      motionProfileState.position,
+      ControlType.kPosition,
+      m_feedforwardSupplier.apply(motionProfileState),
+      SparkMaxPIDController.ArbFFUnits.kVoltage
+    );
   }
 
   public void addToSimulation(DCMotor motor) {
