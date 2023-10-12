@@ -11,10 +11,13 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.subsystems.battery.BatteryScanner;
+import frc.robot.subsystems.battery.BatteryTracker;
 
 public class Robot extends LoggedRobot {
   private Command m_autonomousCommand;
@@ -28,7 +31,9 @@ public class Robot extends LoggedRobot {
   @Override
   @SuppressWarnings("resource")
   public void robotInit() {
-    Logger.getInstance().recordMetadata("ProjectName", "PurpleSwerve"); // Set a metadata value
+    // AdvantageKit Logging
+    Logger.getInstance().recordMetadata("ProjectName", "PurpleSwerve");
+    Logger.getInstance().recordMetadata("BatteryName", BatteryScanner.scanBattery());
     
     if (isReal()) {
       Logger.getInstance().addDataReceiver(new WPILOGWriter("/media/sda1/")); // Log to a USB stick
@@ -45,9 +50,16 @@ public class Robot extends LoggedRobot {
         Logger.getInstance().addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim"))); // Save outputs to a new log
       }
     }
-    
+
+    // Battery Tracking
+    if (BatteryTracker.isBatteryReused()) {
+      String batteryError = BatteryScanner.scanBattery() + " is being reused!";
+      DriverStation.reportError(batteryError, false);
+    } else {
+      BatteryTracker.writeCurrentBattery();
+    }
+
     Logger.getInstance().start(); // Start logging! No more data receivers, replay sources, or metadata values may be added.
-    
     m_robotContainer = new RobotContainer();
   }
 
