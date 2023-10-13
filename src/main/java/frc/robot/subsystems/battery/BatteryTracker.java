@@ -12,34 +12,30 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class BatteryTracker {
-  private static final String LAST_BATTERY_PATH = "last-battery.txt";
+  private static final String PREVIOUS_BATTERY_PATH = "previous_battery.txt";
 
-  /**
-   * Check if battery is reused based on last battery on file
-   */
-  public static Boolean isBatteryReused() {
-    File file = new File(LAST_BATTERY_PATH);
+  public static Boolean isBatteryReused() { // Checks if the battery is reused based on the previous battery on file, run only if hardware real?
+    File file = new File(PREVIOUS_BATTERY_PATH);
 
-    if (file.exists()) {
-      // Read previous battery name
-      String previousBatteryName = "";
-      try {
-          previousBatteryName =
-            new String(Files.readAllBytes(Paths.get(LAST_BATTERY_PATH)), StandardCharsets.UTF_8);
-      } catch (IOException e) {
-        // Throw error
-        e.printStackTrace();
-      }
-
-      if (previousBatteryName.equals(BatteryScanner.scanBattery())) {
-        return true;
-      } else {
-        // New battery, delete file
-        file.delete();
-      }
+    if (!file.exists()) return false;
+    
+    // Read previous battery name
+    String previousBatteryID = "";
+    try {
+        previousBatteryID =
+          new String(Files.readAllBytes(Paths.get(PREVIOUS_BATTERY_PATH)), StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      // Throw error
+      e.printStackTrace();
     }
 
-    return false;
+    if (previousBatteryID.equals(BatteryScanner.scanBattery())) {
+      return true;
+    } else {
+      // New battery, delete file
+      file.delete();
+      return false;
+    }
   }
 
   /**
@@ -47,11 +43,10 @@ public class BatteryTracker {
    */
   public static void writeCurrentBattery() {
     try {
-      FileWriter fileWriter = new FileWriter(LAST_BATTERY_PATH);
+      FileWriter fileWriter = new FileWriter(PREVIOUS_BATTERY_PATH);
       fileWriter.write(BatteryScanner.scanBattery());
       fileWriter.close();
     } catch (IOException e) {
-      // Throw error
       e.printStackTrace();
     }
   }
