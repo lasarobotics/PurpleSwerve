@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -21,10 +22,19 @@ public class JSONObject {
     @JsonProperty("x") double x;
     @JsonProperty("y") double y;
     @JsonProperty("rotation") double rotation;
-    @JsonProperty("timestamp") double timestamp;
 
     private Pose2d toJavaType() {
       return new Pose2d(x, y, Rotation2d.fromDegrees(rotation));
+    }
+
+    private static JSONPose toJSON(Pose2d pose) {
+      JSONPose jsonPose = new JSONPose();
+
+      jsonPose.x = pose.getX();
+      jsonPose.y = pose.getY();
+      jsonPose.rotation = pose.getRotation().getDegrees();
+
+      return jsonPose;
     }
   }
 
@@ -35,31 +45,50 @@ public class JSONObject {
     private Translation2d toJavaType() {
       return new Translation2d(x, y);
     }
+
+      private static JSONPoint toJSON(Translation2d pose) {
+      JSONPoint jsonPoint = new JSONPoint();
+
+      jsonPoint.x = pose.getX();
+      jsonPoint.y = pose.getY();
+
+      return jsonPoint;
+    }
   }
 
   private static class JSONPoseList {
-    @JsonProperty("poses") List<JSONPose> poses;
-
-    private List<Pose2d> toJavaType() {
+    private static List<Pose2d> toJavaType(List<JSONPose> poses) {
       List<Pose2d> poseList = new ArrayList<Pose2d>();
       for (var pose : poses) poseList.add(pose.toJavaType());
 
       return poseList;
     }
+
+    private static List<JSONPose> toJSON(List<Pose2d> poseList) {
+      List<JSONPose> jsonPoseList = new ArrayList<JSONPose>();
+      for (var pose : poseList) jsonPoseList.add(JSONPose.toJSON(pose));
+
+      return jsonPoseList;
+    }
   }
 
   private static class JSONPointList {
-    @JsonProperty("path") List<JSONPoint> points;
-
-    private List<Translation2d> toJavaType() {
+    private static List<Translation2d> toJavaType( List<JSONPoint> points) {
       List<Translation2d> pointList = new ArrayList<Translation2d>();
       for (var point : points) pointList.add(point.toJavaType());
 
       return pointList;
     }
+
+    private static List<JSONPoint> toJSON(List<Translation2d> poseList) {
+      List<JSONPoint> jsonPointList = new ArrayList<JSONPoint>();
+      for (var pose : poseList) jsonPointList.add(JSONPoint.toJSON(pose));
+
+      return jsonPointList;
+    }
   }
 
-  public static Pose2d getPose(String json) {
+  public static Pose2d readPose(String json) {
     try { return OBJECT_MAPPER.readValue(json, JSONPose.class).toJavaType(); } 
     catch (Exception e) {
       System.out.println(e.getMessage());
@@ -67,7 +96,7 @@ public class JSONObject {
     }
   }
 
-  public static Translation2d getPoint(String json) {
+  public static Translation2d readPoint(String json) {
     try { return OBJECT_MAPPER.readValue(json, JSONPoint.class).toJavaType(); } 
     catch (Exception e) {
       System.out.println(e.getMessage());
@@ -75,16 +104,48 @@ public class JSONObject {
     }
   }
 
-  public static List<Pose2d> getPoseList(String json) {
-    try { return OBJECT_MAPPER.readValue(json, JSONPoseList.class).toJavaType(); }
+  public static List<Pose2d> readPoseList(String json) {
+    try { return JSONPoseList.toJavaType(OBJECT_MAPPER.readValue(json, new TypeReference<List<JSONPose>>(){})); }
     catch (Exception e) {
       System.out.println(e.getMessage());
       return null;
     }
   }
 
-  public static List<Translation2d> getPointList(String json) {
-    try { return OBJECT_MAPPER.readValue(json, JSONPointList.class).toJavaType(); } 
+  public static List<Translation2d> readPointList(String json) {
+    try { return JSONPointList.toJavaType(OBJECT_MAPPER.readValue(json, new TypeReference<List<JSONPoint>>(){})); }
+    catch (Exception e) {
+      System.out.println(e.getMessage());
+      return null;
+    }
+  }
+
+  public static String writePose(Pose2d pose) {
+    try { return OBJECT_MAPPER.writeValueAsString(JSONPose.toJSON(pose)); }
+    catch (Exception e) {
+      System.out.println(e.getMessage());
+      return null;
+    }
+  }
+
+  public static String writePoint(Translation2d point) {
+    try { return OBJECT_MAPPER.writeValueAsString(JSONPoint.toJSON(point)); }
+    catch (Exception e) {
+      System.out.println(e.getMessage());
+      return null;
+    }
+  }
+
+  public static String writePoseList(List<Pose2d> poseList) {
+    try { return OBJECT_MAPPER.writeValueAsString(JSONPoseList.toJSON(poseList)); }
+    catch (Exception e) {
+      System.out.println(e.getMessage());
+      return null;
+    }
+  }
+
+  public static String writePointList(List<Translation2d> pointList) {
+    try { return OBJECT_MAPPER.writeValueAsString(JSONPointList.toJSON(pointList)); }
     catch (Exception e) {
       System.out.println(e.getMessage());
       return null;
