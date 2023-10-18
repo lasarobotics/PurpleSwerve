@@ -174,5 +174,8 @@ networktables.json
 simgui.json
 simgui-ds.json
 
-# BuildConstants
+# Build Constants
 src/main/java/frc/robot/BuildConstants.java
+
+# Battery Tracker
+previous_battery.txt

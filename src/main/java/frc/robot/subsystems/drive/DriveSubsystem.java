@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems.drive;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
@@ -27,9 +28,7 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.DoubleArrayPublisher;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.PubSubOption;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -76,7 +75,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   public static final double DRIVE_TICKS_PER_METER = (Constants.Global.NEO_ENCODER_TICKS_PER_ROTATION * DRIVE_GEAR_RATIO) * (1 / (DRIVE_WHEEL_DIAMETER_METERS * Math.PI));
   public static final double DRIVE_METERS_PER_TICK = 1 / DRIVE_TICKS_PER_METER;
   public static final double DRIVE_METERS_PER_ROTATION = DRIVE_METERS_PER_TICK * Constants.Global.NEO_ENCODER_TICKS_PER_ROTATION;
-  public static final double DRIVETRAIN_EFFICIENCY = 0.88;
+  public static final double DRIVETRAIN_EFFICIENCY = 0.90;
   public static final double DRIVE_MAX_LINEAR_SPEED = (Constants.Global.NEO_MAX_RPM / 60) * DRIVE_METERS_PER_ROTATION * DRIVETRAIN_EFFICIENCY;
   public static final double DRIVE_AUTO_ACCELERATION = DRIVE_MAX_LINEAR_SPEED - 0.5;
 
@@ -101,13 +100,25 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private final Matrix<N3, N1> VISION_STDDEV = VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(40));
   private final TrapezoidProfile.Constraints AIM_PID_CONSTRAINT = new TrapezoidProfile.Constraints(1080.0, 1440.0);
 
-  private final String POSE_LOG_ENTRY = "Pose"; 
+  private final List<Pose2d> GOAL_POSES = Arrays.asList(
+    new Pose2d(15.72, 7.33, Rotation2d.fromDegrees(0.0)),
+    new Pose2d(1.90, 4.89, Rotation2d.fromDegrees(0.0)),
+    new Pose2d(1.90, 4.45, Rotation2d.fromDegrees(0.0)),
+    new Pose2d(1.90, 3.90, Rotation2d.fromDegrees(0.0)),
+    new Pose2d(1.90, 3.30, Rotation2d.fromDegrees(0.0)),
+    new Pose2d(1.90, 2.75, Rotation2d.fromDegrees(0.0)),
+    new Pose2d(1.90, 2.20, Rotation2d.fromDegrees(0.0)),
+    new Pose2d(1.90, 1.65, Rotation2d.fromDegrees(0.0)),
+    new Pose2d(1.90, 1.10, Rotation2d.fromDegrees(0.0)),
+    new Pose2d(1.90, 0.45, Rotation2d.fromDegrees(0.0))
+  );
+  PubSubOption[] PUBSUB_OPTIONS = { PubSubOption.periodic(Constants.Global.ROBOT_LOOP_PERIOD), PubSubOption.keepDuplicates(true), PubSubOption.pollStorage(10) };
+
+  private final String POSE_LOG_ENTRY = "Pose";
   private final String SWERVE_STATE_LOG_ENTRY = "Swerve";
 
   private ChassisSpeeds m_desiredChassisSpeeds;
   private Field2d m_field;
-  private NetworkTable m_table;
-  private DoubleArrayPublisher m_posePublisher;
 
   private boolean m_isTractionControlEnabled = true;
   private Pose2d m_previousPose;
@@ -211,9 +222,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     m_previousPose = new Pose2d();
     m_currentHeading = new Rotation2d();
 
-    // Setup NetworkTables
-    m_table = NetworkTableInstance.getDefault().getTable(getName());
-    m_posePublisher = m_table.getDoubleArrayTopic(POSE_LOG_ENTRY).publish();
+    // Set goal poses for PurplePath
+    PurplePath.getInstance().setGoals(GOAL_POSES);
   }
 
   /**
@@ -439,12 +449,14 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private void logOutputs() {
     Logger.getInstance().recordOutput(String.join("/", getName(), POSE_LOG_ENTRY), getPose());
     Logger.getInstance().recordOutput(String.join("/", getName(), SWERVE_STATE_LOG_ENTRY), getModuleStates());
+    for (int i = 0; i < PurplePath.MAX_TRAJECTORIES; i++)
+      Logger.getInstance().recordOutput(String.join("/", getName(), PurplePath.TRAJECTORY_LOG_ENTRY[i]), PurplePath.getInstance().getLatestTrajectory(i));
   }
 
   /**
    * SmartDashboard indicators
    */
-  public void smartDashboard() {
+  private void smartDashboard() {
     SmartDashboard.putBoolean("TC", m_isTractionControlEnabled);
     SmartDashboard.putData("Field", m_field);
   }
@@ -454,9 +466,10 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    */
   private void publishData() {
     Pose2d currentPose = getPose();
-    double[] poseArray = { currentPose.getX(), currentPose.getY(), currentPose.getRotation().getDegrees() };
-    m_posePublisher.set(poseArray);
+    PurplePath.getInstance().setCurrentPose(currentPose);
     m_field.setRobotPose(currentPose);
+    for (int i = 0; i < PurplePath.MAX_TRAJECTORIES; i++)
+      m_field.getObject(PurplePath.TRAJECTORY_LOG_ENTRY[i]).setTrajectory(PurplePath.getInstance().getLatestTrajectory(i));
   }
 
   @Override
@@ -469,8 +482,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     m_rRearModule.periodic();
 
     updatePose();
-    smartDashboard();
     publishData();
+    smartDashboard();
     logOutputs();
   }
 
@@ -570,7 +583,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     Logger.getInstance().recordOutput(getName() + "/AimPoint", new Pose2d(aimPoint, new Rotation2d()));
 
     // Drive robot accordingly
-    drive(velocityOutput * Math.cos(moveDirection), velocityOutput * Math.sin(moveDirection), -rotateOutput);
+    drive(velocityOutput * Math.cos(moveDirection), velocityOutput * Math.sin(moveDirection), -rotateOutput, getInertialVelocity(), getRotateRate());
   }
 
   /**
@@ -746,11 +759,10 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
   @Override
   public void close() {
+    m_navx.close();
     m_lFrontModule.close();
     m_rFrontModule.close();
     m_lRearModule.close();
     m_rRearModule.close();
-    m_navx.close();
-    m_posePublisher.close();
   }
 }

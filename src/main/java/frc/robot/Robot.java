@@ -35,28 +35,30 @@ public class Robot extends LoggedRobot {
     Logger.getInstance().recordMetadata("ProjectName", "PurpleSwerve");
     Logger.getInstance().recordMetadata("BatteryName", BatteryScanner.scanBattery());
     
-    if (isReal()) {
-      Logger.getInstance().addDataReceiver(new WPILOGWriter("/media/sda1/")); // Log to a USB stick
-      Logger.getInstance().addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
-      new PowerDistribution(1, ModuleType.kRev); // Enables power distribution logging
-    } else {
+    if (isReal()) { 
+      // If robot is real, log to USB drive and publish data to NetworkTables
+      Logger.getInstance().addDataReceiver(new WPILOGWriter("/media/sda1/"));
+      Logger.getInstance().addDataReceiver(new NT4Publisher());
+      new PowerDistribution(1, ModuleType.kRev);
+      // Battery Tracking
+      if (BatteryTracker.isBatteryReused()) 
+        DriverStation.reportError(BatteryScanner.scanBattery() + " is being reused!", false);
+      else BatteryTracker.writeCurrentBattery();
+    } else { 
+      // Else just publish to NetworkTables for simulation or replay log file if var is set
       String replay = System.getenv(Constants.Global.REPLAY_ENVIRONMENT_VAR);
       if (replay == null || replay.isBlank()) {
         Logger.getInstance().addDataReceiver(new NT4Publisher());
       } else {
-        setUseTiming(false); // Run as fast as possible
-        String logPath = LogFileUtil.findReplayLog(); // Pull the replay log from AdvantageScope (or prompt the user)
-        Logger.getInstance().setReplaySource(new WPILOGReader(logPath)); // Read replay log
-        Logger.getInstance().addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim"))); // Save outputs to a new log
+        // Run as fast as possible
+        setUseTiming(false);
+        // Pull the replay log from AdvantageScope (or prompt the user)
+        String logPath = LogFileUtil.findReplayLog();
+        // Read replay log
+        Logger.getInstance().setReplaySource(new WPILOGReader(logPath));
+        // Save outputs to a new log
+        Logger.getInstance().addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
       }
-    }
-
-    // Battery Tracking
-    if (BatteryTracker.isBatteryReused()) {
-      String batteryError = BatteryScanner.scanBattery() + " is being reused!";
-      DriverStation.reportError(batteryError, false);
-    } else {
-      BatteryTracker.writeCurrentBattery();
     }
 
     Logger.getInstance().start(); // Start logging! No more data receivers, replay sources, or metadata values may be added.

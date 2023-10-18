@@ -14,7 +14,11 @@ import java.nio.file.Paths;
 public class BatteryTracker {
   private static final String PREVIOUS_BATTERY_PATH = "previous_battery.txt";
 
-  public static Boolean isBatteryReused() { // Checks if the battery is reused based on the previous battery on file, run only if hardware real?
+  /**
+   * Check if current battery is being reused
+   * @return True if battery is the same as previous
+   */
+  public static boolean isBatteryReused() {
     File file = new File(PREVIOUS_BATTERY_PATH);
 
     if (!file.exists()) return false;
@@ -25,7 +29,6 @@ public class BatteryTracker {
         previousBatteryID =
           new String(Files.readAllBytes(Paths.get(PREVIOUS_BATTERY_PATH)), StandardCharsets.UTF_8);
     } catch (IOException e) {
-      // Throw error
       e.printStackTrace();
     }
 
@@ -39,7 +42,7 @@ public class BatteryTracker {
   }
 
   /**
-   * Write current battery
+   * Write current battery ID to file
    */
   public static void writeCurrentBattery() {
     try {
