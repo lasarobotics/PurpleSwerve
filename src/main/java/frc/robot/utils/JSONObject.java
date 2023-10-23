@@ -15,7 +15,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 
-/** Add your docs here. */
+/** Read/write JSON */
 public class JSONObject {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private static class JSONPose {
@@ -46,7 +46,7 @@ public class JSONObject {
       return new Translation2d(x, y);
     }
 
-      private static JSONPoint toJSON(Translation2d pose) {
+    private static JSONPoint toJSON(Translation2d pose) {
       JSONPoint jsonPoint = new JSONPoint();
 
       jsonPoint.x = pose.getX();
@@ -90,65 +90,41 @@ public class JSONObject {
 
   public static Pose2d readPose(String json) {
     try { return OBJECT_MAPPER.readValue(json, JSONPose.class).toJavaType(); } 
-    catch (Exception e) {
-      System.out.println(e.getMessage());
-      return null;
-    }
+    catch (Exception e) { return null; }
   }
 
   public static Translation2d readPoint(String json) {
     try { return OBJECT_MAPPER.readValue(json, JSONPoint.class).toJavaType(); } 
-    catch (Exception e) {
-      System.out.println(e.getMessage());
-      return null;
-    }
+    catch (Exception e) { return null; }
   }
 
   public static List<Pose2d> readPoseList(String json) {
     try { return JSONPoseList.toJavaType(OBJECT_MAPPER.readValue(json, new TypeReference<List<JSONPose>>(){})); }
-    catch (Exception e) {
-      System.out.println(e.getMessage());
-      return null;
-    }
+    catch (Exception e) { return null; }
   }
 
   public static List<Translation2d> readPointList(String json) {
     try { return JSONPointList.toJavaType(OBJECT_MAPPER.readValue(json, new TypeReference<List<JSONPoint>>(){})); }
-    catch (Exception e) {
-      System.out.println(e.getMessage());
-      return null;
-    }
+    catch (Exception e) { return null; }
   }
 
   public static String writePose(Pose2d pose) {
     try { return OBJECT_MAPPER.writeValueAsString(JSONPose.toJSON(pose)); }
-    catch (Exception e) {
-      System.out.println(e.getMessage());
-      return null;
-    }
+    catch (Exception e) { return null; }
   }
 
   public static String writePoint(Translation2d point) {
     try { return OBJECT_MAPPER.writeValueAsString(JSONPoint.toJSON(point)); }
-    catch (Exception e) {
-      System.out.println(e.getMessage());
-      return null;
-    }
+    catch (Exception e) { return null; }
   }
 
   public static String writePoseList(List<Pose2d> poseList) {
     try { return OBJECT_MAPPER.writeValueAsString(JSONPoseList.toJSON(poseList)); }
-    catch (Exception e) {
-      System.out.println(e.getMessage());
-      return null;
-    }
+    catch (Exception e) { return null; }
   }
 
   public static String writePointList(List<Translation2d> pointList) {
     try { return OBJECT_MAPPER.writeValueAsString(JSONPointList.toJSON(pointList)); }
-    catch (Exception e) {
-      System.out.println(e.getMessage());
-      return null;
-    }
+    catch (Exception e) { return null; }
   }
 }

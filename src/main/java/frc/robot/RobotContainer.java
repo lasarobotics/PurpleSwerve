@@ -12,7 +12,6 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.drive.DriveSubsystem;
-import frc.robot.subsystems.drive.PurplePath;
 
 public class RobotContainer {
   private static final DriveSubsystem DRIVE_SUBSYSTEM = new DriveSubsystem(
@@ -37,9 +36,6 @@ public class RobotContainer {
         DRIVE_SUBSYSTEM
       )
     );
-
-    // Start PurplePath thread
-    PurplePath.getInstance().startThread();
 
     // Bind buttons and triggers
     configureBindings();

@@ -36,20 +36,19 @@ public class PurplePath {
     "Trajectory8",
     "Trajectory9",
   };
-
-  private static PurplePath m_purplePath;
   
   private final String GOAL_LOG_ENTRY = "Goal";
   private final String POSE_LOG_ENTRY = "Pose";
   private final String NETWORK_TABLE_NAME = "PurplePath";
-  private final PubSubOption[] PUBSUB_OPTIONS = { PubSubOption.periodic(Constants.Global.ROBOT_LOOP_PERIOD / 2), PubSubOption.keepDuplicates(true), PubSubOption.pollStorage(10) };
+  private final PubSubOption[] PUBSUB_OPTIONS = { PubSubOption.periodic(Constants.Global.ROBOT_LOOP_PERIOD), PubSubOption.keepDuplicates(true), PubSubOption.pollStorage(10) };
   private StringSubscriber[] m_trajectorySubscribers =  new StringSubscriber[MAX_TRAJECTORIES];
   private AtomicReferenceArray<Trajectory> m_trajectories;
+  private List<Pose2d> m_goals;
   private StringPublisher m_posePublisher;
   private StringPublisher m_goalPublisher;
   private Notifier m_thread;
 
-  private PurplePath() {
+  public PurplePath() {
     // Initialise subcribers
     NetworkTable table = NetworkTableInstance.getDefault().getTable(NETWORK_TABLE_NAME);
     for (int i = 0; i < MAX_TRAJECTORIES; i++)
@@ -87,11 +86,6 @@ public class PurplePath {
     }
   }
 
-  public static PurplePath getInstance() {
-    if (m_purplePath == null) m_purplePath = new PurplePath();
-    return m_purplePath;
-  }
-
   /**
    * Start runner thread
    */
@@ -114,7 +108,8 @@ public class PurplePath {
    * @param goals Desired goal poses
    */
   public void setGoals(List<Pose2d> goals) {
-    m_goalPublisher.set(JSONObject.writePoseList(goals));
+    m_goals = goals;
+    m_goalPublisher.set(JSONObject.writePoseList(m_goals));
   }
 
   /**
@@ -124,6 +119,6 @@ public class PurplePath {
    */
   public Trajectory getLatestTrajectory(int index) {
     if (index < 0 || index > MAX_TRAJECTORIES) return new Trajectory();
-    return m_trajectories.get(index);
+    return  m_trajectories.get(index);
   }
 }

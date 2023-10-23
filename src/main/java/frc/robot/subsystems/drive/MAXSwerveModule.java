@@ -13,7 +13,6 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.Constants;
 import frc.robot.utils.SparkMax;
 import frc.robot.utils.SparkPIDConfig;
@@ -181,13 +180,16 @@ public class MAXSwerveModule implements AutoCloseable {
    * Call this method periodically
    */
   public void periodic() {
-    m_driveMotor.periodic();  
+    m_driveMotor.periodic(); 
     m_rotateMotor.periodic();
+  }
 
-    if (RobotBase.isSimulation()) {
-      m_driveMotor.getInputs().encoderPosition = m_simDrivePosition;
-      m_rotateMotor.getInputs().absoluteEncoderPosition = m_simRotatePosition;
-    }
+  /**
+   * Call this method periodically during simulation
+   */
+  public void simulationPeriodic() {
+    m_driveMotor.getInputs().encoderPosition = m_simDrivePosition;
+    m_rotateMotor.getInputs().absoluteEncoderPosition = m_simRotatePosition;
   }
 
   /**
@@ -220,7 +222,6 @@ public class MAXSwerveModule implements AutoCloseable {
     // Save drive and rotate position for simulation purposes only
     m_simDrivePosition += desiredState.speedMetersPerSecond * Constants.Global.ROBOT_LOOP_PERIOD;
     m_simRotatePosition = desiredState.angle.getRadians();
-    
   }
 
   /**

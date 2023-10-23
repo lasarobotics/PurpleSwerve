@@ -11,8 +11,6 @@ import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
 import org.littletonrobotics.junction.Logger;
 
-import com.pathplanner.lib.PathPoint;
-
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -27,7 +25,6 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.PubSubOption;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -85,6 +82,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private SwerveDriveKinematics m_kinematics;
   private SwerveDrivePoseEstimator m_poseEstimator;
   private AdvancedSwerveKinematics m_advancedKinematics;
+  private PurplePath m_purplePath;
 
   private NavX2 m_navx;
   private MAXSwerveModule m_lFrontModule;
@@ -96,9 +94,9 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private final double TOLERANCE = 0.125;
   private final double TIP_THRESHOLD = 30.0;
   private final double BALANCED_THRESHOLD = 5.0;
-  private final Matrix<N3, N1> ODOMETRY_STDDEV = VecBuilder.fill(0.03, 0.03, Units.degreesToRadians(1));
-  private final Matrix<N3, N1> VISION_STDDEV = VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(40));
-  private final TrapezoidProfile.Constraints AIM_PID_CONSTRAINT = new TrapezoidProfile.Constraints(1080.0, 1440.0);
+  private final Matrix<N3, N1> ODOMETRY_STDDEV = VecBuilder.fill(0.03, 0.03, Math.toRadians(1));
+  private final Matrix<N3, N1> VISION_STDDEV = VecBuilder.fill(0.5, 0.5, Math.toRadians(40));
+  private final TrapezoidProfile.Constraints AIM_PID_CONSTRAINT = new TrapezoidProfile.Constraints(2160.0, 2160.0);
 
   private final List<Pose2d> GOAL_POSES = Arrays.asList(
     new Pose2d(15.72, 7.33, Rotation2d.fromDegrees(0.0)),
@@ -222,8 +220,10 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     m_previousPose = new Pose2d();
     m_currentHeading = new Rotation2d();
 
-    // Set goal poses for PurplePath
-    PurplePath.getInstance().setGoals(GOAL_POSES);
+    // Setup PurplePath
+    m_purplePath = new PurplePath();
+    m_purplePath.setGoals(GOAL_POSES);
+    m_purplePath.startThread();
   }
 
   /**
@@ -450,7 +450,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     Logger.getInstance().recordOutput(String.join("/", getName(), POSE_LOG_ENTRY), getPose());
     Logger.getInstance().recordOutput(String.join("/", getName(), SWERVE_STATE_LOG_ENTRY), getModuleStates());
     for (int i = 0; i < PurplePath.MAX_TRAJECTORIES; i++)
-      Logger.getInstance().recordOutput(String.join("/", getName(), PurplePath.TRAJECTORY_LOG_ENTRY[i]), PurplePath.getInstance().getLatestTrajectory(i));
+      Logger.getInstance().recordOutput(String.join("/", getName(), PurplePath.TRAJECTORY_LOG_ENTRY[i]), m_purplePath.getLatestTrajectory(i));
   }
 
   /**
@@ -466,10 +466,10 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    */
   private void publishData() {
     Pose2d currentPose = getPose();
-    PurplePath.getInstance().setCurrentPose(currentPose);
+    m_purplePath.setCurrentPose(currentPose);
     m_field.setRobotPose(currentPose);
     for (int i = 0; i < PurplePath.MAX_TRAJECTORIES; i++)
-      m_field.getObject(PurplePath.TRAJECTORY_LOG_ENTRY[i]).setTrajectory(PurplePath.getInstance().getLatestTrajectory(i));
+      m_field.getObject(PurplePath.TRAJECTORY_LOG_ENTRY[i]).setTrajectory(m_purplePath.getLatestTrajectory(i));
   }
 
   @Override
@@ -481,6 +481,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     m_lRearModule.periodic();
     m_rRearModule.periodic();
 
+    if (RobotBase.isSimulation()) return;
     updatePose();
     publishData();
     smartDashboard();
@@ -490,8 +491,18 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   @Override
   public void simulationPeriodic() {
     // This method will be called once per scheduler run in simulation
+    m_lFrontModule.simulationPeriodic();
+    m_rFrontModule.simulationPeriodic();
+    m_lRearModule.simulationPeriodic();
+    m_rRearModule.simulationPeriodic();
+    
     double angle = m_navx.getSimAngle() + Math.toDegrees(m_desiredChassisSpeeds.omegaRadiansPerSecond) * Constants.Global.ROBOT_LOOP_PERIOD;
     m_navx.setSimAngle(angle);
+
+    updatePose();
+    publishData();
+    smartDashboard();
+    logOutputs();
   }
 
   /**
@@ -532,28 +543,12 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   }
 
   /**
-   * Generate AutoTrajectory to drive to pose
-   * @param pose Destination pose
-   * @return AutoTrajectory that will drive robot to desired pose
-   */
-  public AutoTrajectory driveToPose(Pose2d pose) {
-    Pose2d currentPose = getPose();
-    Rotation2d heading = new Rotation2d(currentPose.getX() - pose.getX(), currentPose.getY() - pose.getY());
-    List<PathPoint> waypoints = List.of(
-      new PathPoint(currentPose.getTranslation(), Rotation2d.fromRadians(0.0), getInertialVelocity()),
-      new PathPoint(pose.getTranslation(), heading, pose.getRotation())
-    );
-
-    return new AutoTrajectory(this, waypoints, DRIVE_MAX_LINEAR_SPEED, DRIVE_AUTO_ACCELERATION);
-  }
-
-  /**
    * Aim robot at a desired point on the field
    * @param xRequest Desired X axis (forward) speed [-1.0, +1.0]
    * @param yRequest Desired Y axis (sideways) speed [-1.0, +1.0]
    * @param point Target point
    */
-  public void aimAtPoint(double xRequest, double yRequest, Translation2d point) {
+  public double aimAtPoint(double xRequest, double yRequest, Translation2d point) {
     // Calculate desired robot velocity
     double moveRequest = Math.hypot(xRequest, yRequest);
     double moveDirection = Math.atan2(yRequest, xRequest);
@@ -578,12 +573,15 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     // Calculate new angle using adjusted point
     Rotation2d adjustedAngle = new Rotation2d(adjustedPoint.getX() - currentPose.getX(), adjustedPoint.getY() - currentPose.getY());
     // Calculate necessary rotate rate
-    double rotateOutput = m_autoAimPIDController.calculate(currentPose.getRotation().getDegrees(), adjustedAngle.getDegrees());
+    double rotateOutput = -m_autoAimPIDController.calculate(currentPose.getRotation().getDegrees(), adjustedAngle.getDegrees());
 
+    // Log aim point
     Logger.getInstance().recordOutput(getName() + "/AimPoint", new Pose2d(aimPoint, new Rotation2d()));
 
     // Drive robot accordingly
-    drive(velocityOutput * Math.cos(moveDirection), velocityOutput * Math.sin(moveDirection), -rotateOutput, getInertialVelocity(), getRotateRate());
+    drive(velocityOutput * Math.cos(moveDirection), velocityOutput * Math.sin(moveDirection), rotateOutput, getInertialVelocity(), getRotateRate());
+
+    return currentPose.getTranslation().getDistance(aimPoint);
   }
 
   /**
