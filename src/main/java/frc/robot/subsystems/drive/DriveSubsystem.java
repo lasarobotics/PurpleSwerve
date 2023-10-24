@@ -39,6 +39,7 @@ import frc.robot.subsystems.led.LEDStrip.Pattern;
 import frc.robot.subsystems.led.LEDSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
 import frc.robot.utils.NavX2;
+import frc.robot.utils.PIDConstants;
 
 public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   public static class Hardware {
@@ -151,12 +152,12 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @param throttleInputCurve Spline function characterising throttle input
    * @param turnInputCurve Spline function characterising turn input
    */
-  public DriveSubsystem(Hardware drivetrainHardware, double kP, double kD,
+  public DriveSubsystem(Hardware drivetrainHardware, PIDConstants pidf,
                         double turnScalar, double deadband, double lookAhead, double slipRatio,
                         PolynomialSplineFunction throttleInputCurve, PolynomialSplineFunction turnInputCurve) {
     setSubsystem(getClass().getSimpleName());
     m_throttleMap = new ThrottleMap(throttleInputCurve, deadband, DRIVE_MAX_LINEAR_SPEED);
-    m_turnPIDController = new TurnPIDController(kP, kD, turnScalar, deadband, lookAhead, turnInputCurve);
+    m_turnPIDController = new TurnPIDController(turnInputCurve, pidf, turnScalar, deadband, lookAhead);
 
     this.m_navx = drivetrainHardware.navx;
     this.m_lFrontModule = drivetrainHardware.lFrontModule;
@@ -213,7 +214,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     m_field = new Field2d();
 
     // Setup auto-aim PID controller
-    m_autoAimPIDController = new ProfiledPIDController(kP, 0.0, kD, AIM_PID_CONSTRAINT, Constants.Global.ROBOT_LOOP_PERIOD);
+    m_autoAimPIDController = new ProfiledPIDController(pidf.kP, 0.0, pidf.kD, AIM_PID_CONSTRAINT, pidf.period);
     m_autoAimPIDController.enableContinuousInput(-180.0, +180.0);
 
     // Initialise other variables

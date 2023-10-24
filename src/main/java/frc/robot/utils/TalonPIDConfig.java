@@ -53,15 +53,14 @@ public class TalonPIDConfig {
    * @param kF feed forward gain
    * @param tolerance tolerance of PID loop in ticks per 100ms
    */
-  public TalonPIDConfig(boolean sensorPhase, boolean invertMotor, double ticksPerRotation,
-                        double kP, double kI, double kD, double kF, double tolerance) {
+  public TalonPIDConfig(PIDConstants pidf, boolean sensorPhase, boolean invertMotor, double ticksPerRotation, double tolerance) {
+    this.m_kP = pidf.kP;
+    this.m_kI = pidf.kI;
+    this.m_kD = pidf.kD;
+    this.m_kF = pidf.kF;
     this.m_sensorPhase = sensorPhase;
     this.m_invertMotor = invertMotor;
     this.m_ticksPerRotation = ticksPerRotation;
-    this.m_kP = kP;
-    this.m_kI = kI;
-    this.m_kD = kD;
-    this.m_kF = kF;
     this.m_tolerance = Math.max(tolerance, MIN_TOLERANCE);
 
     this.m_enableSoftLimits = false;
@@ -83,17 +82,16 @@ public class TalonPIDConfig {
    * @param accelerationRPMPerSec MotionMagic acceleration in RPM
    * @param motionSmoothing MotionMagic smoothing factor [0, 8]
    */
-  public TalonPIDConfig(boolean sensorPhase, boolean invertMotor, double ticksPerRotation,
-                        double kP, double kI, double kD, double kF, double tolerance, 
-                        double lowerLimit, double upperLimit, boolean enableSoftLimits,
+  public TalonPIDConfig(PIDConstants pidf, boolean sensorPhase, boolean invertMotor, double ticksPerRotation,
+                        double tolerance, double lowerLimit, double upperLimit, boolean enableSoftLimits,
                         double velocityRPM, double accelerationRPMPerSec, int motionSmoothing) {
+    this.m_kP = pidf.kP;
+    this.m_kI = pidf.kI;
+    this.m_kD = pidf.kD;
+    this.m_kF = pidf.kF;
     this.m_sensorPhase = sensorPhase;
     this.m_invertMotor = invertMotor;
     this.m_ticksPerRotation = ticksPerRotation;
-    this.m_kP = kP;
-    this.m_kI = kI;
-    this.m_kD = kD;
-    this.m_kF = kF;
     this.m_tolerance = Math.max(tolerance, MIN_TOLERANCE);
     this.m_lowerLimit = lowerLimit;
     this.m_upperLimit = upperLimit;

@@ -11,6 +11,7 @@ import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import frc.robot.Constants;
+import frc.robot.utils.PIDConstants;
 
 public class TurnPIDController extends PIDController {
   private final double MIN_DEADBAND = 0.001;
@@ -33,8 +34,8 @@ public class TurnPIDController extends PIDController {
    * @param lookaAhead Number of loops to look ahead by
    * @param turnInputCurve Turn input curve
    */
-  public TurnPIDController(double kP, double kD, double turnScalar, double deadband, double lookAhead, PolynomialSplineFunction turnInputCurve) {
-    super(kP, 0.0, kD, Constants.Global.ROBOT_LOOP_PERIOD);
+  public TurnPIDController(PolynomialSplineFunction turnInputCurve, PIDConstants pidf, double turnScalar, double deadband, double lookAhead) {
+    super(pidf.kP, 0.0, pidf.kD, Constants.Global.ROBOT_LOOP_PERIOD);
     this.m_turnScalar = turnScalar;
     this.m_deadband = MathUtil.clamp(deadband, MIN_DEADBAND, MAX_DEADBAND);
     this.m_lookAhead = lookAhead;

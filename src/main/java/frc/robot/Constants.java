@@ -57,7 +57,7 @@ public final class Constants {
   }
 
   public static class Drive {
-    public static final PIDConstants DRIVE_TURN_PID = new PIDConstants(30.0, 0.0, 0.3, 0.0);
+    public static final PIDConstants DRIVE_TURN_PID = new PIDConstants(30.0, 0.0, 0.3, 0.0, Global.ROBOT_LOOP_PERIOD);
     public static final double DRIVE_SLIP_RATIO = 0.08;
     public static final double DRIVE_TURN_SCALAR = 30.0;
     public static final double DRIVE_LOOKAHEAD = 3;
@@ -72,30 +72,23 @@ public final class Constants {
     public static final PolynomialSplineFunction DRIVE_TURN_INPUT_CURVE = SPLINE_INTERPOLATOR.interpolate(DRIVE_TURN_INPUT_CURVE_X, DRIVE_TURN_INPUT_CURVE_Y);
 
     // Swerve velocity PID settings
-    private static final double DRIVE_VELOCITY_kP = 0.04;
-    private static final double DRIVE_VELOCITY_kI = 0.0;
-    private static final double DRIVE_VELOCITY_kD = 0.0;
-    private static final double DRIVE_VELOCITY_kF = 1 / (((Global.NEO_MAX_RPM / 60) * DriveSubsystem.DRIVE_WHEEL_DIAMETER_METERS * Math.PI) / DriveSubsystem.DRIVE_GEAR_RATIO);
+    private static final PIDConstants DRIVE_VELOCITY_PID = new PIDConstants(
+      0.04, 0.0, 0.0,  1 / (((Global.NEO_MAX_RPM / 60) * DriveSubsystem.DRIVE_WHEEL_DIAMETER_METERS * Math.PI) / DriveSubsystem.DRIVE_GEAR_RATIO)
+    );
     private static final double DRIVE_VELOCITY_TOLERANCE = 0.01;
     private static final boolean DRIVE_VELOCITY_SENSOR_PHASE = false;
     private static final boolean DRIVE_INVERT_MOTOR = false;
 
     // Swerve velocity PID config
     public static final SparkPIDConfig DRIVE_VELOCITY_CONFIG = new SparkPIDConfig(
+      DRIVE_VELOCITY_PID,
       DRIVE_VELOCITY_SENSOR_PHASE,
       DRIVE_INVERT_MOTOR,
-      DRIVE_VELOCITY_kP,
-      DRIVE_VELOCITY_kI,
-      DRIVE_VELOCITY_kD,
-      DRIVE_VELOCITY_kF,
       DRIVE_VELOCITY_TOLERANCE
     );
 
     // Swerve rotate PID settings
-    private static final double DRIVE_ROTATE_kP = 1.0;
-    private static final double DRIVE_ROTATE_kI = 0.0;
-    private static final double DRIVE_ROTATE_kD = 0.0;
-    private static final double DRIVE_ROTATE_kF = 0.0;
+    private static final PIDConstants DRIVE_ROTATE_PID = new PIDConstants(1.0, 0.0, 0.0, 0.0);
     private static final double DRIVE_ROTATE_TOLERANCE = 0.01;
     private static final double DRIVE_ROTATE_LOWER_LIMIT = 0.0;
     private static final double DRIVE_ROTATE_UPPER_LIMIT = 0.0;
@@ -105,12 +98,9 @@ public final class Constants {
 
     // Swerve rotate PID config
     public static final SparkPIDConfig DRIVE_ROTATE_CONFIG = new SparkPIDConfig(
+      DRIVE_ROTATE_PID,
       DRIVE_ROTATE_SENSOR_PHASE,
       DRIVE_ROTATE_INVERT_MOTOR,
-      DRIVE_ROTATE_kP,
-      DRIVE_ROTATE_kI,
-      DRIVE_ROTATE_kD,
-      DRIVE_ROTATE_kF,
       DRIVE_ROTATE_TOLERANCE,
       DRIVE_ROTATE_LOWER_LIMIT,
       DRIVE_ROTATE_UPPER_LIMIT,

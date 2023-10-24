@@ -41,14 +41,13 @@ public class SparkPIDConfig {
    * @param kF feed-forward gain
    * @param tolerance tolerance of PID loop in ticks per 100ms
    */
-  public SparkPIDConfig(boolean sensorPhase, boolean invertMotor,
-                        double kP, double kI, double kD, double kF, double tolerance) {
+  public SparkPIDConfig(PIDConstants pidf, boolean sensorPhase, boolean invertMotor, double tolerance) {
+    this.m_kP = pidf.kP;
+    this.m_kI = pidf.kI;
+    this.m_kD = pidf.kD;
+    this.m_kF = pidf.kF;
     this.m_sensorPhase = sensorPhase;
     this.m_invertMotor = invertMotor;
-    this.m_kP = kP;
-    this.m_kI = kI;
-    this.m_kD = kD;
-    this.m_kF = kF;
     this.m_tolerance = tolerance;
 
     this.m_enableSoftLimits = false;
@@ -69,15 +68,14 @@ public class SparkPIDConfig {
    * @param upperLimit upper soft limit
    * @param enableSoftLimits true to enable soft limits
    */
-  public SparkPIDConfig(boolean sensorPhase, boolean invertMotor,
-                        double kP, double kI, double kD, double kF, double tolerance, 
-                        double lowerLimit, double upperLimit, boolean enableSoftLimits) {
+  public SparkPIDConfig(PIDConstants pidf, boolean sensorPhase, boolean invertMotor,
+                        double tolerance, double lowerLimit, double upperLimit, boolean enableSoftLimits) {
+    this.m_kP = pidf.kP;
+    this.m_kI = pidf.kI;
+    this.m_kD = pidf.kD;
+    this.m_kF = pidf.kF;
     this.m_sensorPhase = sensorPhase;
     this.m_invertMotor = invertMotor;
-    this.m_kP = kP;
-    this.m_kI = kI;
-    this.m_kD = kD;
-    this.m_kF = kF;
     this.m_tolerance = tolerance;
     this.m_lowerLimit = lowerLimit;
     this.m_upperLimit = upperLimit;
