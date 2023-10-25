@@ -4,6 +4,9 @@
 
 package frc.robot;
 
+import org.lasarobotics.battery.BatteryScanner;
+import org.lasarobotics.battery.BatteryTracker;
+import org.lasarobotics.utils.GlobalConstants;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -16,8 +19,6 @@ import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.subsystems.battery.BatteryScanner;
-import frc.robot.subsystems.battery.BatteryTracker;
 
 public class Robot extends LoggedRobot {
   private Command m_autonomousCommand;
@@ -25,7 +26,7 @@ public class Robot extends LoggedRobot {
   private RobotContainer m_robotContainer;
 
   public Robot() {
-    super(Constants.Global.ROBOT_LOOP_PERIOD);
+    super(GlobalConstants.ROBOT_LOOP_PERIOD);
   }
 
   @Override
@@ -46,7 +47,7 @@ public class Robot extends LoggedRobot {
       else BatteryTracker.writeCurrentBattery();
     } else { 
       // Else just publish to NetworkTables for simulation or replay log file if var is set
-      String replay = System.getenv(Constants.Global.REPLAY_ENVIRONMENT_VAR);
+      String replay = System.getenv(GlobalConstants.REPLAY_ENVIRONMENT_VAR);
       if (replay == null || replay.isBlank()) {
         Logger.getInstance().addDataReceiver(new NT4Publisher());
       } else {

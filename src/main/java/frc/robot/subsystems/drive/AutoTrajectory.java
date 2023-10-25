@@ -7,6 +7,8 @@ package frc.robot.subsystems.drive;
 import java.util.HashMap;
 import java.util.List;
 
+import org.lasarobotics.utils.GlobalConstants;
+
 import com.pathplanner.lib.PathConstraints;
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
@@ -20,13 +22,12 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import frc.robot.Constants;
 
 public class AutoTrajectory {
   // Ramsete Command values
   private final boolean USE_ALLIANCE = false;
-  private final PIDController XY_PID_CONTROLLER = new PIDController(1.0, 0.0, 0.0, Constants.Global.ROBOT_LOOP_PERIOD);
-  private final PIDController THETA_PID_CONTROLLER = new PIDController(5.0, 0.0, 0.8, Constants.Global.ROBOT_LOOP_PERIOD);
+  private final PIDController XY_PID_CONTROLLER = new PIDController(1.0, 0.0, 0.0, GlobalConstants.ROBOT_LOOP_PERIOD);
+  private final PIDController THETA_PID_CONTROLLER = new PIDController(5.0, 0.0, 0.8, GlobalConstants.ROBOT_LOOP_PERIOD);
 
   DriveSubsystem m_driveSubsystem;
   PPSwerveControllerCommand m_swerveCommand;

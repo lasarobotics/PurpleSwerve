@@ -6,17 +6,18 @@ package frc.robot;
 
 import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
+import org.lasarobotics.hardware.NavX2;
+import org.lasarobotics.hardware.SparkMax;
+import org.lasarobotics.led.LEDStrip;
+import org.lasarobotics.utils.GlobalConstants;
+import org.lasarobotics.utils.PIDConstants;
+import org.lasarobotics.utils.SparkPIDConfig;
 
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import frc.robot.subsystems.drive.DriveSubsystem;
-import frc.robot.subsystems.led.LEDStrip;
-import frc.robot.utils.NavX2;
-import frc.robot.utils.PIDConstants;
-import frc.robot.utils.SparkMax;
-import frc.robot.utils.SparkPIDConfig;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide
@@ -31,18 +32,6 @@ import frc.robot.utils.SparkPIDConfig;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
-  public static class Global {
-    public static final int ROBOT_LOOP_HZ = 50;
-    public static final double ROBOT_LOOP_PERIOD = 1.0 / ROBOT_LOOP_HZ;
-
-    // Motor RPMs, encoder values, and gear ratios
-    public static final int NEO_MAX_RPM = 5676;
-    public static final int NEO_ENCODER_TICKS_PER_ROTATION = 42;
-    public static final int REV_ENCODER_TICKS_PER_ROTATION = 8192;
-
-    public static final String REPLAY_ENVIRONMENT_VAR = "ROBOT_REPLAY";
-  }
-
   public static class Field {
     public static final double FIELD_WIDTH = 8.1026;
     public static final double FIELD_LENGTH = 16.4846;
@@ -57,7 +46,7 @@ public final class Constants {
   }
 
   public static class Drive {
-    public static final PIDConstants DRIVE_TURN_PID = new PIDConstants(30.0, 0.0, 0.3, 0.0, Global.ROBOT_LOOP_PERIOD);
+    public static final PIDConstants DRIVE_TURN_PID = new PIDConstants(30.0, 0.0, 0.3, 0.0, GlobalConstants.ROBOT_LOOP_PERIOD);
     public static final double DRIVE_SLIP_RATIO = 0.08;
     public static final double DRIVE_TURN_SCALAR = 30.0;
     public static final double DRIVE_LOOKAHEAD = 3;
@@ -73,7 +62,7 @@ public final class Constants {
 
     // Swerve velocity PID settings
     private static final PIDConstants DRIVE_VELOCITY_PID = new PIDConstants(
-      0.04, 0.0, 0.0,  1 / (((Global.NEO_MAX_RPM / 60) * DriveSubsystem.DRIVE_WHEEL_DIAMETER_METERS * Math.PI) / DriveSubsystem.DRIVE_GEAR_RATIO)
+      0.04, 0.0, 0.0, 1 / (((GlobalConstants.NEO_MAX_RPM / 60) * DriveSubsystem.DRIVE_WHEEL_DIAMETER_METERS * Math.PI) / DriveSubsystem.DRIVE_GEAR_RATIO)
     );
     private static final double DRIVE_VELOCITY_TOLERANCE = 0.01;
     private static final boolean DRIVE_VELOCITY_SENSOR_PHASE = false;

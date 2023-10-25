@@ -7,6 +7,7 @@ package frc.robot.subsystems.vision;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.lasarobotics.utils.GlobalConstants;
 import org.photonvision.EstimatedRobotPose;
 
 import edu.wpi.first.wpilibj.Notifier;
@@ -44,7 +45,7 @@ public class VisionSubsystem extends SubsystemBase implements AutoCloseable {
 
     // Start camera threads
     m_cameraNotifier.setName(getClass().getSimpleName());
-    m_cameraNotifier.startPeriodic(Constants.Global.ROBOT_LOOP_PERIOD);
+    m_cameraNotifier.startPeriodic(GlobalConstants.ROBOT_LOOP_PERIOD);
   }
 
   public static Hardware initializeHardware() {

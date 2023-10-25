@@ -17,6 +17,13 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.lasarobotics.drive.MAXSwerveModule;
+import org.lasarobotics.drive.MAXSwerveModule.ModuleLocation;
+import org.lasarobotics.hardware.NavX2;
+import org.lasarobotics.hardware.NavX2.NavX2Inputs;
+import org.lasarobotics.hardware.SparkMax;
+import org.lasarobotics.hardware.SparkMax.SparkMaxInputs;
+import org.lasarobotics.led.LEDStrip;
 import org.mockito.AdditionalMatchers;
 import org.mockito.ArgumentMatchers;
 
@@ -25,13 +32,6 @@ import com.revrobotics.CANSparkMax.ControlType;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.subsystems.drive.DriveSubsystem;
-import frc.robot.subsystems.drive.MAXSwerveModule;
-import frc.robot.subsystems.drive.MAXSwerveModule.ModuleLocation;
-import frc.robot.subsystems.led.LEDStrip;
-import frc.robot.utils.NavX2;
-import frc.robot.utils.NavX2InputsAutoLogged;
-import frc.robot.utils.SparkMax;
-import frc.robot.utils.SparkMaxInputsAutoLogged;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class AntiTipCommandTest {
@@ -63,11 +63,11 @@ public class AntiTipCommandTest {
     m_rRearRotateMotor = mock(SparkMax.class);
     m_ledStrip = mock(LEDStrip.class);
 
-    
-    NavX2InputsAutoLogged navxInputs = new NavX2InputsAutoLogged();
+
+    NavX2Inputs navxInputs = new NavX2Inputs();
     when(m_navx.getInputs()).thenReturn(navxInputs);
 
-    SparkMaxInputsAutoLogged sparkMaxInputs = new SparkMaxInputsAutoLogged();
+    SparkMaxInputs sparkMaxInputs = new SparkMaxInputs();
     when(m_lFrontDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
     when(m_lFrontRotateMotor.getInputs()).thenReturn(sparkMaxInputs);
     when(m_rFrontDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
@@ -82,7 +82,7 @@ public class AntiTipCommandTest {
       m_navx,
       new MAXSwerveModule(
         new MAXSwerveModule.Hardware(m_lFrontDriveMotor, m_lFrontRotateMotor),
-        ModuleLocation.LeftFront, 
+        ModuleLocation.LeftFront,
         Constants.Drive.DRIVE_VELOCITY_CONFIG,
         Constants.Drive.DRIVE_ROTATE_CONFIG,
         Constants.Drive.DRIVE_SLIP_RATIO,
@@ -94,7 +94,7 @@ public class AntiTipCommandTest {
       ),
       new MAXSwerveModule(
         new MAXSwerveModule.Hardware(m_rFrontDriveMotor, m_rFrontRotateMotor),
-        ModuleLocation.RightFront, 
+        ModuleLocation.RightFront,
         Constants.Drive.DRIVE_VELOCITY_CONFIG,
         Constants.Drive.DRIVE_ROTATE_CONFIG,
         Constants.Drive.DRIVE_SLIP_RATIO,
@@ -106,7 +106,7 @@ public class AntiTipCommandTest {
       ),
       new MAXSwerveModule(
         new MAXSwerveModule.Hardware(m_lRearDriveMotor, m_lRearRotateMotor),
-        ModuleLocation.LeftRear, 
+        ModuleLocation.LeftRear,
         Constants.Drive.DRIVE_VELOCITY_CONFIG,
         Constants.Drive.DRIVE_ROTATE_CONFIG,
         Constants.Drive.DRIVE_SLIP_RATIO,
@@ -159,7 +159,7 @@ public class AntiTipCommandTest {
   @DisplayName("Test if robot can execute anti-tip")
   public void execute() {
     // Hardcode sensor values
-    NavX2InputsAutoLogged inputs = new NavX2InputsAutoLogged(); 
+    NavX2Inputs inputs = new NavX2Inputs();
     inputs.rollAngle = +35.0;
 
     when(m_navx.getInputs()).thenReturn(inputs);
@@ -183,7 +183,7 @@ public class AntiTipCommandTest {
   @DisplayName("Test if robot knows when to stop anti-tip")
   public void isFinished() {
     // Hardcode sensor values
-    NavX2InputsAutoLogged inputs = new NavX2InputsAutoLogged(); 
+    NavX2Inputs inputs = new NavX2Inputs();
     inputs.rollAngle = +4.0;
 
     when(m_navx.getInputs()).thenReturn(inputs);

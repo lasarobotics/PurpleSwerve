@@ -17,16 +17,15 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.lasarobotics.led.LEDStrip;
+import org.lasarobotics.led.LEDStrip.AddressableLED;
+import org.lasarobotics.led.LEDStrip.Pattern;
+import org.lasarobotics.led.LEDStrip.Section;
+import org.lasarobotics.led.LEDSubsystem;
 import org.mockito.ArgumentCaptor;
 
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.util.Color;
-import frc.robot.subsystems.led.LEDStrip;
-import frc.robot.subsystems.led.LEDStrip.AddressableLED;
-import frc.robot.subsystems.led.LEDStrip.Hardware;
-import frc.robot.subsystems.led.LEDStrip.Pattern;
-import frc.robot.subsystems.led.LEDStrip.Section;
-import frc.robot.subsystems.led.LEDSubsystem;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class LEDSubsystemTest {
@@ -52,8 +51,8 @@ public class LEDSubsystemTest {
     when(m_leds2.getLength()).thenReturn(LENGTH);
 
     // Create LED strip objects
-    m_ledStrip1 = new LEDStrip(new Hardware(m_leds1));
-    m_ledStrip2 = new LEDStrip(new Hardware(m_leds2));
+    m_ledStrip1 = new LEDStrip(new LEDStrip.Hardware(m_leds1));
+    m_ledStrip2 = new LEDStrip(new LEDStrip.Hardware(m_leds2));
 
     // Create LEDSubsystem object
     m_ledSubsystem = LEDSubsystem.getInstance();

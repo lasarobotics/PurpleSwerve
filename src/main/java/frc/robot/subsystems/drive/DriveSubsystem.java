@@ -9,6 +9,16 @@ import java.util.List;
 
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
+import org.lasarobotics.drive.AdvancedSwerveKinematics;
+import org.lasarobotics.drive.MAXSwerveModule;
+import org.lasarobotics.drive.ThrottleMap;
+import org.lasarobotics.drive.TurnPIDController;
+import org.lasarobotics.hardware.NavX2;
+import org.lasarobotics.led.LEDStrip;
+import org.lasarobotics.led.LEDStrip.Pattern;
+import org.lasarobotics.led.LEDSubsystem;
+import org.lasarobotics.utils.GlobalConstants;
+import org.lasarobotics.utils.PIDConstants;
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.Matrix;
@@ -34,12 +44,7 @@ import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
-import frc.robot.subsystems.led.LEDStrip;
-import frc.robot.subsystems.led.LEDStrip.Pattern;
-import frc.robot.subsystems.led.LEDSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
-import frc.robot.utils.NavX2;
-import frc.robot.utils.PIDConstants;
 
 public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   public static class Hardware {
@@ -70,11 +75,11 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   public static final double DRIVE_TRACK_WIDTH = 0.6;
   public static final double DRIVE_WHEEL_DIAMETER_METERS = 0.0762; // 3" wheels
   public static final double DRIVE_GEAR_RATIO = 4.71;
-  public static final double DRIVE_TICKS_PER_METER = (Constants.Global.NEO_ENCODER_TICKS_PER_ROTATION * DRIVE_GEAR_RATIO) * (1 / (DRIVE_WHEEL_DIAMETER_METERS * Math.PI));
+  public static final double DRIVE_TICKS_PER_METER = (GlobalConstants.NEO_ENCODER_TICKS_PER_ROTATION * DRIVE_GEAR_RATIO) * (1 / (DRIVE_WHEEL_DIAMETER_METERS * Math.PI));
   public static final double DRIVE_METERS_PER_TICK = 1 / DRIVE_TICKS_PER_METER;
-  public static final double DRIVE_METERS_PER_ROTATION = DRIVE_METERS_PER_TICK * Constants.Global.NEO_ENCODER_TICKS_PER_ROTATION;
+  public static final double DRIVE_METERS_PER_ROTATION = DRIVE_METERS_PER_TICK * GlobalConstants.NEO_ENCODER_TICKS_PER_ROTATION;
   public static final double DRIVETRAIN_EFFICIENCY = 0.90;
-  public static final double DRIVE_MAX_LINEAR_SPEED = (Constants.Global.NEO_MAX_RPM / 60) * DRIVE_METERS_PER_ROTATION * DRIVETRAIN_EFFICIENCY;
+  public static final double DRIVE_MAX_LINEAR_SPEED = (GlobalConstants.NEO_MAX_RPM / 60) * DRIVE_METERS_PER_ROTATION * DRIVETRAIN_EFFICIENCY;
   public static final double DRIVE_AUTO_ACCELERATION = DRIVE_MAX_LINEAR_SPEED - 0.5;
 
   private ThrottleMap m_throttleMap;
@@ -111,7 +116,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     new Pose2d(1.90, 1.10, Rotation2d.fromDegrees(0.0)),
     new Pose2d(1.90, 0.45, Rotation2d.fromDegrees(0.0))
   );
-  PubSubOption[] PUBSUB_OPTIONS = { PubSubOption.periodic(Constants.Global.ROBOT_LOOP_PERIOD), PubSubOption.keepDuplicates(true), PubSubOption.pollStorage(10) };
+  PubSubOption[] PUBSUB_OPTIONS = { PubSubOption.periodic(GlobalConstants.ROBOT_LOOP_PERIOD), PubSubOption.keepDuplicates(true), PubSubOption.pollStorage(10) };
 
   private final String POSE_LOG_ENTRY = "Pose";
   private final String SWERVE_STATE_LOG_ENTRY = "Swerve";
@@ -192,7 +197,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     m_poseEstimator = new SwerveDrivePoseEstimator(
       m_kinematics,
       Rotation2d.fromDegrees(getAngle()),
-      getModulePositions(), 
+      getModulePositions(),
       new Pose2d(),
       ODOMETRY_STDDEV,
       VISION_STDDEV
@@ -232,15 +237,15 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @return Hardware object containing all necessary devices for this subsystem
    */
   public static Hardware initializeHardware() {
-    NavX2 navx = new NavX2(Constants.DriveHardware.NAVX_ID, Constants.Global.ROBOT_LOOP_HZ);
+    NavX2 navx = new NavX2(Constants.DriveHardware.NAVX_ID, GlobalConstants.ROBOT_LOOP_HZ);
 
     MAXSwerveModule lFrontModule = new MAXSwerveModule(
       MAXSwerveModule.initializeHardware(
         Constants.DriveHardware.LEFT_FRONT_DRIVE_MOTOR_ID,
         Constants.DriveHardware.LEFT_FRONT_ROTATE_MOTOR_ID
       ),
-      MAXSwerveModule.ModuleLocation.LeftFront, 
-      Constants.Drive.DRIVE_VELOCITY_CONFIG, 
+      MAXSwerveModule.ModuleLocation.LeftFront,
+      Constants.Drive.DRIVE_VELOCITY_CONFIG,
       Constants.Drive.DRIVE_ROTATE_CONFIG,
       Constants.Drive.DRIVE_SLIP_RATIO,
       DRIVE_MAX_LINEAR_SPEED,
@@ -255,8 +260,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
         Constants.DriveHardware.RIGHT_FRONT_DRIVE_MOTOR_ID,
         Constants.DriveHardware.RIGHT_FRONT_ROTATE_MOTOR_ID
       ),
-      MAXSwerveModule.ModuleLocation.RightFront, 
-      Constants.Drive.DRIVE_VELOCITY_CONFIG, 
+      MAXSwerveModule.ModuleLocation.RightFront,
+      Constants.Drive.DRIVE_VELOCITY_CONFIG,
       Constants.Drive.DRIVE_ROTATE_CONFIG,
       Constants.Drive.DRIVE_SLIP_RATIO,
       DRIVE_MAX_LINEAR_SPEED,
@@ -271,8 +276,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
         Constants.DriveHardware.LEFT_REAR_DRIVE_MOTOR_ID,
         Constants.DriveHardware.LEFT_REAR_ROTATE_MOTOR_ID
       ),
-      MAXSwerveModule.ModuleLocation.LeftRear, 
-      Constants.Drive.DRIVE_VELOCITY_CONFIG, 
+      MAXSwerveModule.ModuleLocation.LeftRear,
+      Constants.Drive.DRIVE_VELOCITY_CONFIG,
       Constants.Drive.DRIVE_ROTATE_CONFIG,
       Constants.Drive.DRIVE_SLIP_RATIO,
       DRIVE_MAX_LINEAR_SPEED,
@@ -287,8 +292,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
         Constants.DriveHardware.RIGHT_REAR_DRIVE_MOTOR_ID,
         Constants.DriveHardware.RIGHT_REAR_ROTATE_MOTOR_ID
       ),
-      MAXSwerveModule.ModuleLocation.RightRear, 
-      Constants.Drive.DRIVE_VELOCITY_CONFIG, 
+      MAXSwerveModule.ModuleLocation.RightRear,
+      Constants.Drive.DRIVE_VELOCITY_CONFIG,
       Constants.Drive.DRIVE_ROTATE_CONFIG,
       Constants.Drive.DRIVE_SLIP_RATIO,
       DRIVE_MAX_LINEAR_SPEED,
@@ -302,7 +307,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
     Hardware drivetrainHardware = new Hardware(navx, lFrontModule, rFrontModule, lRearModule, rRearModule, ledStrip);
 
-    return drivetrainHardware;  
+    return drivetrainHardware;
   }
 
   /**
@@ -496,8 +501,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     m_rFrontModule.simulationPeriodic();
     m_lRearModule.simulationPeriodic();
     m_rRearModule.simulationPeriodic();
-    
-    double angle = m_navx.getSimAngle() + Math.toDegrees(m_desiredChassisSpeeds.omegaRadiansPerSecond) * Constants.Global.ROBOT_LOOP_PERIOD;
+
+    double angle = m_navx.getSimAngle() + Math.toDegrees(m_desiredChassisSpeeds.omegaRadiansPerSecond) * GlobalConstants.ROBOT_LOOP_PERIOD;
     m_navx.setSimAngle(angle);
 
     updatePose();
@@ -698,7 +703,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @return True if robot is (nearly) balanced
    */
   public boolean isBalanced() {
-    return Math.abs(getPitch()) < BALANCED_THRESHOLD && 
+    return Math.abs(getPitch()) < BALANCED_THRESHOLD &&
            Math.abs(getRoll()) < BALANCED_THRESHOLD;
   }
 

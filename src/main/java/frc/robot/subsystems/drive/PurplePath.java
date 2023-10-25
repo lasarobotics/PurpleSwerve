@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
+import org.lasarobotics.utils.GlobalConstants;
+import org.lasarobotics.utils.JSONObject;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -18,8 +21,6 @@ import edu.wpi.first.networktables.PubSubOption;
 import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.networktables.StringSubscriber;
 import edu.wpi.first.wpilibj.Notifier;
-import frc.robot.Constants;
-import frc.robot.utils.JSONObject;
 
 /** PurplePath Pathfinder */
 public class PurplePath {
@@ -40,7 +41,7 @@ public class PurplePath {
   private final String GOAL_LOG_ENTRY = "Goal";
   private final String POSE_LOG_ENTRY = "Pose";
   private final String NETWORK_TABLE_NAME = "PurplePath";
-  private final PubSubOption[] PUBSUB_OPTIONS = { PubSubOption.periodic(Constants.Global.ROBOT_LOOP_PERIOD), PubSubOption.keepDuplicates(true), PubSubOption.pollStorage(10) };
+  private final PubSubOption[] PUBSUB_OPTIONS = { PubSubOption.periodic(GlobalConstants.ROBOT_LOOP_PERIOD), PubSubOption.keepDuplicates(true), PubSubOption.pollStorage(10) };
   private StringSubscriber[] m_trajectorySubscribers =  new StringSubscriber[MAX_TRAJECTORIES];
   private AtomicReferenceArray<Trajectory> m_trajectories;
   private List<Pose2d> m_goals;
@@ -92,7 +93,7 @@ public class PurplePath {
   public void startThread() {
     m_thread = new Notifier(() -> run());
     m_thread.setName("PurplePath");
-    m_thread.startPeriodic(Constants.Global.ROBOT_LOOP_PERIOD);
+    m_thread.startPeriodic(GlobalConstants.ROBOT_LOOP_PERIOD);
   }
 
   /**
