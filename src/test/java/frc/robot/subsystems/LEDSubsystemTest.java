@@ -85,7 +85,7 @@ public class LEDSubsystemTest {
     verify(m_leds1, times(1)).setData(bufferCaptor.capture());
 
     // Verify LED pattern
-    for (int i = 0; i < LENGTH; i++) 
+    for (int i = 0; i < LENGTH; i++)
       assertEquals(LEDStrip.TEAM_COLOR, bufferCaptor.getValue().getLED(i));
   }
 
@@ -102,7 +102,7 @@ public class LEDSubsystemTest {
 
     // Run LED subsystem loop
     m_ledSubsystem.periodic();
-    
+
     // Verify LEDs are being set
     verify(m_leds1, times(1)).setData(bufferCaptor.capture());
 
@@ -126,7 +126,7 @@ public class LEDSubsystemTest {
 
     // Run LED subsystem loop
     m_ledSubsystem.periodic();
-    
+
     // Verify LEDs are being set
     verify(m_leds1, times(1)).setData(bufferCaptor.capture());
 
@@ -152,7 +152,7 @@ public class LEDSubsystemTest {
 
     // Run LED subsystem loop
     m_ledSubsystem.periodic();
-    
+
     // Verify LEDs are being set
     verify(m_leds1, times(1)).setData(bufferCaptor.capture());
 
@@ -183,9 +183,9 @@ public class LEDSubsystemTest {
     verify(m_leds2, times(1)).setData(bufferCaptor2.capture());
 
     // Verify LED pattern
-    for (int i = 0; i < LENGTH; i++) 
+    for (int i = 0; i < LENGTH; i++)
       assertEquals(Color.kRed, bufferCaptor1.getValue().getLED(i));
-    for (int i = 0; i < LENGTH; i++) 
+    for (int i = 0; i < LENGTH; i++)
       assertEquals(Color.kBlue, bufferCaptor2.getValue().getLED(i));
   }
 
@@ -212,9 +212,9 @@ public class LEDSubsystemTest {
     verify(m_leds2, times(1)).setData(bufferCaptor2.capture());
 
     // Verify LED pattern
-    for (int i = 0; i < LENGTH; i++) 
+    for (int i = 0; i < LENGTH; i++)
       assertEquals(LEDStrip.TEAM_COLOR, bufferCaptor1.getValue().getLED(i));
-    for (int i = 0; i < LENGTH; i++) 
+    for (int i = 0; i < LENGTH; i++)
       assertEquals(LEDStrip.TEAM_COLOR, bufferCaptor2.getValue().getLED(i));
 
     // End LED override
@@ -228,9 +228,9 @@ public class LEDSubsystemTest {
     verify(m_leds2, times(2)).setData(bufferCaptor2.capture());
 
     // Verify LED pattern
-    for (int i = 0; i < LENGTH; i++) 
+    for (int i = 0; i < LENGTH; i++)
       assertEquals(Color.kRed, bufferCaptor1.getValue().getLED(i));
-    for (int i = 0; i < LENGTH; i++) 
-      assertEquals(Color.kBlue, bufferCaptor2.getValue().getLED(i));    
+    for (int i = 0; i < LENGTH; i++)
+      assertEquals(Color.kBlue, bufferCaptor2.getValue().getLED(i));
   }
 }

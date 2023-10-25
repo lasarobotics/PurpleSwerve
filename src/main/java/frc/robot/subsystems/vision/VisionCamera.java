@@ -29,7 +29,7 @@ public class VisionCamera implements Runnable, AutoCloseable {
   public static class VisionCameraInputs {
     public PhotonPipelineResult pipelineResult = new PhotonPipelineResult();
   }
-  
+
   private PhotonCamera m_camera;
   private PhotonPoseEstimator m_poseEstimator;
   private Transform3d m_transform;
@@ -58,7 +58,7 @@ public class VisionCamera implements Runnable, AutoCloseable {
   public void run() {
     // Return if camera or field layout failed to load
     if (m_poseEstimator == null || m_camera == null) return;
-    
+
     // Update and log inputs
     m_inputs.pipelineResult = m_camera.getLatestResult();
     Logger.getInstance().processInputs(m_camera.getName(), m_inputs);
@@ -67,7 +67,7 @@ public class VisionCamera implements Runnable, AutoCloseable {
     if (!m_inputs.pipelineResult.hasTargets()) return;
     if (m_inputs.pipelineResult.targets.size() == 1
         && m_inputs.pipelineResult.targets.get(0).getPoseAmbiguity() > APRILTAG_POSE_AMBIGUITY_THRESHOLD) return;
-    
+
     // Update pose estimate
     m_poseEstimator.update(m_inputs.pipelineResult).ifPresent(estimatedRobotPose -> {
       var estimatedPose = estimatedRobotPose.estimatedPose;
@@ -80,7 +80,7 @@ public class VisionCamera implements Runnable, AutoCloseable {
   }
 
   /**
-   * Gets the latest robot pose. Calling this will only return the pose once. 
+   * Gets the latest robot pose. Calling this will only return the pose once.
    * If it returns a non-null value, it is a new estimate that hasn't been returned before.
    * This pose will always be for the BLUE alliance.
    * @return Latest estimated pose

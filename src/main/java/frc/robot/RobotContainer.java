@@ -31,7 +31,7 @@ public class RobotContainer {
     // Set drive command
     DRIVE_SUBSYSTEM.setDefaultCommand(
       new RunCommand(
-        () -> DRIVE_SUBSYSTEM.teleopPID(-PRIMARY_CONTROLLER.getLeftY(), -PRIMARY_CONTROLLER.getLeftX(), PRIMARY_CONTROLLER.getRightX()), 
+        () -> DRIVE_SUBSYSTEM.teleopPID(-PRIMARY_CONTROLLER.getLeftY(), -PRIMARY_CONTROLLER.getLeftX(), PRIMARY_CONTROLLER.getRightX()),
         DRIVE_SUBSYSTEM
       )
     );
@@ -48,7 +48,7 @@ public class RobotContainer {
           -PRIMARY_CONTROLLER.getLeftY(),
           -PRIMARY_CONTROLLER.getLeftX(),
           Constants.Field.CENTER
-        ), 
+        ),
         DRIVE_SUBSYSTEM
       )
     ).onFalse(new InstantCommand(() -> DRIVE_SUBSYSTEM.resetTurnPID(), DRIVE_SUBSYSTEM));

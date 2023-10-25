@@ -34,7 +34,7 @@ public class VisionSubsystem extends SubsystemBase implements AutoCloseable {
    */
   private VisionSubsystem(Hardware visionHardware) {
     this.m_cameras = visionHardware.cameras;
-  
+
     // Setup camera pose estimation threads
     this.m_cameraNotifier = new Notifier(() -> {
       for (var camera : m_cameras) camera.run();
@@ -49,7 +49,7 @@ public class VisionSubsystem extends SubsystemBase implements AutoCloseable {
   }
 
   public static Hardware initializeHardware() {
-    Hardware visionHardware = new Hardware( 
+    Hardware visionHardware = new Hardware(
       new VisionCamera(Constants.VisionHardware.CAMERA_0_NAME, Constants.VisionHardware.CAMERA_0_LOCATION)
     );
 
@@ -77,7 +77,7 @@ public class VisionSubsystem extends SubsystemBase implements AutoCloseable {
       var result = camera.getLatestEstimatedPose();
       if (result != null) estimatedPoses.add(result);
     }
-   
+
     return estimatedPoses;
   }
 

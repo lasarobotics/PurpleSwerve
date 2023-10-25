@@ -37,7 +37,7 @@ public class PurplePath {
     "Trajectory8",
     "Trajectory9",
   };
-  
+
   private final String GOAL_LOG_ENTRY = "Goal";
   private final String POSE_LOG_ENTRY = "Pose";
   private final String NETWORK_TABLE_NAME = "PurplePath";
@@ -55,7 +55,7 @@ public class PurplePath {
     for (int i = 0; i < MAX_TRAJECTORIES; i++)
       m_trajectorySubscribers[i] = table.getStringTopic(TRAJECTORY_LOG_ENTRY[i])
         .subscribe("", PUBSUB_OPTIONS);
-    
+
     // Initialise trajectories
     m_trajectories = new AtomicReferenceArray<>(MAX_TRAJECTORIES);
 
@@ -79,9 +79,9 @@ public class PurplePath {
 
       // If path exists, generate trajectory
       List<Trajectory.State> trajectory = new ArrayList<>();
-      for (var point : path) 
+      for (var point : path)
         trajectory.add(new Trajectory.State(0.0, 0.0, 0.0, new Pose2d(point, Rotation2d.fromDegrees(0.0)), 0.0));
-      
+
       // Update trajectory
       m_trajectories.set(i, new Trajectory(trajectory));
     }

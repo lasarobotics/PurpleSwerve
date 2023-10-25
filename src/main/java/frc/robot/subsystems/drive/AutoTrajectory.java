@@ -32,7 +32,7 @@ public class AutoTrajectory {
   DriveSubsystem m_driveSubsystem;
   PPSwerveControllerCommand m_swerveCommand;
   PathPlannerTrajectory m_trajectory;
-  
+
   /**
    * Create new path trajectory using PathPlanner path
    * @param driveSubsystem DriveSubsystem to drive the robot
@@ -51,14 +51,14 @@ public class AutoTrajectory {
 
     // Set swerve command
     m_swerveCommand = new PPSwerveControllerCommand(
-      m_trajectory, 
-      m_driveSubsystem::getPose, 
+      m_trajectory,
+      m_driveSubsystem::getPose,
       m_driveSubsystem.getKinematics(),
       XY_PID_CONTROLLER,
       XY_PID_CONTROLLER,
       THETA_PID_CONTROLLER,
-      m_driveSubsystem::autoDrive, 
-      USE_ALLIANCE, 
+      m_driveSubsystem::autoDrive,
+      USE_ALLIANCE,
       m_driveSubsystem
     );
   }
@@ -79,14 +79,14 @@ public class AutoTrajectory {
 
     // Set swerve command
     m_swerveCommand = new PPSwerveControllerCommand(
-      m_trajectory, 
-      m_driveSubsystem::getPose, 
+      m_trajectory,
+      m_driveSubsystem::getPose,
       m_driveSubsystem.getKinematics(),
       XY_PID_CONTROLLER,
       XY_PID_CONTROLLER,
       THETA_PID_CONTROLLER,
-      m_driveSubsystem::autoDrive, 
-      USE_ALLIANCE, 
+      m_driveSubsystem::autoDrive,
+      USE_ALLIANCE,
       m_driveSubsystem
     );
   }
@@ -170,7 +170,7 @@ public class AutoTrajectory {
                   });
     } else return getCommandAndStopWithEvents(eventMap);
   }
-  
+
   /**
    * Get auto command to execute path
    * @return Ramsete command that does NOT stop when complete
@@ -189,6 +189,6 @@ public class AutoTrajectory {
       return new InstantCommand(() -> resetOdometry())
                  .andThen(m_swerveCommand)
                  .andThen(() -> m_driveSubsystem.resetTurnPID());
-    } else return getCommand();  
+    } else return getCommand();
   }
 }

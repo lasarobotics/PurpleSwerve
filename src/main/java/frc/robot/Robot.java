@@ -35,17 +35,17 @@ public class Robot extends LoggedRobot {
     // AdvantageKit Logging
     Logger.getInstance().recordMetadata("ProjectName", "PurpleSwerve");
     Logger.getInstance().recordMetadata("BatteryName", BatteryScanner.scanBattery());
-    
-    if (isReal()) { 
+
+    if (isReal()) {
       // If robot is real, log to USB drive and publish data to NetworkTables
       Logger.getInstance().addDataReceiver(new WPILOGWriter("/media/sda1/"));
       Logger.getInstance().addDataReceiver(new NT4Publisher());
       new PowerDistribution(1, ModuleType.kRev);
       // Battery Tracking
-      if (BatteryTracker.isBatteryReused()) 
+      if (BatteryTracker.isBatteryReused())
         DriverStation.reportError(BatteryScanner.scanBattery() + " is being reused!", false);
       else BatteryTracker.writeCurrentBattery();
-    } else { 
+    } else {
       // Else just publish to NetworkTables for simulation or replay log file if var is set
       String replay = System.getenv(GlobalConstants.REPLAY_ENVIRONMENT_VAR);
       if (replay == null || replay.isBlank()) {
