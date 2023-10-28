@@ -83,50 +83,34 @@ public class AntiTipCommandTest {
       new MAXSwerveModule(
         new MAXSwerveModule.Hardware(m_lFrontDriveMotor, m_lFrontRotateMotor),
         ModuleLocation.LeftFront,
-        Constants.Drive.DRIVE_VELOCITY_CONFIG,
-        Constants.Drive.DRIVE_ROTATE_CONFIG,
+        Constants.Drive.GEAR_RATIO,
         Constants.Drive.DRIVE_SLIP_RATIO,
-        DriveSubsystem.DRIVE_MAX_LINEAR_SPEED,
         DriveSubsystem.DRIVE_WHEELBASE,
-        DriveSubsystem.DRIVE_TRACK_WIDTH,
-        DriveSubsystem.DRIVE_GEAR_RATIO,
-        DriveSubsystem.DRIVE_GEAR_RATIO
+        DriveSubsystem.DRIVE_TRACK_WIDTH
       ),
       new MAXSwerveModule(
         new MAXSwerveModule.Hardware(m_rFrontDriveMotor, m_rFrontRotateMotor),
         ModuleLocation.RightFront,
-        Constants.Drive.DRIVE_VELOCITY_CONFIG,
-        Constants.Drive.DRIVE_ROTATE_CONFIG,
+        Constants.Drive.GEAR_RATIO,
         Constants.Drive.DRIVE_SLIP_RATIO,
-        DriveSubsystem.DRIVE_MAX_LINEAR_SPEED,
         DriveSubsystem.DRIVE_WHEELBASE,
-        DriveSubsystem.DRIVE_TRACK_WIDTH,
-        DriveSubsystem.DRIVE_GEAR_RATIO,
-        DriveSubsystem.DRIVE_GEAR_RATIO
+        DriveSubsystem.DRIVE_TRACK_WIDTH
       ),
       new MAXSwerveModule(
         new MAXSwerveModule.Hardware(m_lRearDriveMotor, m_lRearRotateMotor),
         ModuleLocation.LeftRear,
-        Constants.Drive.DRIVE_VELOCITY_CONFIG,
-        Constants.Drive.DRIVE_ROTATE_CONFIG,
+        Constants.Drive.GEAR_RATIO,
         Constants.Drive.DRIVE_SLIP_RATIO,
-        DriveSubsystem.DRIVE_MAX_LINEAR_SPEED,
         DriveSubsystem.DRIVE_WHEELBASE,
-        DriveSubsystem.DRIVE_TRACK_WIDTH,
-        DriveSubsystem.DRIVE_GEAR_RATIO,
-        DriveSubsystem.DRIVE_GEAR_RATIO
+        DriveSubsystem.DRIVE_TRACK_WIDTH
       ),
       new MAXSwerveModule(
         new MAXSwerveModule.Hardware(m_rRearDriveMotor, m_rRearRotateMotor),
         ModuleLocation.RightRear,
-        Constants.Drive.DRIVE_VELOCITY_CONFIG,
-        Constants.Drive.DRIVE_ROTATE_CONFIG,
+        Constants.Drive.GEAR_RATIO,
         Constants.Drive.DRIVE_SLIP_RATIO,
-        DriveSubsystem.DRIVE_MAX_LINEAR_SPEED,
         DriveSubsystem.DRIVE_WHEELBASE,
-        DriveSubsystem.DRIVE_TRACK_WIDTH,
-        DriveSubsystem.DRIVE_GEAR_RATIO,
-        DriveSubsystem.DRIVE_GEAR_RATIO
+        DriveSubsystem.DRIVE_TRACK_WIDTH
       ),
       m_ledStrip
     );

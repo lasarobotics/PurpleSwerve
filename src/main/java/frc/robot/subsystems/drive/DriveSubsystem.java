@@ -245,14 +245,10 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
         Constants.DriveHardware.LEFT_FRONT_ROTATE_MOTOR_ID
       ),
       MAXSwerveModule.ModuleLocation.LeftFront,
-      Constants.Drive.DRIVE_VELOCITY_CONFIG,
-      Constants.Drive.DRIVE_ROTATE_CONFIG,
+      Constants.Drive.GEAR_RATIO,
       Constants.Drive.DRIVE_SLIP_RATIO,
-      DRIVE_MAX_LINEAR_SPEED,
       DRIVE_WHEELBASE,
-      DRIVE_TRACK_WIDTH,
-      DRIVE_GEAR_RATIO,
-      DRIVE_WHEEL_DIAMETER_METERS
+      DRIVE_TRACK_WIDTH
     );
 
     MAXSwerveModule rFrontModule = new MAXSwerveModule(
@@ -261,14 +257,10 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
         Constants.DriveHardware.RIGHT_FRONT_ROTATE_MOTOR_ID
       ),
       MAXSwerveModule.ModuleLocation.RightFront,
-      Constants.Drive.DRIVE_VELOCITY_CONFIG,
-      Constants.Drive.DRIVE_ROTATE_CONFIG,
+      Constants.Drive.GEAR_RATIO,
       Constants.Drive.DRIVE_SLIP_RATIO,
-      DRIVE_MAX_LINEAR_SPEED,
       DRIVE_WHEELBASE,
-      DRIVE_TRACK_WIDTH,
-      DRIVE_GEAR_RATIO,
-      DRIVE_WHEEL_DIAMETER_METERS
+      DRIVE_TRACK_WIDTH
     );
 
     MAXSwerveModule lRearModule = new MAXSwerveModule(
@@ -277,14 +269,10 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
         Constants.DriveHardware.LEFT_REAR_ROTATE_MOTOR_ID
       ),
       MAXSwerveModule.ModuleLocation.LeftRear,
-      Constants.Drive.DRIVE_VELOCITY_CONFIG,
-      Constants.Drive.DRIVE_ROTATE_CONFIG,
+      Constants.Drive.GEAR_RATIO,
       Constants.Drive.DRIVE_SLIP_RATIO,
-      DRIVE_MAX_LINEAR_SPEED,
       DRIVE_WHEELBASE,
-      DRIVE_TRACK_WIDTH,
-      DRIVE_GEAR_RATIO,
-      DRIVE_WHEEL_DIAMETER_METERS
+      DRIVE_TRACK_WIDTH
     );
 
     MAXSwerveModule rRearModule = new MAXSwerveModule(
@@ -293,14 +281,10 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
         Constants.DriveHardware.RIGHT_REAR_ROTATE_MOTOR_ID
       ),
       MAXSwerveModule.ModuleLocation.RightRear,
-      Constants.Drive.DRIVE_VELOCITY_CONFIG,
-      Constants.Drive.DRIVE_ROTATE_CONFIG,
+      Constants.Drive.GEAR_RATIO,
       Constants.Drive.DRIVE_SLIP_RATIO,
-      DRIVE_MAX_LINEAR_SPEED,
       DRIVE_WHEELBASE,
-      DRIVE_TRACK_WIDTH,
-      DRIVE_GEAR_RATIO,
-      DRIVE_WHEEL_DIAMETER_METERS
+      DRIVE_TRACK_WIDTH
     );
 
     LEDStrip ledStrip = new LEDStrip(LEDStrip.initializeHardware(Constants.DriveHardware.LED_STRIP_ID));

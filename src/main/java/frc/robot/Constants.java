@@ -6,18 +6,17 @@ package frc.robot;
 
 import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
+import org.lasarobotics.drive.MAXSwerveModule;
 import org.lasarobotics.hardware.NavX2;
 import org.lasarobotics.hardware.SparkMax;
 import org.lasarobotics.led.LEDStrip;
 import org.lasarobotics.utils.GlobalConstants;
 import org.lasarobotics.utils.PIDConstants;
-import org.lasarobotics.utils.SparkPIDConfig;
 
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
-import frc.robot.subsystems.drive.DriveSubsystem;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide
@@ -60,41 +59,8 @@ public final class Constants {
     public static final PolynomialSplineFunction DRIVE_THROTTLE_INPUT_CURVE = SPLINE_INTERPOLATOR.interpolate(DRIVE_THROTTLE_INPUT_CURVE_X, DRIVE_THROTTLE_INPUT_CURVE_Y);
     public static final PolynomialSplineFunction DRIVE_TURN_INPUT_CURVE = SPLINE_INTERPOLATOR.interpolate(DRIVE_TURN_INPUT_CURVE_X, DRIVE_TURN_INPUT_CURVE_Y);
 
-    // Swerve velocity PID settings
-    private static final PIDConstants DRIVE_VELOCITY_PID = new PIDConstants(
-      0.04, 0.0, 0.0, 1 / (((GlobalConstants.NEO_MAX_RPM / 60) * DriveSubsystem.DRIVE_WHEEL_DIAMETER_METERS * Math.PI) / DriveSubsystem.DRIVE_GEAR_RATIO)
-    );
-    private static final double DRIVE_VELOCITY_TOLERANCE = 0.01;
-    private static final boolean DRIVE_VELOCITY_SENSOR_PHASE = false;
-    private static final boolean DRIVE_INVERT_MOTOR = false;
-
-    // Swerve velocity PID config
-    public static final SparkPIDConfig DRIVE_VELOCITY_CONFIG = new SparkPIDConfig(
-      DRIVE_VELOCITY_PID,
-      DRIVE_VELOCITY_SENSOR_PHASE,
-      DRIVE_INVERT_MOTOR,
-      DRIVE_VELOCITY_TOLERANCE
-    );
-
-    // Swerve rotate PID settings
-    private static final PIDConstants DRIVE_ROTATE_PID = new PIDConstants(1.0, 0.0, 0.0, 0.0);
-    private static final double DRIVE_ROTATE_TOLERANCE = 0.01;
-    private static final double DRIVE_ROTATE_LOWER_LIMIT = 0.0;
-    private static final double DRIVE_ROTATE_UPPER_LIMIT = 0.0;
-    private static final boolean DRIVE_ROTATE_SOFT_LIMITS = false;
-    private static final boolean DRIVE_ROTATE_SENSOR_PHASE = true;
-    private static final boolean DRIVE_ROTATE_INVERT_MOTOR = false;
-
-    // Swerve rotate PID config
-    public static final SparkPIDConfig DRIVE_ROTATE_CONFIG = new SparkPIDConfig(
-      DRIVE_ROTATE_PID,
-      DRIVE_ROTATE_SENSOR_PHASE,
-      DRIVE_ROTATE_INVERT_MOTOR,
-      DRIVE_ROTATE_TOLERANCE,
-      DRIVE_ROTATE_LOWER_LIMIT,
-      DRIVE_ROTATE_UPPER_LIMIT,
-      DRIVE_ROTATE_SOFT_LIMITS
-    );
+    // MAXSwerve Module settings
+    public static final MAXSwerveModule.GearRatio GEAR_RATIO = MAXSwerveModule.GearRatio.High;
   }
 
   public static class DriveHardware {
