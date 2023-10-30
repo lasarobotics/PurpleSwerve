@@ -4,7 +4,6 @@
 
 package frc.robot;
 
-import org.lasarobotics.battery.BatteryScanner;
 import org.lasarobotics.battery.BatteryTracker;
 import org.lasarobotics.utils.GlobalConstants;
 import org.littletonrobotics.junction.LogFileUtil;
@@ -33,8 +32,9 @@ public class Robot extends LoggedRobot {
   @SuppressWarnings("resource")
   public void robotInit() {
     // AdvantageKit Logging
+    BatteryTracker batteryTracker = new BatteryTracker(BatteryTracker.initializeHardware());
     Logger.getInstance().recordMetadata("ProjectName", "PurpleSwerve");
-    Logger.getInstance().recordMetadata("BatteryName", BatteryScanner.scanBattery());
+    Logger.getInstance().recordMetadata("BatteryName", batteryTracker.scanBattery());
 
     if (isReal()) {
       // If robot is real, log to USB drive and publish data to NetworkTables
@@ -42,15 +42,14 @@ public class Robot extends LoggedRobot {
       Logger.getInstance().addDataReceiver(new NT4Publisher());
       new PowerDistribution(1, ModuleType.kRev);
       // Battery Tracking
-      if (BatteryTracker.isBatteryReused())
-        DriverStation.reportError(BatteryScanner.scanBattery() + " is being reused!", false);
-      else BatteryTracker.writeCurrentBattery();
+      if (batteryTracker.isBatteryReused())
+        DriverStation.reportError(batteryTracker.scanBattery() + " is being reused!", false);
+      else batteryTracker.writeCurrentBattery();
     } else {
       // Else just publish to NetworkTables for simulation or replay log file if var is set
       String replay = System.getenv(GlobalConstants.REPLAY_ENVIRONMENT_VAR);
-      if (replay == null || replay.isBlank()) {
-        Logger.getInstance().addDataReceiver(new NT4Publisher());
-      } else {
+      if (replay == null || replay.isBlank()) Logger.getInstance().addDataReceiver(new NT4Publisher());
+      else {
         // Run as fast as possible
         setUseTiming(false);
         // Pull the replay log from AdvantageScope (or prompt the user)
