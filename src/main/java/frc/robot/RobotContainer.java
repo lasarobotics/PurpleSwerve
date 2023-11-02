@@ -8,8 +8,6 @@ import com.revrobotics.REVPhysicsSim;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.drive.DriveSubsystem;
 
@@ -30,7 +28,7 @@ public class RobotContainer {
   public RobotContainer() {
     // Set drive command
     DRIVE_SUBSYSTEM.setDefaultCommand(
-      new RunCommand(
+     Commands.run(
         () -> DRIVE_SUBSYSTEM.teleopPID(-PRIMARY_CONTROLLER.getLeftY(), -PRIMARY_CONTROLLER.getLeftX(), PRIMARY_CONTROLLER.getRightX()),
         DRIVE_SUBSYSTEM
       )
@@ -41,9 +39,9 @@ public class RobotContainer {
   }
 
   private void configureBindings() {
-    PRIMARY_CONTROLLER.start().onTrue(new InstantCommand(() -> DRIVE_SUBSYSTEM.toggleTractionControl(), DRIVE_SUBSYSTEM));
+    PRIMARY_CONTROLLER.start().onTrue(Commands.runOnce(() -> DRIVE_SUBSYSTEM.toggleTractionControl(), DRIVE_SUBSYSTEM));
     PRIMARY_CONTROLLER.leftBumper().whileTrue(
-      new RunCommand(
+      Commands.run(
         () -> DRIVE_SUBSYSTEM.aimAtPoint(
           -PRIMARY_CONTROLLER.getLeftY(),
           -PRIMARY_CONTROLLER.getLeftX(),
@@ -51,7 +49,7 @@ public class RobotContainer {
         ),
         DRIVE_SUBSYSTEM
       )
-    ).onFalse(new InstantCommand(() -> DRIVE_SUBSYSTEM.resetTurnPID(), DRIVE_SUBSYSTEM));
+    ).onFalse(Commands.runOnce(() -> DRIVE_SUBSYSTEM.resetTurnPID(), DRIVE_SUBSYSTEM));
   }
 
   /**

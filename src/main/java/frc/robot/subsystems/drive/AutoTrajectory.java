@@ -20,7 +20,7 @@ import com.pathplanner.lib.commands.PPSwerveControllerCommand;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 
 public class AutoTrajectory {
@@ -125,13 +125,13 @@ public class AutoTrajectory {
    */
   public SequentialCommandGroup getCommandAndStop(boolean isFirstPath) {
     if (isFirstPath) {
-      return new InstantCommand(() -> resetOdometry())
-                 .andThen(m_swerveCommand)
-                 .andThen(() -> {
-                    m_driveSubsystem.resetTurnPID();
-                    m_driveSubsystem.lock();
-                    m_driveSubsystem.stop();
-                  });
+      return Commands.runOnce(() -> resetOdometry())
+              .andThen(m_swerveCommand)
+              .andThen(() -> {
+                m_driveSubsystem.resetTurnPID();
+                m_driveSubsystem.lock();
+                m_driveSubsystem.stop();
+              });
     } else return getCommandAndStop();
   }
 
@@ -161,13 +161,14 @@ public class AutoTrajectory {
    */
   public Command getCommandAndStopWithEvents(boolean isFirstPath, HashMap<String, Command> eventMap) {
     if (isFirstPath) {
-      return new InstantCommand(() -> resetOdometry())
-                 .andThen(new FollowPathWithEvents(m_swerveCommand, m_trajectory.getMarkers(), eventMap))
-                 .andThen(() -> {
-                    m_driveSubsystem.resetTurnPID();
-                    m_driveSubsystem.lock();
-                    m_driveSubsystem.stop();
-                  });
+      Commands.runOnce(() -> {});
+      return Commands.runOnce(() -> resetOdometry())
+              .andThen(new FollowPathWithEvents(m_swerveCommand, m_trajectory.getMarkers(), eventMap))
+              .andThen(() -> {
+                m_driveSubsystem.resetTurnPID();
+                m_driveSubsystem.lock();
+                m_driveSubsystem.stop();
+              });
     } else return getCommandAndStopWithEvents(eventMap);
   }
 
@@ -186,9 +187,9 @@ public class AutoTrajectory {
    */
   public Command getCommand(boolean isFirstPath) {
     if (isFirstPath) {
-      return new InstantCommand(() -> resetOdometry())
-                 .andThen(m_swerveCommand)
-                 .andThen(() -> m_driveSubsystem.resetTurnPID());
+      return Commands.runOnce(() -> resetOdometry())
+              .andThen(m_swerveCommand)
+              .andThen(() -> m_driveSubsystem.resetTurnPID());
     } else return getCommand();
   }
 }
