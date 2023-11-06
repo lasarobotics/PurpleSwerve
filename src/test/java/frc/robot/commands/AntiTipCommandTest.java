@@ -20,9 +20,9 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.lasarobotics.drive.MAXSwerveModule;
 import org.lasarobotics.drive.MAXSwerveModule.ModuleLocation;
 import org.lasarobotics.hardware.NavX2;
-import org.lasarobotics.hardware.NavX2.NavX2Inputs;
+import org.lasarobotics.hardware.NavX2InputsAutoLogged;
 import org.lasarobotics.hardware.SparkMax;
-import org.lasarobotics.hardware.SparkMax.SparkMaxInputs;
+import org.lasarobotics.hardware.SparkMaxInputsAutoLogged;
 import org.lasarobotics.led.LEDStrip;
 import org.mockito.AdditionalMatchers;
 import org.mockito.ArgumentMatchers;
@@ -64,10 +64,10 @@ public class AntiTipCommandTest {
     m_ledStrip = mock(LEDStrip.class);
 
 
-    NavX2Inputs navxInputs = new NavX2Inputs();
+    NavX2InputsAutoLogged navxInputs = new NavX2InputsAutoLogged();
     when(m_navx.getInputs()).thenReturn(navxInputs);
 
-    SparkMaxInputs sparkMaxInputs = new SparkMaxInputs();
+    SparkMaxInputsAutoLogged sparkMaxInputs = new SparkMaxInputsAutoLogged();
     when(m_lFrontDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
     when(m_lFrontRotateMotor.getInputs()).thenReturn(sparkMaxInputs);
     when(m_rFrontDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
@@ -143,7 +143,7 @@ public class AntiTipCommandTest {
   @DisplayName("Test if robot can execute anti-tip")
   public void execute() {
     // Hardcode sensor values
-    NavX2Inputs inputs = new NavX2Inputs();
+    NavX2InputsAutoLogged inputs = new NavX2InputsAutoLogged();
     inputs.rollAngle = +35.0;
 
     when(m_navx.getInputs()).thenReturn(inputs);
@@ -167,7 +167,7 @@ public class AntiTipCommandTest {
   @DisplayName("Test if robot knows when to stop anti-tip")
   public void isFinished() {
     // Hardcode sensor values
-    NavX2Inputs inputs = new NavX2Inputs();
+    NavX2InputsAutoLogged inputs = new NavX2InputsAutoLogged();
     inputs.rollAngle = +4.0;
 
     when(m_navx.getInputs()).thenReturn(inputs);

@@ -19,9 +19,9 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.lasarobotics.drive.MAXSwerveModule;
 import org.lasarobotics.drive.MAXSwerveModule.ModuleLocation;
 import org.lasarobotics.hardware.NavX2;
-import org.lasarobotics.hardware.NavX2.NavX2Inputs;
+import org.lasarobotics.hardware.NavX2InputsAutoLogged;
 import org.lasarobotics.hardware.SparkMax;
-import org.lasarobotics.hardware.SparkMax.SparkMaxInputs;
+import org.lasarobotics.hardware.SparkMaxInputsAutoLogged;
 import org.lasarobotics.led.LEDStrip;
 import org.mockito.AdditionalMatchers;
 import org.mockito.ArgumentMatchers;
@@ -61,10 +61,10 @@ public class DriveSubsystemTest {
     m_rRearRotateMotor = mock(SparkMax.class);
     m_ledStrip = mock(LEDStrip.class);
 
-    NavX2Inputs navxInputs = new NavX2Inputs();
+    NavX2InputsAutoLogged navxInputs = new NavX2InputsAutoLogged();
     when(m_navx.getInputs()).thenReturn(navxInputs);
 
-    SparkMaxInputs sparkMaxInputs = new SparkMaxInputs();
+    SparkMaxInputsAutoLogged sparkMaxInputs = new SparkMaxInputsAutoLogged();
     when(m_lFrontDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
     when(m_lFrontRotateMotor.getInputs()).thenReturn(sparkMaxInputs);
     when(m_rFrontDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
@@ -139,7 +139,7 @@ public class DriveSubsystemTest {
   @DisplayName("Test if robot can drive forward")
   public void forward() {
     // Hardcode sensor values
-    NavX2Inputs inputs = new NavX2Inputs();
+    NavX2InputsAutoLogged inputs = new NavX2InputsAutoLogged();
     inputs.yVelocity = +DriveSubsystem.DRIVE_MAX_LINEAR_SPEED;
 
     when(m_navx.getInputs()).thenReturn(inputs);
@@ -163,7 +163,7 @@ public class DriveSubsystemTest {
   @DisplayName("Test if robot can drive in reverse")
   public void reverse() {
     // Hardcode sensor values
-    NavX2Inputs inputs = new NavX2Inputs();
+    NavX2InputsAutoLogged inputs = new NavX2InputsAutoLogged();
     inputs.yVelocity = -DriveSubsystem.DRIVE_MAX_LINEAR_SPEED;
 
     when(m_navx.getInputs()).thenReturn(inputs);
@@ -187,7 +187,7 @@ public class DriveSubsystemTest {
   @DisplayName("Test if robot can strafe left")
   public void strafeLeft() {
     // Hardcode sensor values
-    NavX2Inputs inputs = new NavX2Inputs();
+    NavX2InputsAutoLogged inputs = new NavX2InputsAutoLogged();
     inputs.xVelocity = +DriveSubsystem.DRIVE_MAX_LINEAR_SPEED;
 
     when(m_navx.getInputs()).thenReturn(inputs);
@@ -211,7 +211,7 @@ public class DriveSubsystemTest {
   @DisplayName("Test if robot can strafe right")
   public void strafeRight() {
     // Hardcode sensor values
-    NavX2Inputs inputs = new NavX2Inputs();
+    NavX2InputsAutoLogged inputs = new NavX2InputsAutoLogged();
     inputs.xVelocity = -DriveSubsystem.DRIVE_MAX_LINEAR_SPEED;
 
     when(m_navx.getInputs()).thenReturn(inputs);
@@ -235,7 +235,7 @@ public class DriveSubsystemTest {
   @DisplayName("Test if robot can rotate left")
   public void rotateLeft() {
     // Hardcode sensor values
-    NavX2Inputs inputs = new NavX2Inputs();
+    NavX2InputsAutoLogged inputs = new NavX2InputsAutoLogged();
     inputs.yawRate = 90.0;
 
     when(m_navx.getInputs()).thenReturn(inputs);
@@ -259,7 +259,7 @@ public class DriveSubsystemTest {
   @DisplayName("Test if robot can rotate right")
   public void rotateRight() {
     // Hardcode sensor values
-    NavX2Inputs inputs = new NavX2Inputs();
+    NavX2InputsAutoLogged inputs = new NavX2InputsAutoLogged();
     inputs.yawRate = 90.0;
 
     when(m_navx.getInputs()).thenReturn(inputs);
@@ -319,7 +319,7 @@ public class DriveSubsystemTest {
   @DisplayName("Test if robot can maintain orientation")
   public void maintainOrientation() {
     // Hardcode sensor values
-    NavX2Inputs inputs = new NavX2Inputs();
+    NavX2InputsAutoLogged inputs = new NavX2InputsAutoLogged();
     inputs.yawAngle = +30.0;
 
     when(m_navx.getInputs()).thenReturn(inputs);
@@ -343,7 +343,7 @@ public class DriveSubsystemTest {
   @DisplayName("Test if robot can limit wheel slip")
   public void tractionControl() {
     // Hardcode sensor values
-    SparkMaxInputs sparkMaxInputs = new SparkMaxInputs();
+    SparkMaxInputsAutoLogged sparkMaxInputs = new SparkMaxInputsAutoLogged();
     sparkMaxInputs.encoderVelocity = +1.0;
 
     when(m_lFrontDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
@@ -371,7 +371,7 @@ public class DriveSubsystemTest {
   @DisplayName("Test if robot can disable traction control")
   public void disableTractionControl() {
     // Hardcode sensor values
-    SparkMaxInputs sparkMaxInputs = new SparkMaxInputs();
+    SparkMaxInputsAutoLogged sparkMaxInputs = new SparkMaxInputsAutoLogged();
     sparkMaxInputs.encoderVelocity = +1.0;
 
     when(m_lFrontDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
