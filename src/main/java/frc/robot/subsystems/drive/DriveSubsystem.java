@@ -10,6 +10,7 @@ import java.util.List;
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
 import org.lasarobotics.drive.AdvancedSwerveKinematics;
+import org.lasarobotics.drive.AdvancedSwerveKinematics.ControlCentricity;
 import org.lasarobotics.drive.MAXSwerveModule;
 import org.lasarobotics.drive.ThrottleMap;
 import org.lasarobotics.drive.TurnPIDController;
@@ -20,6 +21,10 @@ import org.lasarobotics.led.LEDSubsystem;
 import org.lasarobotics.utils.GlobalConstants;
 import org.lasarobotics.utils.PIDConstants;
 import org.littletonrobotics.junction.Logger;
+
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
+import com.pathplanner.lib.util.ReplanningConfig;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
@@ -37,7 +42,6 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.networktables.PubSubOption;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
@@ -73,14 +77,11 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   // Drive specs, these numbers use the motor shaft encoder
   public static final double DRIVE_WHEELBASE = 0.6;
   public static final double DRIVE_TRACK_WIDTH = 0.6;
-  public static final double DRIVE_WHEEL_DIAMETER_METERS = 0.0762; // 3" wheels
-  public static final double DRIVE_GEAR_RATIO = 4.71;
-  public static final double DRIVE_TICKS_PER_METER = (GlobalConstants.NEO_ENCODER_TICKS_PER_ROTATION * DRIVE_GEAR_RATIO) * (1 / (DRIVE_WHEEL_DIAMETER_METERS * Math.PI));
-  public static final double DRIVE_METERS_PER_TICK = 1 / DRIVE_TICKS_PER_METER;
-  public static final double DRIVE_METERS_PER_ROTATION = DRIVE_METERS_PER_TICK * GlobalConstants.NEO_ENCODER_TICKS_PER_ROTATION;
-  public static final double DRIVETRAIN_EFFICIENCY = 0.90;
-  public static final double DRIVE_MAX_LINEAR_SPEED = (GlobalConstants.NEO_MAX_RPM / 60) * DRIVE_METERS_PER_ROTATION * DRIVETRAIN_EFFICIENCY;
-  public static final double DRIVE_AUTO_ACCELERATION = DRIVE_MAX_LINEAR_SPEED - 0.5;
+  public final double DRIVE_MAX_LINEAR_SPEED;
+  public final double DRIVE_AUTO_ACCELERATION;
+  public final double DRIVE_ROTATE_VELOCITY = 12 * Math.PI;
+  public final double DRIVE_ROTATE_ACCELERATION = 6 * Math.PI;
+
 
   private ThrottleMap m_throttleMap;
   private TurnPIDController m_turnPIDController;
@@ -88,6 +89,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private SwerveDriveKinematics m_kinematics;
   private SwerveDrivePoseEstimator m_poseEstimator;
   private AdvancedSwerveKinematics m_advancedKinematics;
+  private HolonomicPathFollowerConfig m_pathFollowerConfig;
   private PurplePath m_purplePath;
 
   private NavX2 m_navx;
@@ -103,18 +105,19 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private final Matrix<N3, N1> ODOMETRY_STDDEV = VecBuilder.fill(0.03, 0.03, Math.toRadians(1));
   private final Matrix<N3, N1> VISION_STDDEV = VecBuilder.fill(0.5, 0.5, Math.toRadians(40));
   private final TrapezoidProfile.Constraints AIM_PID_CONSTRAINT = new TrapezoidProfile.Constraints(2160.0, 2160.0);
+  private final ControlCentricity CONTROL_CENTRICITY = ControlCentricity.FIELD_CENTRIC;
 
   private final List<Pose2d> GOAL_POSES = Arrays.asList(
     new Pose2d(15.72, 7.33, Rotation2d.fromDegrees(0.0)),
-    new Pose2d(1.90, 4.89, Rotation2d.fromDegrees(0.0)),
-    new Pose2d(1.90, 4.45, Rotation2d.fromDegrees(0.0)),
-    new Pose2d(1.90, 3.90, Rotation2d.fromDegrees(0.0)),
-    new Pose2d(1.90, 3.30, Rotation2d.fromDegrees(0.0)),
-    new Pose2d(1.90, 2.75, Rotation2d.fromDegrees(0.0)),
-    new Pose2d(1.90, 2.20, Rotation2d.fromDegrees(0.0)),
-    new Pose2d(1.90, 1.65, Rotation2d.fromDegrees(0.0)),
-    new Pose2d(1.90, 1.10, Rotation2d.fromDegrees(0.0)),
-    new Pose2d(1.90, 0.45, Rotation2d.fromDegrees(0.0))
+    new Pose2d(1.90, 4.89, Rotation2d.fromDegrees(180.0)),
+    new Pose2d(1.90, 4.45, Rotation2d.fromDegrees(180.0)),
+    new Pose2d(1.90, 3.90, Rotation2d.fromDegrees(180.0)),
+    new Pose2d(1.90, 3.30, Rotation2d.fromDegrees(180.0)),
+    new Pose2d(1.90, 2.75, Rotation2d.fromDegrees(180.0)),
+    new Pose2d(1.90, 2.20, Rotation2d.fromDegrees(180.0)),
+    new Pose2d(1.90, 1.65, Rotation2d.fromDegrees(180.0)),
+    new Pose2d(1.90, 1.10, Rotation2d.fromDegrees(180.0)),
+    new Pose2d(1.90, 0.45, Rotation2d.fromDegrees(180.0))
   );
   PubSubOption[] PUBSUB_OPTIONS = { PubSubOption.periodic(GlobalConstants.ROBOT_LOOP_PERIOD), PubSubOption.keepDuplicates(true), PubSubOption.pollStorage(10) };
 
@@ -122,7 +125,6 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private final String SWERVE_STATE_LOG_ENTRY = "Swerve";
 
   private ChassisSpeeds m_desiredChassisSpeeds;
-  private Field2d m_field;
 
   private boolean m_isTractionControlEnabled = true;
   private Pose2d m_previousPose;
@@ -161,18 +163,23 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
                         double turnScalar, double deadband, double lookAhead, double slipRatio,
                         PolynomialSplineFunction throttleInputCurve, PolynomialSplineFunction turnInputCurve) {
     setSubsystem(getClass().getSimpleName());
-    m_throttleMap = new ThrottleMap(throttleInputCurve, deadband, DRIVE_MAX_LINEAR_SPEED);
-    m_turnPIDController = new TurnPIDController(turnInputCurve, pidf, turnScalar, deadband, lookAhead);
-
+    DRIVE_MAX_LINEAR_SPEED = drivetrainHardware.lFrontModule.getMaxLinearSpeed();
+    DRIVE_AUTO_ACCELERATION = DRIVE_MAX_LINEAR_SPEED;
     this.m_navx = drivetrainHardware.navx;
     this.m_lFrontModule = drivetrainHardware.lFrontModule;
     this.m_rFrontModule = drivetrainHardware.rFrontModule;
     this.m_lRearModule = drivetrainHardware.lRearModule;
     this.m_rRearModule = drivetrainHardware.rRearModule;
     this.m_ledStrip = drivetrainHardware.ledStrip;
+    this.m_throttleMap = new ThrottleMap(throttleInputCurve, deadband, DRIVE_MAX_LINEAR_SPEED);
+    this.m_turnPIDController = new TurnPIDController(turnInputCurve, pidf, turnScalar, deadband, lookAhead);
+    this.m_pathFollowerConfig = new HolonomicPathFollowerConfig(
+      DRIVE_MAX_LINEAR_SPEED,
+      m_lFrontModule.getModuleCoordinate().getNorm(),
+      new ReplanningConfig()
+    );
 
     // Calibrate and reset navX
-    m_navx.calibrate();
     while (m_navx.isCalibrating()) stop();
     m_navx.reset();
 
@@ -187,8 +194,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
                                              m_rRearModule.getModuleCoordinate());
 
     // Define advanced drivetrain kinematics
-    m_advancedKinematics = new AdvancedSwerveKinematics(true,
-                                                        m_lFrontModule.getModuleCoordinate(),
+    m_advancedKinematics = new AdvancedSwerveKinematics(m_lFrontModule.getModuleCoordinate(),
                                                         m_rFrontModule.getModuleCoordinate(),
                                                         m_lRearModule.getModuleCoordinate(),
                                                         m_rRearModule.getModuleCoordinate());
@@ -215,9 +221,6 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     // Set LED strip to team color
     m_ledStrip.set(Pattern.TEAM_COLOR_SOLID);
 
-    // Initialise field
-    m_field = new Field2d();
-
     // Setup auto-aim PID controller
     m_autoAimPIDController = new ProfiledPIDController(pidf.kP, 0.0, pidf.kD, AIM_PID_CONSTRAINT, pidf.period);
     m_autoAimPIDController.enableContinuousInput(-180.0, +180.0);
@@ -227,7 +230,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     m_currentHeading = new Rotation2d();
 
     // Setup PurplePath
-    m_purplePath = new PurplePath();
+    m_purplePath = new PurplePath(this);
     m_purplePath.setGoals(GOAL_POSES);
     m_purplePath.startThread();
   }
@@ -335,7 +338,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     // Convert speeds to module states, correcting for 2nd order kinematics
     SwerveModuleState[] moduleStates = m_advancedKinematics.toSwerveModuleStates(
       m_desiredChassisSpeeds,
-      getPose().getRotation()
+      getPose().getRotation(),
+      CONTROL_CENTRICITY
     );
 
     // Desaturate drive speeds
@@ -352,7 +356,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @param rotateRequest Desired rotate rate (degrees/s)
    */
   private void drive(double xRequest, double yRequest, double rotateRequest) {
-     // Get requested chassis speeds, correcting for second order kinematics
+    // Get requested chassis speeds, correcting for second order kinematics
     m_desiredChassisSpeeds = AdvancedSwerveKinematics.correctForDynamics(
       new ChassisSpeeds(xRequest, yRequest, Math.toRadians(rotateRequest))
     );
@@ -360,7 +364,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     // Convert speeds to module states, correcting for 2nd order kinematics
     SwerveModuleState[] moduleStates = m_advancedKinematics.toSwerveModuleStates(
       m_desiredChassisSpeeds,
-      getPose().getRotation()
+      getPose().getRotation(),
+      CONTROL_CENTRICITY
     );
 
     // Desaturate drive speeds
@@ -437,10 +442,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * Log DriveSubsystem outputs
    */
   private void logOutputs() {
-    Logger.getInstance().recordOutput(String.join("/", getName(), POSE_LOG_ENTRY), getPose());
-    Logger.getInstance().recordOutput(String.join("/", getName(), SWERVE_STATE_LOG_ENTRY), getModuleStates());
-    for (int i = 0; i < PurplePath.MAX_TRAJECTORIES; i++)
-      Logger.getInstance().recordOutput(String.join("/", getName(), PurplePath.TRAJECTORY_LOG_ENTRY[i]), m_purplePath.getLatestTrajectory(i));
+    Logger.recordOutput(String.join("/", getName(), POSE_LOG_ENTRY), getPose());
+    Logger.recordOutput(String.join("/", getName(), SWERVE_STATE_LOG_ENTRY), getModuleStates());
   }
 
   /**
@@ -448,7 +451,6 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    */
   private void smartDashboard() {
     SmartDashboard.putBoolean("TC", m_isTractionControlEnabled);
-    SmartDashboard.putData("Field", m_field);
   }
 
   /**
@@ -457,9 +459,6 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private void publishData() {
     Pose2d currentPose = getPose();
     m_purplePath.setCurrentPose(currentPose);
-    m_field.setRobotPose(currentPose);
-    for (int i = 0; i < PurplePath.MAX_TRAJECTORIES; i++)
-      m_field.getObject(PurplePath.TRAJECTORY_LOG_ENTRY[i]).setTrajectory(m_purplePath.getLatestTrajectory(i));
   }
 
   @Override
@@ -517,8 +516,28 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * Call this repeatedly to drive during autonomous
    * @param moduleStates Calculated swerve module states
    */
-  public void autoDrive(SwerveModuleState[] moduleStates) {
+  public void autoDrive(ChassisSpeeds speeds) {
+    // Get requested chassis speeds, correcting for second order kinematics
+    m_desiredChassisSpeeds = AdvancedSwerveKinematics.correctForDynamics(speeds);
+
+    // Invert rotation
+    m_desiredChassisSpeeds.omegaRadiansPerSecond = -m_desiredChassisSpeeds.omegaRadiansPerSecond;
+
+    // Convert speeds to module states, correcting for 2nd order kinematics
+    SwerveModuleState[] moduleStates = m_advancedKinematics.toSwerveModuleStates(
+      m_desiredChassisSpeeds,
+      getPose().getRotation(),
+      ControlCentricity.ROBOT_CENTRIC
+    );
+
+    // Desaturate drive speeds
+    SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, DRIVE_MAX_LINEAR_SPEED);
+
+    // Set modules to calculated states, WITHOUT traction control
     setSwerveModules(moduleStates);
+
+    // Update turn PID
+    m_turnPIDController.setSetpoint(getAngle());
   }
 
   /**
@@ -566,7 +585,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     double rotateOutput = -m_autoAimPIDController.calculate(currentPose.getRotation().getDegrees(), adjustedAngle.getDegrees());
 
     // Log aim point
-    Logger.getInstance().recordOutput(getName() + "/AimPoint", new Pose2d(aimPoint, new Rotation2d()));
+    Logger.recordOutput(getName() + "/AimPoint", new Pose2d(aimPoint, new Rotation2d()));
 
     // Drive robot accordingly
     drive(velocityOutput * Math.cos(moveDirection), velocityOutput * Math.sin(moveDirection), rotateOutput, getInertialVelocity(), getRotateRate());
@@ -580,6 +599,15 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    */
   public void aimAtPoint(Translation2d point) {
     aimAtPoint(0.0, 0.0, point);
+  }
+
+  /**
+   * Go to goal pose
+   * @param index Index of goal pose
+   * @return Command that will drive robot to goal pose
+   */
+  public Command goToGoal(int index) {
+    return m_purplePath.getTrajectoryCommand(index);
   }
 
   /**
@@ -654,6 +682,30 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
       getModulePositions(),
       pose
     );
+  }
+
+  /**
+   * Get path follower configuration
+   * @return Path follower configuration
+   */
+  public HolonomicPathFollowerConfig getPathFollowerConfig() {
+    return m_pathFollowerConfig;
+  }
+
+  /**
+   * Get constraints for path following
+   * @return Path following constraints
+   */
+  public PathConstraints getPathConstraints() {
+    return new PathConstraints(DRIVE_MAX_LINEAR_SPEED, DRIVE_AUTO_ACCELERATION, DRIVE_ROTATE_VELOCITY, DRIVE_ROTATE_ACCELERATION);
+  }
+
+  /**
+   * Get robot relative speeds
+   * @return Robot relative speeds
+   */
+  public ChassisSpeeds getChassisSpeeds() {
+    return m_kinematics.toChassisSpeeds(getModuleStates());
   }
 
   /**

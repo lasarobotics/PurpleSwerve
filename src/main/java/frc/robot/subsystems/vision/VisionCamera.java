@@ -4,7 +4,6 @@
 
 package frc.robot.subsystems.vision;
 
-import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.littletonrobotics.junction.AutoLog;
@@ -18,7 +17,6 @@ import org.photonvision.targeting.PhotonPipelineResult;
 import edu.wpi.first.apriltag.AprilTagFieldLayout.OriginPosition;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Constants;
 
 /** Create a camera */
@@ -39,17 +37,13 @@ public class VisionCamera implements Runnable, AutoCloseable {
   public VisionCamera(String name, Transform3d transform) {
     this.m_camera = new PhotonCamera(name);
     this.m_transform = transform;
-    try {
-      var fieldLayout = AprilTagFields.k2023ChargedUp.loadAprilTagLayoutField();
-      // PV estimates will always be blue, they'll get flipped by robot thread
-      fieldLayout.setOrigin(OriginPosition.kBlueAllianceWallRightSide);
-      this.m_poseEstimator = new PhotonPoseEstimator(
-          fieldLayout, PoseStrategy.MULTI_TAG_PNP, m_camera, m_transform);
-      m_poseEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
-    } catch (IOException e) {
-      DriverStation.reportError("Failed to load AprilTagFieldLayout", e.getStackTrace());
-      this.m_poseEstimator = null;
-    }
+    var fieldLayout = AprilTagFields.k2023ChargedUp.loadAprilTagLayoutField();
+    // PV estimates will always be blue, they'll get flipped by robot thread
+    fieldLayout.setOrigin(OriginPosition.kBlueAllianceWallRightSide);
+    this.m_poseEstimator = new PhotonPoseEstimator(
+        fieldLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, m_camera, m_transform);
+    m_poseEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+
     this.m_inputs = new VisionCameraInputsAutoLogged();
     this.m_atomicEstimatedRobotPose = new AtomicReference<EstimatedRobotPose>();
   }
@@ -61,7 +55,7 @@ public class VisionCamera implements Runnable, AutoCloseable {
 
     // Update and log inputs
     m_inputs.pipelineResult = m_camera.getLatestResult();
-    Logger.getInstance().processInputs(m_camera.getName(), m_inputs);
+    Logger.processInputs(m_camera.getName(), m_inputs);
 
     // Return if result is non-existent or invalid
     if (!m_inputs.pipelineResult.hasTargets()) return;

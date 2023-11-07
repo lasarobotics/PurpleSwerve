@@ -7,31 +7,23 @@ package frc.robot.subsystems.drive;
 import java.util.HashMap;
 import java.util.List;
 
-import org.lasarobotics.utils.GlobalConstants;
-
-import com.pathplanner.lib.PathConstraints;
-import com.pathplanner.lib.PathPlanner;
-import com.pathplanner.lib.PathPlannerTrajectory;
-import com.pathplanner.lib.PathPlannerTrajectory.EventMarker;
-import com.pathplanner.lib.PathPoint;
+import com.pathplanner.lib.commands.FollowPathHolonomic;
 import com.pathplanner.lib.commands.FollowPathWithEvents;
-import com.pathplanner.lib.commands.PPSwerveControllerCommand;
+import com.pathplanner.lib.path.EventMarker;
+import com.pathplanner.lib.path.GoalEndState;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.path.PathPoint;
 
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 
 public class AutoTrajectory {
-  // Ramsete Command values
-  private final boolean USE_ALLIANCE = false;
-  private final PIDController XY_PID_CONTROLLER = new PIDController(1.0, 0.0, 0.0, GlobalConstants.ROBOT_LOOP_PERIOD);
-  private final PIDController THETA_PID_CONTROLLER = new PIDController(5.0, 0.0, 0.8, GlobalConstants.ROBOT_LOOP_PERIOD);
-
   DriveSubsystem m_driveSubsystem;
-  PPSwerveControllerCommand m_swerveCommand;
-  PathPlannerTrajectory m_trajectory;
+  Command m_swerveCommand;
+  PathPlannerPath m_path;
 
   /**
    * Create new path trajectory using PathPlanner path
@@ -43,23 +35,21 @@ public class AutoTrajectory {
   public AutoTrajectory(DriveSubsystem driveSubsystem, String pathName) {
     this.m_driveSubsystem = driveSubsystem;
 
-    // Get path and transform for current alliance
-    m_trajectory = PathPlannerTrajectory.transformTrajectoryForAlliance(
-      PathPlanner.loadPath(pathName, PathPlanner.getConstraintsFromPath(pathName)),
-      DriverStation.getAlliance()
-    );
+    // Get path
+    m_path = PathPlannerPath.fromPathFile(pathName);
 
     // Set swerve command
-    m_swerveCommand = new PPSwerveControllerCommand(
-      m_trajectory,
-      m_driveSubsystem::getPose,
-      m_driveSubsystem.getKinematics(),
-      XY_PID_CONTROLLER,
-      XY_PID_CONTROLLER,
-      THETA_PID_CONTROLLER,
-      m_driveSubsystem::autoDrive,
-      USE_ALLIANCE,
-      m_driveSubsystem
+    m_swerveCommand = new FollowPathWithEvents(
+      new FollowPathHolonomic(
+          m_path,
+          driveSubsystem::getPose,
+          driveSubsystem::getChassisSpeeds,
+          driveSubsystem::autoDrive,
+          m_driveSubsystem.getPathFollowerConfig(),
+          driveSubsystem
+      ),
+      m_path,
+      driveSubsystem::getPose
     );
   }
 
@@ -71,23 +61,28 @@ public class AutoTrajectory {
    * @param maxVelocity Maximum velocity of robot during path (m/s)
    * @param maxAcceleration Maximum acceleration of robot during path (m/s^2)
    */
-  public AutoTrajectory(DriveSubsystem driveSubsystem, List<PathPoint> waypoints, double maxVelocity, double maxAcceleration) {
+  public AutoTrajectory(DriveSubsystem driveSubsystem, List<PathPoint> waypoints, PathConstraints pathConstraints) {
     this.m_driveSubsystem = driveSubsystem;
 
     // Generate path from waypoints
-    m_trajectory = PathPlanner.generatePath(new PathConstraints(maxVelocity, maxAcceleration), waypoints);
+    m_path = PathPlannerPath.fromPathPoints(
+      waypoints,
+      pathConstraints,
+      new GoalEndState(0.0, waypoints.get(waypoints.size() - 1).holonomicRotation)
+    );
 
     // Set swerve command
-    m_swerveCommand = new PPSwerveControllerCommand(
-      m_trajectory,
-      m_driveSubsystem::getPose,
-      m_driveSubsystem.getKinematics(),
-      XY_PID_CONTROLLER,
-      XY_PID_CONTROLLER,
-      THETA_PID_CONTROLLER,
-      m_driveSubsystem::autoDrive,
-      USE_ALLIANCE,
-      m_driveSubsystem
+    m_swerveCommand = new FollowPathWithEvents(
+      new FollowPathHolonomic(
+          m_path,
+          driveSubsystem::getPose,
+          driveSubsystem::getChassisSpeeds,
+          driveSubsystem::autoDrive,
+          m_driveSubsystem.getPathFollowerConfig(),
+          driveSubsystem
+      ),
+      m_path,
+      driveSubsystem::getPose
     );
   }
 
@@ -95,15 +90,15 @@ public class AutoTrajectory {
    * Reset drive odometry to beginning of this path
    */
   private void resetOdometry() {
-    m_driveSubsystem.resetPose(m_trajectory.getInitialHolonomicPose());
+    m_driveSubsystem.resetPose(new Pose2d(m_path.getPoint(0).position, m_path.getPoint(0).holonomicRotation));
   }
 
   /**
    * Get markers of path
    * @return A list of markers within the path
    */
-  public List<EventMarker> getMarkers() {
-    return m_trajectory.getMarkers();
+  public List<EventMarker> getEventMarkers() {
+    return m_path.getEventMarkers();
   }
 
   /**
@@ -143,12 +138,11 @@ public class AutoTrajectory {
    * @return Command to execute actions in autonomous
    */
   public Command getCommandAndStopWithEvents(HashMap<String, Command> eventMap) {
-    return new FollowPathWithEvents(m_swerveCommand, m_trajectory.getMarkers(), eventMap)
-               .andThen(() -> {
-                  m_driveSubsystem.resetTurnPID();
-                  m_driveSubsystem.lock();
-                  m_driveSubsystem.stop();
-                });
+    return m_swerveCommand.andThen(() -> {
+            m_driveSubsystem.resetTurnPID();
+            m_driveSubsystem.lock();
+            m_driveSubsystem.stop();
+           });
   }
 
   /**
@@ -161,9 +155,8 @@ public class AutoTrajectory {
    */
   public Command getCommandAndStopWithEvents(boolean isFirstPath, HashMap<String, Command> eventMap) {
     if (isFirstPath) {
-      Commands.runOnce(() -> {});
       return Commands.runOnce(() -> resetOdometry())
-              .andThen(new FollowPathWithEvents(m_swerveCommand, m_trajectory.getMarkers(), eventMap))
+              .andThen(m_swerveCommand)
               .andThen(() -> {
                 m_driveSubsystem.resetTurnPID();
                 m_driveSubsystem.lock();
