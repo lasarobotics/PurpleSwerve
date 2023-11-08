@@ -62,6 +62,8 @@ public class PurplePath {
 
     // Initialise commands
     m_commands = new AtomicReferenceArray<>(MAX_TRAJECTORIES);
+    for (int i = 0; i < m_commands.length(); i++)
+      m_commands.set(i, Commands.none());
 
     // Initialise goal publisher
     m_posePublisher = table.getStringTopic(POSE_LOG_ENTRY).publish(PUBSUB_OPTIONS);
@@ -76,7 +78,7 @@ public class PurplePath {
       // Attempt to read path from NetworkTables
       List<Translation2d> points = JSONObject.readPointList(m_trajectorySubscribers[i].getAtomic().value);
       // If path isn't there, clear trajectory
-      if (points == null) {
+      if (points == null || points.size() < 2) {
         m_commands.set(i, Commands.none());
         continue;
       }

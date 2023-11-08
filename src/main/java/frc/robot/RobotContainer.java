@@ -24,16 +24,15 @@ public class RobotContainer {
   );
 
   private static final CommandXboxController PRIMARY_CONTROLLER = new CommandXboxController(Constants.HID.PRIMARY_CONTROLLER_PORT);
-  private final Command DRIVE_COMMAND;
 
   public RobotContainer() {
-    DRIVE_COMMAND = Commands.run(
-      () -> DRIVE_SUBSYSTEM.teleopPID(-PRIMARY_CONTROLLER.getLeftY(), -PRIMARY_CONTROLLER.getLeftX(), PRIMARY_CONTROLLER.getRightX()),
-      DRIVE_SUBSYSTEM
-    );
-
     // Set drive command
-    DRIVE_SUBSYSTEM.setDefaultCommand(DRIVE_COMMAND);
+    DRIVE_SUBSYSTEM.setDefaultCommand(
+      Commands.run(
+        () -> DRIVE_SUBSYSTEM.teleopPID(-PRIMARY_CONTROLLER.getLeftY(), -PRIMARY_CONTROLLER.getLeftX(), PRIMARY_CONTROLLER.getRightX()),
+        DRIVE_SUBSYSTEM
+      )
+    );
 
     // Bind buttons and triggers
     configureBindings();
@@ -54,10 +53,10 @@ public class RobotContainer {
   }
 
   public void dynamicBindings() {
-    if (DRIVE_SUBSYSTEM.goToGoal(0) != null && DRIVE_SUBSYSTEM.getCurrentCommand() == DRIVE_COMMAND)
+    if (DRIVE_SUBSYSTEM.getCurrentCommand() == DRIVE_SUBSYSTEM.getDefaultCommand()) {
       PRIMARY_CONTROLLER.rightBumper().whileTrue(DRIVE_SUBSYSTEM.goToGoal(0));
-    if (DRIVE_SUBSYSTEM.goToGoal(3) != null && DRIVE_SUBSYSTEM.getCurrentCommand() == DRIVE_COMMAND)
       PRIMARY_CONTROLLER.a().whileTrue(DRIVE_SUBSYSTEM.goToGoal(5));
+    }
   }
 
   /**

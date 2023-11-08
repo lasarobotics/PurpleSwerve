@@ -79,8 +79,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   public static final double DRIVE_TRACK_WIDTH = 0.6;
   public final double DRIVE_MAX_LINEAR_SPEED;
   public final double DRIVE_AUTO_ACCELERATION;
-  public final double DRIVE_ROTATE_VELOCITY = 12 * Math.PI;
-  public final double DRIVE_ROTATE_ACCELERATION = 6 * Math.PI;
+  public final double DRIVE_ROTATE_VELOCITY = 6 * Math.PI;
+  public final double DRIVE_ROTATE_ACCELERATION = 2 * Math.PI;
 
 
   private ThrottleMap m_throttleMap;
@@ -108,7 +108,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private final ControlCentricity CONTROL_CENTRICITY = ControlCentricity.FIELD_CENTRIC;
 
   private final List<Pose2d> GOAL_POSES = Arrays.asList(
-    new Pose2d(15.72, 7.33, Rotation2d.fromDegrees(0.0)),
+    new Pose2d(15.72, 6.20, Rotation2d.fromDegrees(0.0)),
     new Pose2d(1.90, 4.89, Rotation2d.fromDegrees(180.0)),
     new Pose2d(1.90, 4.45, Rotation2d.fromDegrees(180.0)),
     new Pose2d(1.90, 3.90, Rotation2d.fromDegrees(180.0)),
@@ -174,9 +174,12 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     this.m_throttleMap = new ThrottleMap(throttleInputCurve, deadband, DRIVE_MAX_LINEAR_SPEED);
     this.m_turnPIDController = new TurnPIDController(turnInputCurve, pidf, turnScalar, deadband, lookAhead);
     this.m_pathFollowerConfig = new HolonomicPathFollowerConfig(
+      new com.pathplanner.lib.util.PIDConstants(5.0, 0.0, 0.0),
+      new com.pathplanner.lib.util.PIDConstants(30.0, 0.0, 0.0),
       DRIVE_MAX_LINEAR_SPEED,
       m_lFrontModule.getModuleCoordinate().getNorm(),
-      new ReplanningConfig()
+      new ReplanningConfig(),
+      GlobalConstants.ROBOT_LOOP_PERIOD
     );
 
     // Calibrate and reset navX
@@ -537,7 +540,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     setSwerveModules(moduleStates);
 
     // Update turn PID
-    m_turnPIDController.setSetpoint(getAngle());
+    m_turnPIDController.calculate(getAngle(), getRotateRate(), 0.0);
   }
 
   /**
