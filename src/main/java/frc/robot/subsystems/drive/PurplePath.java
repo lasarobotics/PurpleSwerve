@@ -71,9 +71,19 @@ public class PurplePath {
   }
 
   /**
+   * Set current robot pose
+   * @param pose Current robot pose
+   */
+  private void setCurrentPose(Pose2d pose) {
+    m_posePublisher.set(JSONObject.writePose(pose));
+  }
+
+  /**
    * Get latest paths from PurplePath and calculate trajectories
    */
   private void run() {
+    // Set current pose
+    setCurrentPose(m_driveSubsystem.getPose());
     for (int i = 0; i < m_trajectorySubscribers.length; i++) {
       // Attempt to read path from NetworkTables
       List<Translation2d> points = JSONObject.readPointList(m_trajectorySubscribers[i].getAtomic().value);
@@ -103,14 +113,6 @@ public class PurplePath {
   }
 
   /**
-   * Set current robot pose
-   * @param pose Current robot pose
-   */
-  public void setCurrentPose(Pose2d pose) {
-    m_posePublisher.set(JSONObject.writePose(pose));
-  }
-
-  /**
    * Set goal poses
    * @param goals Desired goal poses
    */
@@ -126,6 +128,6 @@ public class PurplePath {
    */
   public Command getTrajectoryCommand(int index) {
     if (index < 0 || index > MAX_TRAJECTORIES) return Commands.none();
-    return  m_commands.get(index);
+    return m_commands.get(index);
   }
 }

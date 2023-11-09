@@ -175,10 +175,10 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     this.m_turnPIDController = new TurnPIDController(turnInputCurve, pidf, turnScalar, deadband, lookAhead);
     this.m_pathFollowerConfig = new HolonomicPathFollowerConfig(
       new com.pathplanner.lib.util.PIDConstants(5.0, 0.0, 0.0),
-      new com.pathplanner.lib.util.PIDConstants(30.0, 0.0, 0.0),
+      new com.pathplanner.lib.util.PIDConstants(50.0, 0.0, 0.0),
       DRIVE_MAX_LINEAR_SPEED,
       m_lFrontModule.getModuleCoordinate().getNorm(),
-      new ReplanningConfig(),
+      new ReplanningConfig(false, true),
       GlobalConstants.ROBOT_LOOP_PERIOD
     );
 
@@ -456,13 +456,6 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     SmartDashboard.putBoolean("TC", m_isTractionControlEnabled);
   }
 
-  /**
-   * Publish data to network tables
-   */
-  private void publishData() {
-    Pose2d currentPose = getPose();
-    m_purplePath.setCurrentPose(currentPose);
-  }
 
   @Override
   public void periodic() {
@@ -475,7 +468,6 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
     if (RobotBase.isSimulation()) return;
     updatePose();
-    publishData();
     smartDashboard();
     logOutputs();
   }
@@ -492,7 +484,6 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     m_navx.setSimAngle(angle);
 
     updatePose();
-    publishData();
     smartDashboard();
     logOutputs();
   }

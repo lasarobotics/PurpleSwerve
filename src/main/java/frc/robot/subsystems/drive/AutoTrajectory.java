@@ -37,20 +37,6 @@ public class AutoTrajectory {
 
     // Get path
     m_path = PathPlannerPath.fromPathFile(pathName);
-
-    // Set swerve command
-    m_swerveCommand = new FollowPathWithEvents(
-      new FollowPathHolonomic(
-          m_path,
-          driveSubsystem::getPose,
-          driveSubsystem::getChassisSpeeds,
-          driveSubsystem::autoDrive,
-          m_driveSubsystem.getPathFollowerConfig(),
-          driveSubsystem
-      ),
-      m_path,
-      driveSubsystem::getPose
-    );
   }
 
   /**
