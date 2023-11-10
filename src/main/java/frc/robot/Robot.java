@@ -13,6 +13,8 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
+import com.pathplanner.lib.pathfinding.Pathfinding;
+
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
@@ -35,6 +37,9 @@ public class Robot extends LoggedRobot {
     BatteryTracker batteryTracker = new BatteryTracker(BatteryTracker.initializeHardware());
     Logger.recordMetadata("ProjectName", "PurpleSwerve");
     Logger.recordMetadata("BatteryName", batteryTracker.scanBattery());
+
+    // Set pathfinding algorithm to be AdvantageKit compatible
+    Pathfinding.setPathfinder(new LocalADStarAK());
 
     if (isReal()) {
       // If robot is real, log to USB drive and publish data to NetworkTables

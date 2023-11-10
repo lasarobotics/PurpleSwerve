@@ -13,6 +13,7 @@ import org.lasarobotics.utils.JSONObject;
 
 import com.pathplanner.lib.path.PathPoint;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.NetworkTable;
@@ -43,7 +44,7 @@ public class PurplePath {
   private final String GOAL_LOG_ENTRY = "Goal";
   private final String POSE_LOG_ENTRY = "Pose";
   private final String NETWORK_TABLE_NAME = "PurplePath";
-  private final PubSubOption[] PUBSUB_OPTIONS = { PubSubOption.periodic(GlobalConstants.ROBOT_LOOP_PERIOD / 2), PubSubOption.keepDuplicates(true), PubSubOption.pollStorage(10) };
+  private final PubSubOption[] PUBSUB_OPTIONS = { PubSubOption.periodic(GlobalConstants.ROBOT_LOOP_PERIOD), PubSubOption.keepDuplicates(true), PubSubOption.pollStorage(10) };
   private DriveSubsystem m_driveSubsystem;
   private StringSubscriber[] m_trajectorySubscribers =  new StringSubscriber[MAX_TRAJECTORIES];
   private AtomicReferenceArray<Command> m_commands;
@@ -78,29 +79,32 @@ public class PurplePath {
     m_posePublisher.set(JSONObject.writePose(pose));
   }
 
+  private void updateCommand(int index) {
+    // Attempt to read path from NetworkTables
+    List<Translation2d> points = JSONObject.readPointList(m_trajectorySubscribers[index].getAtomic().value);
+    // If path isn't there, clear trajectory
+    if (points == null || points.size() < 2) {
+      m_commands.set(index, Commands.none());
+      return;
+    }
+
+    // Convert to PathPoint list
+    List<PathPoint> waypoints = new ArrayList<>();
+    for (var point : points)
+      waypoints.add(new PathPoint(point, m_goals.get(index).getRotation()));
+
+    // Update trajectory
+    m_commands.set(index, new AutoTrajectory(m_driveSubsystem, waypoints, m_driveSubsystem.getPathConstraints()).getCommandAndStop());
+  }
+
   /**
    * Get latest paths from PurplePath and calculate trajectories
    */
   private void run() {
     // Set current pose
     setCurrentPose(m_driveSubsystem.getPose());
-    for (int i = 0; i < m_trajectorySubscribers.length; i++) {
-      // Attempt to read path from NetworkTables
-      List<Translation2d> points = JSONObject.readPointList(m_trajectorySubscribers[i].getAtomic().value);
-      // If path isn't there, clear trajectory
-      if (points == null || points.size() < 2) {
-        m_commands.set(i, Commands.none());
-        continue;
-      }
-
-      // Convert to PathPoint list
-      List<PathPoint> waypoints = new ArrayList<>();
-      for (var point : points)
-        waypoints.add(new PathPoint(point, m_goals.get(i).getRotation()));
-
-      // Update trajectory
-      m_commands.set(i, new AutoTrajectory(m_driveSubsystem, waypoints, m_driveSubsystem.getPathConstraints()).getCommandAndStop());
-    }
+    // Update trajectory commands
+    for (int i = 0; i < m_trajectorySubscribers.length; i++) updateCommand(i);
   }
 
   /**
@@ -109,7 +113,7 @@ public class PurplePath {
   public void startThread() {
     m_thread = new Notifier(() -> run());
     m_thread.setName("PurplePath");
-    m_thread.startPeriodic(GlobalConstants.ROBOT_LOOP_PERIOD / 2);
+    m_thread.startPeriodic(GlobalConstants.ROBOT_LOOP_PERIOD);
   }
 
   /**
@@ -127,7 +131,7 @@ public class PurplePath {
    * @return Trajectory command
    */
   public Command getTrajectoryCommand(int index) {
-    if (index < 0 || index > MAX_TRAJECTORIES) return Commands.none();
+    index = MathUtil.clamp(index, 0, MAX_TRAJECTORIES);
     return m_commands.get(index);
   }
 }

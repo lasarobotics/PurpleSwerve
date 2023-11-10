@@ -22,6 +22,7 @@ import org.lasarobotics.utils.GlobalConstants;
 import org.lasarobotics.utils.PIDConstants;
 import org.littletonrobotics.junction.Logger;
 
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.ReplanningConfig;
@@ -90,7 +91,6 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private SwerveDrivePoseEstimator m_poseEstimator;
   private AdvancedSwerveKinematics m_advancedKinematics;
   private HolonomicPathFollowerConfig m_pathFollowerConfig;
-  private PurplePath m_purplePath;
 
   private NavX2 m_navx;
   private MAXSwerveModule m_lFrontModule;
@@ -175,10 +175,10 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     this.m_turnPIDController = new TurnPIDController(turnInputCurve, pidf, turnScalar, deadband, lookAhead);
     this.m_pathFollowerConfig = new HolonomicPathFollowerConfig(
       new com.pathplanner.lib.util.PIDConstants(5.0, 0.0, 0.0),
-      new com.pathplanner.lib.util.PIDConstants(50.0, 0.0, 0.0),
+      new com.pathplanner.lib.util.PIDConstants(45.0, 0.0, 0.0),
       DRIVE_MAX_LINEAR_SPEED,
       m_lFrontModule.getModuleCoordinate().getNorm(),
-      new ReplanningConfig(false, true),
+      new ReplanningConfig(),
       GlobalConstants.ROBOT_LOOP_PERIOD
     );
 
@@ -231,11 +231,6 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     // Initialise other variables
     m_previousPose = new Pose2d();
     m_currentHeading = new Rotation2d();
-
-    // Setup PurplePath
-    m_purplePath = new PurplePath(this);
-    m_purplePath.setGoals(GOAL_POSES);
-    m_purplePath.startThread();
   }
 
   /**
@@ -488,6 +483,10 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     logOutputs();
   }
 
+  public void configureAutoBuilder() {
+    AutoBuilder.configureHolonomic(this::getPose, this::resetPose, this::getChassisSpeeds, this::autoDrive, m_pathFollowerConfig, this);
+  }
+
   /**
    * Call this repeatedly to drive using PID during teleoperation
    * @param xRequest Desired X axis (forward) speed [-1.0, +1.0]
@@ -601,7 +600,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @return Command that will drive robot to goal pose
    */
   public Command goToGoal(int index) {
-    return m_purplePath.getTrajectoryCommand(index);
+    //return m_purplePath.getTrajectoryCommand(index);
+    return AutoBuilder.pathfindToPose(GOAL_POSES.get(index), getPathConstraints()).andThen(runOnce(() -> resetTurnPID()));
   }
 
   /**

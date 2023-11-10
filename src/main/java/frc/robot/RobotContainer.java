@@ -34,6 +34,9 @@ public class RobotContainer {
       )
     );
 
+    // Setup AutoBuilder
+    DRIVE_SUBSYSTEM.configureAutoBuilder();
+
     // Bind buttons and triggers
     configureBindings();
   }
