@@ -41,7 +41,6 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.networktables.PubSubOption;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -75,7 +74,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     }
   }
 
-  // Drive specs, these numbers use the motor shaft encoder
+  // Drive specsS
   public static final double DRIVE_WHEELBASE = 0.6;
   public static final double DRIVE_TRACK_WIDTH = 0.6;
   public final double DRIVE_MAX_LINEAR_SPEED;
@@ -99,13 +98,12 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private MAXSwerveModule m_rRearModule;
   private LEDStrip m_ledStrip;
 
-  private final double TOLERANCE = 0.125;
+  private final double TOLERANCE = 1.0;
   private final double TIP_THRESHOLD = 30.0;
   private final double BALANCED_THRESHOLD = 5.0;
   private final Matrix<N3, N1> ODOMETRY_STDDEV = VecBuilder.fill(0.03, 0.03, Math.toRadians(1));
   private final Matrix<N3, N1> VISION_STDDEV = VecBuilder.fill(0.5, 0.5, Math.toRadians(40));
   private final TrapezoidProfile.Constraints AIM_PID_CONSTRAINT = new TrapezoidProfile.Constraints(2160.0, 2160.0);
-  private final ControlCentricity CONTROL_CENTRICITY = ControlCentricity.FIELD_CENTRIC;
 
   private final List<Pose2d> GOAL_POSES = Arrays.asList(
     new Pose2d(15.72, 6.20, Rotation2d.fromDegrees(0.0)),
@@ -119,13 +117,12 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     new Pose2d(1.90, 1.10, Rotation2d.fromDegrees(180.0)),
     new Pose2d(1.90, 0.45, Rotation2d.fromDegrees(180.0))
   );
-  PubSubOption[] PUBSUB_OPTIONS = { PubSubOption.periodic(GlobalConstants.ROBOT_LOOP_PERIOD), PubSubOption.keepDuplicates(true), PubSubOption.pollStorage(10) };
 
   private final String POSE_LOG_ENTRY = "Pose";
   private final String SWERVE_STATE_LOG_ENTRY = "Swerve";
 
+  private ControlCentricity m_controlCentricity;
   private ChassisSpeeds m_desiredChassisSpeeds;
-
   private boolean m_isTractionControlEnabled = true;
   private Pose2d m_previousPose;
   private Rotation2d m_currentHeading;
@@ -150,8 +147,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * NOTE: ONLY ONE INSTANCE SHOULD EXIST AT ANY TIME!
    * <p>
    * @param drivetrainHardware Hardware devices required by drivetrain
-   * @param kP Proportional gain
-   * @param kD Derivative gain
+   * @param pidf PID constants
    * @param turnScalar Scalar for turn input (degrees)
    * @param deadband Deadband for controller input [+0.001, +0.2]
    * @param lookAhead Turn PID lookahead, in number of loops
@@ -159,7 +155,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @param throttleInputCurve Spline function characterising throttle input
    * @param turnInputCurve Spline function characterising turn input
    */
-  public DriveSubsystem(Hardware drivetrainHardware, PIDConstants pidf,
+  public DriveSubsystem(Hardware drivetrainHardware, PIDConstants pidf, ControlCentricity controlCentricity,
                         double turnScalar, double deadband, double lookAhead, double slipRatio,
                         PolynomialSplineFunction throttleInputCurve, PolynomialSplineFunction turnInputCurve) {
     setSubsystem(getClass().getSimpleName());
@@ -171,6 +167,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     this.m_lRearModule = drivetrainHardware.lRearModule;
     this.m_rRearModule = drivetrainHardware.rRearModule;
     this.m_ledStrip = drivetrainHardware.ledStrip;
+    this.m_controlCentricity = controlCentricity;
     this.m_throttleMap = new ThrottleMap(throttleInputCurve, deadband, DRIVE_MAX_LINEAR_SPEED);
     this.m_turnPIDController = new TurnPIDController(turnInputCurve, pidf, turnScalar, deadband, lookAhead);
     this.m_pathFollowerConfig = new HolonomicPathFollowerConfig(
@@ -227,6 +224,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     // Setup auto-aim PID controller
     m_autoAimPIDController = new ProfiledPIDController(pidf.kP, 0.0, pidf.kD, AIM_PID_CONSTRAINT, pidf.period);
     m_autoAimPIDController.enableContinuousInput(-180.0, +180.0);
+    m_autoAimPIDController.setTolerance(TOLERANCE);
 
     // Initialise other variables
     m_previousPose = new Pose2d();
@@ -337,7 +335,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     SwerveModuleState[] moduleStates = m_advancedKinematics.toSwerveModuleStates(
       m_desiredChassisSpeeds,
       getPose().getRotation(),
-      CONTROL_CENTRICITY
+      m_controlCentricity
     );
 
     // Desaturate drive speeds
@@ -363,7 +361,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     SwerveModuleState[] moduleStates = m_advancedKinematics.toSwerveModuleStates(
       m_desiredChassisSpeeds,
       getPose().getRotation(),
-      CONTROL_CENTRICITY
+      m_controlCentricity
     );
 
     // Desaturate drive speeds
@@ -426,7 +424,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     if (RobotBase.isSimulation()) return;
 
     // Get estimated poses from VisionSubsystem
-    var visionEstimatedRobotPoses = VisionSubsystem.getInstance().getEstimatedGlobalPose();
+    var visionEstimatedRobotPoses = VisionSubsystem.getInstance().getEstimatedGlobalPoses();
 
     // Exit if no valid vision pose estimates
     if (visionEstimatedRobotPoses.isEmpty()) return;
@@ -483,6 +481,9 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     logOutputs();
   }
 
+  /**
+   * Configure AutoBuilder for PathPlannerLib
+   */
   public void configureAutoBuilder() {
     AutoBuilder.configureHolonomic(this::getPose, this::resetPose, this::getChassisSpeeds, this::autoDrive, m_pathFollowerConfig, this);
   }
@@ -600,7 +601,6 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @return Command that will drive robot to goal pose
    */
   public Command goToGoal(int index) {
-    //return m_purplePath.getTrajectoryCommand(index);
     return AutoBuilder.pathfindToPose(GOAL_POSES.get(index), getPathConstraints()).andThen(runOnce(() -> resetTurnPID()));
   }
 

@@ -67,10 +67,10 @@ public class VisionSubsystem extends SubsystemBase implements AutoCloseable {
   }
 
   /**
-   * Get currently estimated robot pose
-   * @return  an EstimatedRobotPose with an estimated pose, the timestamp, and targets used to create the estimate
+   * Get currently estimated robot poses from each camera
+   * @return List of estimated poses, the timestamp, and targets used to create the estimate
    */
-  public List<EstimatedRobotPose> getEstimatedGlobalPose() {
+  public List<EstimatedRobotPose> getEstimatedGlobalPoses() {
     List<EstimatedRobotPose> estimatedPoses = new ArrayList<EstimatedRobotPose>();
 
     for (var camera : m_cameras) {
