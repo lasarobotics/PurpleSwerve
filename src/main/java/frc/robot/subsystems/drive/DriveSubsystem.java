@@ -4,9 +4,6 @@
 
 package frc.robot.subsystems.drive;
 
-import java.util.Arrays;
-import java.util.List;
-
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
 import org.lasarobotics.drive.AdvancedSwerveKinematics;
@@ -28,6 +25,7 @@ import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.ReplanningConfig;
 
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
@@ -44,7 +42,9 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
@@ -79,8 +79,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   public static final double DRIVE_TRACK_WIDTH = 0.6;
   public final double DRIVE_MAX_LINEAR_SPEED;
   public final double DRIVE_AUTO_ACCELERATION;
-  public final double DRIVE_ROTATE_VELOCITY = 6 * Math.PI;
-  public final double DRIVE_ROTATE_ACCELERATION = 2 * Math.PI;
+  public final double DRIVE_ROTATE_VELOCITY = 9 * Math.PI;
+  public final double DRIVE_ROTATE_ACCELERATION = 3 * Math.PI;
 
 
   private ThrottleMap m_throttleMap;
@@ -105,19 +105,6 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private final Matrix<N3, N1> VISION_STDDEV = VecBuilder.fill(0.5, 0.5, Math.toRadians(40));
   private final TrapezoidProfile.Constraints AIM_PID_CONSTRAINT = new TrapezoidProfile.Constraints(2160.0, 2160.0);
 
-  private final List<Pose2d> GOAL_POSES = Arrays.asList(
-    new Pose2d(15.72, 6.20, Rotation2d.fromDegrees(0.0)),
-    new Pose2d(1.90, 4.89, Rotation2d.fromDegrees(180.0)),
-    new Pose2d(1.90, 4.45, Rotation2d.fromDegrees(180.0)),
-    new Pose2d(1.90, 3.90, Rotation2d.fromDegrees(180.0)),
-    new Pose2d(1.90, 3.30, Rotation2d.fromDegrees(180.0)),
-    new Pose2d(1.90, 2.75, Rotation2d.fromDegrees(180.0)),
-    new Pose2d(1.90, 2.20, Rotation2d.fromDegrees(180.0)),
-    new Pose2d(1.90, 1.65, Rotation2d.fromDegrees(180.0)),
-    new Pose2d(1.90, 1.10, Rotation2d.fromDegrees(180.0)),
-    new Pose2d(1.90, 0.45, Rotation2d.fromDegrees(180.0))
-  );
-
   private final String POSE_LOG_ENTRY = "Pose";
   private final String SWERVE_STATE_LOG_ENTRY = "Swerve";
 
@@ -126,6 +113,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private boolean m_isTractionControlEnabled = true;
   private Pose2d m_previousPose;
   private Rotation2d m_currentHeading;
+  private PurplePath m_purplePath;
 
   public final Command ANTI_TIP_COMMAND = new FunctionalCommand(
     () -> m_ledStrip.set(Pattern.RED_STROBE),
@@ -229,6 +217,9 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     // Initialise other variables
     m_previousPose = new Pose2d();
     m_currentHeading = new Rotation2d();
+
+    // Initalise PurplePath
+    m_purplePath = new PurplePath(this::getPose, getPathConstraints());
   }
 
   /**
@@ -598,10 +589,17 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   /**
    * Go to goal pose
    * @param index Index of goal pose
-   * @return Command that will drive robot to goal pose
+   * @return Command that will drive robot to the desired pose
    */
-  public Command goToGoal(int index) {
-    return AutoBuilder.pathfindToPose(GOAL_POSES.get(index), getPathConstraints()).andThen(runOnce(() -> resetTurnPID()));
+  public Command goToPose(Pair<Pose2d,Double> pose) {
+    return new SequentialCommandGroup(
+      defer(() ->
+        m_purplePath.getTrajectoryCommand(pose.getFirst(), pose.getSecond())
+        .finallyDo(() -> resetTurnPID())
+      ),
+      runOnce(() -> stop()),
+      Commands.idle(this)
+    );
   }
 
   /**

@@ -58,11 +58,17 @@ public class AutoTrajectory {
     );
   }
 
-  private Command generateCommand(PathPlannerPath path) {
+  public AutoTrajectory(DriveSubsystem driveSubsystem) {
+    this.m_driveSubsystem = driveSubsystem;
+    this.m_path = null;
+  }
+
+  private Command generateCommand() {
+    if (m_path == null) return Commands.none();
     // Set swerve command
     return new FollowPathWithEvents(
       new FollowPathHolonomic(
-          path,
+          m_path,
           m_driveSubsystem::getPose,
           m_driveSubsystem::getChassisSpeeds,
           m_driveSubsystem::autoDrive,
@@ -78,7 +84,7 @@ public class AutoTrajectory {
    * Reset drive odometry to beginning of this path
    */
   private void resetOdometry() {
-    m_driveSubsystem.resetPose(new Pose2d(m_path.getPoint(0).position, m_path.getPoint(0).holonomicRotation));
+    m_driveSubsystem.resetPose(getInitalPose());
   }
 
   /**
@@ -90,11 +96,20 @@ public class AutoTrajectory {
   }
 
   /**
+   * Get initial pose for path
+   * @return Path initial pose
+   */
+  public Pose2d getInitalPose() {
+    if (m_path == null) return new Pose2d();
+    return new Pose2d(m_path.getPoint(0).position, m_path.getPoint(0).holonomicRotation);
+  }
+
+  /**
    * Get Ramsete command to run
    * @return Ramsete command that will stop when complete
    */
   public SequentialCommandGroup getCommandAndStop() {
-    return generateCommand(m_path)
+    return generateCommand()
            .andThen(() -> {
               m_driveSubsystem.resetTurnPID();
               m_driveSubsystem.lock();
@@ -110,7 +125,7 @@ public class AutoTrajectory {
   public SequentialCommandGroup getCommandAndStop(boolean isFirstPath) {
     if (isFirstPath) {
       return Commands.runOnce(() -> resetOdometry())
-              .andThen(generateCommand(m_path))
+              .andThen(generateCommand())
               .andThen(() -> {
                 m_driveSubsystem.resetTurnPID();
                 m_driveSubsystem.lock();
@@ -127,7 +142,7 @@ public class AutoTrajectory {
    * @return Command to execute actions in autonomous
    */
   public Command getCommandAndStopWithEvents(HashMap<String, Command> eventMap) {
-    return generateCommand(m_path)
+    return generateCommand()
            .andThen(() -> {
               m_driveSubsystem.resetTurnPID();
               m_driveSubsystem.lock();
@@ -145,7 +160,7 @@ public class AutoTrajectory {
    */
   public Command getCommandAndStopWithEvents(boolean isFirstPath, HashMap<String, Command> eventMap) {
     if (isFirstPath) {
-      return generateCommand(m_path)
+      return generateCommand()
              .andThen(() -> {
               m_driveSubsystem.resetTurnPID();
               m_driveSubsystem.lock();
@@ -159,7 +174,7 @@ public class AutoTrajectory {
    * @return Ramsete command that does NOT stop when complete
    */
   public Command getCommand() {
-    return generateCommand(m_path).andThen(() -> m_driveSubsystem.resetTurnPID());
+    return generateCommand().andThen(() -> m_driveSubsystem.resetTurnPID());
   }
 
   /**
@@ -170,7 +185,7 @@ public class AutoTrajectory {
   public Command getCommand(boolean isFirstPath) {
     if (isFirstPath) {
       return Commands.runOnce(() -> resetOdometry())
-             .andThen(generateCommand(m_path))
+             .andThen(generateCommand())
              .andThen(() -> m_driveSubsystem.resetTurnPID());
     } else return getCommand();
   }

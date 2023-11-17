@@ -4,125 +4,142 @@
 
 package frc.robot.subsystems.drive;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReferenceArray;
+import java.util.Scanner;
+import java.util.function.Supplier;
 
-import org.lasarobotics.utils.GlobalConstants;
 import org.lasarobotics.utils.JSONObject;
+import org.littletonrobotics.junction.Logger;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.GoalEndState;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.PathPoint;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.PubSubOption;
-import edu.wpi.first.networktables.StringPublisher;
-import edu.wpi.first.networktables.StringSubscriber;
-import edu.wpi.first.wpilibj.Notifier;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 
 /** PurplePath Pathfinder */
 public class PurplePath {
-  public static final int MAX_TRAJECTORIES = 10;
-  public static final String[] TRAJECTORY_LOG_ENTRY = {
-    "Trajectory0",
-    "Trajectory1",
-    "Trajectory2",
-    "Trajectory3",
-    "Trajectory4",
-    "Trajectory5",
-    "Trajectory6",
-    "Trajectory7",
-    "Trajectory8",
-    "Trajectory9",
-  };
+  private final String URI;
 
-  private final String GOAL_LOG_ENTRY = "Goal";
-  private final String POSE_LOG_ENTRY = "Pose";
-  private final String NETWORK_TABLE_NAME = "PurplePath";
-  private final PubSubOption[] PUBSUB_OPTIONS = { PubSubOption.periodic(GlobalConstants.ROBOT_LOOP_PERIOD), PubSubOption.keepDuplicates(true), PubSubOption.pollStorage(10) };
-  private DriveSubsystem m_driveSubsystem;
-  private StringSubscriber[] m_trajectorySubscribers =  new StringSubscriber[MAX_TRAJECTORIES];
-  private AtomicReferenceArray<Command> m_commands;
-  private List<Pose2d> m_goals;
-  private StringPublisher m_posePublisher;
-  private StringPublisher m_goalPublisher;
-  private Notifier m_thread;
+  private Supplier<Pose2d> m_poseSupplier;
+  private PathConstraints m_pathConstraints;
+  private HttpURLConnection m_serverConnection;
+  private boolean m_isConnected;
 
-  public PurplePath(DriveSubsystem driveSubsystem) {
-    this.m_driveSubsystem = driveSubsystem;
-    // Initialise subcribers
-    NetworkTable table = NetworkTableInstance.getDefault().getTable(NETWORK_TABLE_NAME);
-    for (int i = 0; i < MAX_TRAJECTORIES; i++)
-      m_trajectorySubscribers[i] = table.getStringTopic(TRAJECTORY_LOG_ENTRY[i])
-        .subscribe("", PUBSUB_OPTIONS);
+  public PurplePath(Supplier<Pose2d> poseSupplier, PathConstraints pathConstraints) {
+    this.m_poseSupplier = poseSupplier;
+    this.m_pathConstraints = pathConstraints;
+    this.m_isConnected = false;
 
-    // Initialise commands
-    m_commands = new AtomicReferenceArray<>(MAX_TRAJECTORIES);
-    for (int i = 0; i < m_commands.length(); i++)
-      m_commands.set(i, Commands.none());
+    // Set URI
+    if (RobotBase.isSimulation()) URI = "http://localhost:5000/";
+    else URI = "http://purplebox.local:5000/";
 
-    // Initialise goal publisher
-    m_posePublisher = table.getStringTopic(POSE_LOG_ENTRY).publish(PUBSUB_OPTIONS);
-    m_goalPublisher = table.getStringTopic(GOAL_LOG_ENTRY).publish(PUBSUB_OPTIONS);
+    // Initialize connection
+    getCommand(new Pose2d(), new Pose2d(), 0.0);
   }
 
   /**
-   * Set current robot pose
-   * @param pose Current robot pose
+   * Get trajectory command to go from start pose to goal pose
+   * @param start Starting pose of robot
+   * @param goal Desired pose of robot
+   * @param finalApproachDistance Distance of final approach path
+   * @return Command that drives robot to desired pose
    */
-  private void setCurrentPose(Pose2d pose) {
-    m_posePublisher.set(JSONObject.writePose(pose));
-  }
+  private Command getCommand(Pose2d start, Pose2d goal, double finalApproachDistance) {
+    Pose2d finalApproachPoint = new Pose2d(
+      goal.getTranslation()
+        .plus(new Translation2d(finalApproachDistance, goal.getRotation().plus(Rotation2d.fromRadians(Math.PI)))),
+      goal.getRotation()
+    );
+    PathPlannerPath finalApproachPath = PathPlannerPath.fromPathPoints(
+      Arrays.asList(
+        new PathPoint(finalApproachPoint.getTranslation(), finalApproachPoint.getRotation()),
+        new PathPoint(goal.getTranslation(), goal.getRotation())
+      ),
+      m_pathConstraints,
+      new GoalEndState(0.0, goal.getRotation())
+    );
 
-  private void updateCommand(int index) {
-    // Attempt to read path from NetworkTables
-    List<Translation2d> points = JSONObject.readPointList(m_trajectorySubscribers[index].getAtomic().value);
-    // If path isn't there, clear trajectory
-    if (points == null || points.size() < 2) {
-      m_commands.set(index, Commands.none());
-      return;
+    // Check if robot is close to goal
+    boolean isClose = start.getTranslation().getDistance(goal.getTranslation()) < finalApproachDistance;
+
+    // Construct JSON request
+    String jsonRequest = isClose ? JSONObject.writePointList(Arrays.asList(start.getTranslation(), goal.getTranslation()))
+                                 : JSONObject.writePointList(Arrays.asList(start.getTranslation(), finalApproachPoint.getTranslation()));
+
+    // Send pathfinding request and get response
+    String jsonResponse = "";
+    try {
+      // Define the server endpoint to send the HTTP request to
+      m_serverConnection = (HttpURLConnection)new URL(URI).openConnection();
+
+      // Indicate that we want to write to the HTTP request body
+      m_serverConnection.setDoOutput(true);
+      m_serverConnection.setRequestMethod("POST");
+      m_serverConnection.setRequestProperty("Content-Type", "application/json");
+
+      // Writing the post data to the HTTP request body
+      BufferedWriter httpRequestBodyWriter = new BufferedWriter(new OutputStreamWriter(m_serverConnection.getOutputStream()));
+      httpRequestBodyWriter.write(jsonRequest);
+      httpRequestBodyWriter.close();
+
+      // Reading from the HTTP response body
+      Scanner httpResponseScanner = new Scanner(m_serverConnection.getInputStream());
+      while (httpResponseScanner.hasNextLine()) jsonResponse += httpResponseScanner.nextLine();
+      m_isConnected = m_serverConnection.getResponseCode() == 200;
+      httpResponseScanner.close();
+    } catch (IOException e) {
+      System.out.println(e.getMessage());
+      m_isConnected = false;
+      return Commands.none();
     }
+
+    // Attempt to read path from response
+    List<Translation2d> points = JSONObject.readPointList(jsonResponse);
+
+    // If path isn't there, return empty command
+    if (points == null || points.size() < 2) return Commands.none();
 
     // Convert to PathPoint list
     List<PathPoint> waypoints = new ArrayList<>();
     for (var point : points)
-      waypoints.add(new PathPoint(point, m_goals.get(index).getRotation()));
+      waypoints.add(new PathPoint(point, goal.getRotation()));
 
-    // Update trajectory
-    m_commands.set(index, new AutoTrajectory(m_driveSubsystem, waypoints, m_driveSubsystem.getPathConstraints()).getCommandAndStop());
-  }
+    // Generate path
+    PathPlannerPath path = PathPlannerPath.fromPathPoints(
+      waypoints,
+      m_pathConstraints,
+      new GoalEndState(
+        isClose ? 0.0 : Math.sqrt(2 * m_pathConstraints.getMaxAccelerationMpsSq() * finalApproachDistance) / 2,
+        finalApproachPoint.getRotation()
+      )
+    );
 
-  /**
-   * Get latest paths from PurplePath and calculate trajectories
-   */
-  private void run() {
-    // Set current pose
-    setCurrentPose(m_driveSubsystem.getPose());
-    // Update trajectory commands
-    for (int i = 0; i < m_trajectorySubscribers.length; i++) updateCommand(i);
-  }
+    Logger.recordOutput("PurplePath/GoalPoint", goal);
+    Logger.recordOutput("PurplePath/FinalApproachPoint", finalApproachPoint);
 
-  /**
-   * Start runner thread
-   */
-  public void startThread() {
-    m_thread = new Notifier(() -> run());
-    m_thread.setName("PurplePath");
-    m_thread.startPeriodic(GlobalConstants.ROBOT_LOOP_PERIOD);
-  }
-
-  /**
-   * Set goal poses
-   * @param goals Desired goal poses
-   */
-  public void setGoals(List<Pose2d> goals) {
-    m_goals = goals;
-    m_goalPublisher.set(JSONObject.writePoseList(m_goals));
+    // Return path following command
+    return isClose ? AutoBuilder.followPathWithEvents(path)
+                   : new SequentialCommandGroup(
+                      AutoBuilder.followPathWithEvents(path),
+                      AutoBuilder.followPathWithEvents(finalApproachPath)
+                    );
   }
 
   /**
@@ -130,8 +147,15 @@ public class PurplePath {
    * @param index Index of trajectory command to obtain
    * @return Trajectory command
    */
-  public Command getTrajectoryCommand(int index) {
-    index = MathUtil.clamp(index, 0, MAX_TRAJECTORIES);
-    return m_commands.get(index);
+  public Command getTrajectoryCommand(Pose2d destination, double finalApproachDistance) {
+    return getCommand(m_poseSupplier.get(), destination, finalApproachDistance);
+  }
+
+  /**
+   * Get if connected to coprocessor
+   * @return True if connected to PurplePath server on coprocessor
+   */
+  public boolean isConnected() {
+    return m_isConnected;
   }
 }

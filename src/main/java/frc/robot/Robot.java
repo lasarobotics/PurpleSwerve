@@ -72,7 +72,6 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void robotPeriodic() {
-    m_robotContainer.dynamicBindings();
     CommandScheduler.getInstance().run();
   }
 

@@ -6,13 +6,16 @@ package frc.robot;
 
 import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
-import org.lasarobotics.drive.MAXSwerveModule;
 import org.lasarobotics.drive.AdvancedSwerveKinematics.ControlCentricity;
+import org.lasarobotics.drive.MAXSwerveModule;
 import org.lasarobotics.hardware.NavX2;
 import org.lasarobotics.hardware.SparkMax;
 import org.lasarobotics.led.LEDStrip;
 import org.lasarobotics.utils.PIDConstants;
 
+import edu.wpi.first.math.Pair;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -36,6 +39,17 @@ public final class Constants {
     public static final double FIELD_LENGTH = 16.4846;
 
     public static final Translation2d CENTER = new Translation2d(FIELD_LENGTH / 2, FIELD_WIDTH / 2);
+
+    public static final Pair<Pose2d,Double> SUBSTATION_POSE = new Pair<Pose2d,Double>(new Pose2d(15.72, 6.20, Rotation2d.fromDegrees(0.0)), 2.0);
+    public static final Pair<Pose2d,Double> GRID_1_POSE = new Pair<Pose2d,Double>(new Pose2d(1.90, 4.89, Rotation2d.fromDegrees(180.0)), 0.15);
+    public static final Pair<Pose2d,Double> GRID_2_POSE = new Pair<Pose2d,Double>(new Pose2d(1.90, 4.45, Rotation2d.fromDegrees(180.0)), 0.15);
+    public static final Pair<Pose2d,Double> GRID_3_POSE = new Pair<Pose2d,Double>(new Pose2d(1.90, 3.90, Rotation2d.fromDegrees(180.0)), 0.15);
+    public static final Pair<Pose2d,Double> GRID_4_POSE = new Pair<Pose2d,Double>(new Pose2d(1.90, 3.30, Rotation2d.fromDegrees(180.0)), 0.15);
+    public static final Pair<Pose2d,Double> GRID_5_POSE = new Pair<Pose2d,Double>(new Pose2d(1.90, 2.75, Rotation2d.fromDegrees(180.0)), 0.15);
+    public static final Pair<Pose2d,Double> GRID_6_POSE = new Pair<Pose2d,Double>(new Pose2d(1.90, 2.20, Rotation2d.fromDegrees(180.0)), 0.15);
+    public static final Pair<Pose2d,Double> GRID_7_POSE = new Pair<Pose2d,Double>(new Pose2d(1.90, 1.65, Rotation2d.fromDegrees(180.0)), 0.15);
+    public static final Pair<Pose2d,Double> GRID_8_POSE = new Pair<Pose2d,Double>(new Pose2d(1.90, 1.10, Rotation2d.fromDegrees(180.0)), 0.15);
+    public static final Pair<Pose2d,Double> GRID_9_POSE = new Pair<Pose2d,Double>(new Pose2d(1.90, 0.45, Rotation2d.fromDegrees(180.0)), 0.15);
   }
 
   public static class HID {

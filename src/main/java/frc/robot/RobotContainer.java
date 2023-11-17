@@ -45,8 +45,8 @@ public class RobotContainer {
   private void configureBindings() {
     PRIMARY_CONTROLLER.start().onTrue(Commands.runOnce(() -> DRIVE_SUBSYSTEM.toggleTractionControl(), DRIVE_SUBSYSTEM));
     PRIMARY_CONTROLLER.leftBumper().whileTrue(
-      Commands.run(
-        () -> DRIVE_SUBSYSTEM.aimAtPoint(
+      Commands.run(() ->
+        DRIVE_SUBSYSTEM.aimAtPoint(
           -PRIMARY_CONTROLLER.getLeftY(),
           -PRIMARY_CONTROLLER.getLeftX(),
           Constants.Field.CENTER
@@ -54,13 +54,11 @@ public class RobotContainer {
         DRIVE_SUBSYSTEM
       )
     ).onFalse(Commands.runOnce(() -> DRIVE_SUBSYSTEM.resetTurnPID(), DRIVE_SUBSYSTEM));
-  }
 
-  public void dynamicBindings() {
-    if (DRIVE_SUBSYSTEM.getCurrentCommand() == DRIVE_SUBSYSTEM.getDefaultCommand()) {
-      PRIMARY_CONTROLLER.rightBumper().whileTrue(DRIVE_SUBSYSTEM.goToGoal(0));
-      PRIMARY_CONTROLLER.a().whileTrue(DRIVE_SUBSYSTEM.goToGoal(5));
-    }
+    PRIMARY_CONTROLLER.rightBumper().whileTrue(DRIVE_SUBSYSTEM.goToPose(Constants.Field.SUBSTATION_POSE));
+    PRIMARY_CONTROLLER.a().whileTrue(DRIVE_SUBSYSTEM.goToPose(Constants.Field.GRID_5_POSE));
+    PRIMARY_CONTROLLER.b().whileTrue(DRIVE_SUBSYSTEM.goToPose(Constants.Field.GRID_8_POSE));
+    PRIMARY_CONTROLLER.x().whileTrue(DRIVE_SUBSYSTEM.goToPose(Constants.Field.GRID_2_POSE));
   }
 
   /**
