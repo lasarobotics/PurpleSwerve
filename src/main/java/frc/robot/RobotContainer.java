@@ -55,10 +55,10 @@ public class RobotContainer {
       )
     ).onFalse(Commands.runOnce(() -> DRIVE_SUBSYSTEM.resetTurnPID(), DRIVE_SUBSYSTEM));
 
-    PRIMARY_CONTROLLER.rightBumper().whileTrue(DRIVE_SUBSYSTEM.goToPose(Constants.Field.SUBSTATION_POSE));
-    PRIMARY_CONTROLLER.a().whileTrue(DRIVE_SUBSYSTEM.goToPose(Constants.Field.GRID_5_POSE));
-    PRIMARY_CONTROLLER.b().whileTrue(DRIVE_SUBSYSTEM.goToPose(Constants.Field.GRID_8_POSE));
-    PRIMARY_CONTROLLER.x().whileTrue(DRIVE_SUBSYSTEM.goToPose(Constants.Field.GRID_2_POSE));
+    PRIMARY_CONTROLLER.rightBumper().whileTrue(DRIVE_SUBSYSTEM.goToPose(Constants.Field.SUBSTATION));
+    PRIMARY_CONTROLLER.a().whileTrue(DRIVE_SUBSYSTEM.goToPose(Constants.Field.GRID_5));
+    PRIMARY_CONTROLLER.b().whileTrue(DRIVE_SUBSYSTEM.goToPose(Constants.Field.GRID_8));
+    PRIMARY_CONTROLLER.x().whileTrue(DRIVE_SUBSYSTEM.goToPose(Constants.Field.GRID_2));
   }
 
   /**

@@ -25,15 +25,14 @@ import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.PathPoint;
 
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 
-/** PurplePath Pathfinder */
-public class PurplePath {
+/** PurplePath Client */
+public class PurplePathClient {
   private final String URI;
 
   private Supplier<Pose2d> m_poseSupplier;
@@ -41,7 +40,7 @@ public class PurplePath {
   private HttpURLConnection m_serverConnection;
   private boolean m_isConnected;
 
-  public PurplePath(Supplier<Pose2d> poseSupplier, PathConstraints pathConstraints) {
+  public PurplePathClient(Supplier<Pose2d> poseSupplier, PathConstraints pathConstraints) {
     this.m_poseSupplier = poseSupplier;
     this.m_pathConstraints = pathConstraints;
     this.m_isConnected = false;
@@ -51,37 +50,30 @@ public class PurplePath {
     else URI = "http://purplebox.local:5000/";
 
     // Initialize connection
-    getCommand(new Pose2d(), new Pose2d(), 0.0);
+    getCommand(new Pose2d(), new PurplePathPose(new Pose2d(), 0));
   }
 
   /**
    * Get trajectory command to go from start pose to goal pose
    * @param start Starting pose of robot
    * @param goal Desired pose of robot
-   * @param finalApproachDistance Distance of final approach path
+   * @param m_finalApproachDistance Distance of final approach path
    * @return Command that drives robot to desired pose
    */
-  private Command getCommand(Pose2d start, Pose2d goal, double finalApproachDistance) {
-    Pose2d finalApproachPoint = new Pose2d(
-      goal.getTranslation()
-        .plus(new Translation2d(finalApproachDistance, goal.getRotation().plus(Rotation2d.fromRadians(Math.PI)))),
-      goal.getRotation()
-    );
-    PathPlannerPath finalApproachPath = PathPlannerPath.fromPathPoints(
-      Arrays.asList(
-        new PathPoint(finalApproachPoint.getTranslation(), finalApproachPoint.getRotation()),
-        new PathPoint(goal.getTranslation(), goal.getRotation())
-      ),
-      m_pathConstraints,
-      new GoalEndState(0.0, goal.getRotation())
-    );
+  private Command getCommand(Pose2d start, PurplePathPose goal) {
+    Pose2d goalPose = goal.getGoalPose();
+    Pose2d finalApproachPose = goal.getFinalApproachPose();
+    PathPlannerPath finalApproachPath = goal.getFinalApproachPath();
+    double finalApproachDistance = goal.getM_finalApproachDistance();
+
+    if (goalPose == null || finalApproachPose == null || finalApproachPath == null) return Commands.none();
 
     // Check if robot is close to goal
-    boolean isClose = start.getTranslation().getDistance(goal.getTranslation()) < finalApproachDistance;
+    boolean isClose = start.getTranslation().getDistance(goalPose.getTranslation()) < finalApproachDistance;
 
     // Construct JSON request
-    String jsonRequest = isClose ? JSONObject.writePointList(Arrays.asList(start.getTranslation(), goal.getTranslation()))
-                                 : JSONObject.writePointList(Arrays.asList(start.getTranslation(), finalApproachPoint.getTranslation()));
+    String jsonRequest = isClose ? JSONObject.writePointList(Arrays.asList(start.getTranslation(), goalPose.getTranslation()))
+                                 : JSONObject.writePointList(Arrays.asList(start.getTranslation(), finalApproachPose.getTranslation()));
 
     // Send pathfinding request and get response
     String jsonResponse = "";
@@ -119,20 +111,20 @@ public class PurplePath {
     // Convert to PathPoint list
     List<PathPoint> waypoints = new ArrayList<>();
     for (var point : points)
-      waypoints.add(new PathPoint(point, goal.getRotation()));
+      waypoints.add(new PathPoint(point, goalPose.getRotation()));
 
     // Generate path
     PathPlannerPath path = PathPlannerPath.fromPathPoints(
       waypoints,
       m_pathConstraints,
       new GoalEndState(
-        isClose ? 0.0 : Math.sqrt(2 * m_pathConstraints.getMaxAccelerationMpsSq() * finalApproachDistance) / 2,
-        finalApproachPoint.getRotation()
+        isClose ? 0.0 : Math.sqrt(2 * m_pathConstraints.getMaxAccelerationMpsSq() * finalApproachDistance) * 0.66,
+        finalApproachPose.getRotation()
       )
     );
 
-    Logger.recordOutput("PurplePath/GoalPoint", goal);
-    Logger.recordOutput("PurplePath/FinalApproachPoint", finalApproachPoint);
+    Logger.recordOutput("PurplePath/GoalPose", goalPose);
+    Logger.recordOutput("PurplePath/FinalApproachPose", finalApproachPose);
 
     // Return path following command
     return isClose ? AutoBuilder.followPathWithEvents(path)
@@ -147,8 +139,8 @@ public class PurplePath {
    * @param index Index of trajectory command to obtain
    * @return Trajectory command
    */
-  public Command getTrajectoryCommand(Pose2d destination, double finalApproachDistance) {
-    return getCommand(m_poseSupplier.get(), destination, finalApproachDistance);
+  public Command getTrajectoryCommand(PurplePathPose goal) {
+    return getCommand(m_poseSupplier.get(), goal);
   }
 
   /**

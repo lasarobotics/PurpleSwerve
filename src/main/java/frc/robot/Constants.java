@@ -13,13 +13,13 @@ import org.lasarobotics.hardware.SparkMax;
 import org.lasarobotics.led.LEDStrip;
 import org.lasarobotics.utils.PIDConstants;
 
-import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import frc.robot.subsystems.drive.PurplePathPose;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide
@@ -40,16 +40,16 @@ public final class Constants {
 
     public static final Translation2d CENTER = new Translation2d(FIELD_LENGTH / 2, FIELD_WIDTH / 2);
 
-    public static final Pair<Pose2d,Double> SUBSTATION_POSE = new Pair<Pose2d,Double>(new Pose2d(15.72, 6.20, Rotation2d.fromDegrees(0.0)), 2.0);
-    public static final Pair<Pose2d,Double> GRID_1_POSE = new Pair<Pose2d,Double>(new Pose2d(1.90, 4.89, Rotation2d.fromDegrees(180.0)), 0.15);
-    public static final Pair<Pose2d,Double> GRID_2_POSE = new Pair<Pose2d,Double>(new Pose2d(1.90, 4.45, Rotation2d.fromDegrees(180.0)), 0.15);
-    public static final Pair<Pose2d,Double> GRID_3_POSE = new Pair<Pose2d,Double>(new Pose2d(1.90, 3.90, Rotation2d.fromDegrees(180.0)), 0.15);
-    public static final Pair<Pose2d,Double> GRID_4_POSE = new Pair<Pose2d,Double>(new Pose2d(1.90, 3.30, Rotation2d.fromDegrees(180.0)), 0.15);
-    public static final Pair<Pose2d,Double> GRID_5_POSE = new Pair<Pose2d,Double>(new Pose2d(1.90, 2.75, Rotation2d.fromDegrees(180.0)), 0.15);
-    public static final Pair<Pose2d,Double> GRID_6_POSE = new Pair<Pose2d,Double>(new Pose2d(1.90, 2.20, Rotation2d.fromDegrees(180.0)), 0.15);
-    public static final Pair<Pose2d,Double> GRID_7_POSE = new Pair<Pose2d,Double>(new Pose2d(1.90, 1.65, Rotation2d.fromDegrees(180.0)), 0.15);
-    public static final Pair<Pose2d,Double> GRID_8_POSE = new Pair<Pose2d,Double>(new Pose2d(1.90, 1.10, Rotation2d.fromDegrees(180.0)), 0.15);
-    public static final Pair<Pose2d,Double> GRID_9_POSE = new Pair<Pose2d,Double>(new Pose2d(1.90, 0.45, Rotation2d.fromDegrees(180.0)), 0.15);
+    public static final PurplePathPose SUBSTATION = new PurplePathPose(new Pose2d(15.72, 6.20, Rotation2d.fromDegrees(0.0)), new Pose2d(0.80, 6.20, Rotation2d.fromDegrees(180.0)), 2.0);
+    public static final PurplePathPose GRID_1 = new PurplePathPose(new Pose2d(1.85, 4.89, Rotation2d.fromDegrees(180.0)), new Pose2d(14.70, 4.89, Rotation2d.fromDegrees(0.0)), 0.15);
+    public static final PurplePathPose GRID_2 = new PurplePathPose(new Pose2d(1.85, 4.45, Rotation2d.fromDegrees(180.0)), new Pose2d(14.70, 4.45, Rotation2d.fromDegrees(0.0)), 0.15);
+    public static final PurplePathPose GRID_3 = new PurplePathPose(new Pose2d(1.85, 3.90, Rotation2d.fromDegrees(180.0)), new Pose2d(14.70, 3.90, Rotation2d.fromDegrees(0.0)), 0.15);
+    public static final PurplePathPose GRID_4 = new PurplePathPose(new Pose2d(1.85, 3.30, Rotation2d.fromDegrees(180.0)), new Pose2d(14.70, 3.30, Rotation2d.fromDegrees(0.0)), 0.15);
+    public static final PurplePathPose GRID_5 = new PurplePathPose(new Pose2d(1.85, 2.75, Rotation2d.fromDegrees(180.0)), new Pose2d(14.70, 2.75, Rotation2d.fromDegrees(0.0)), 0.15);
+    public static final PurplePathPose GRID_6 = new PurplePathPose(new Pose2d(1.85, 2.20, Rotation2d.fromDegrees(180.0)), new Pose2d(14.70, 2.20, Rotation2d.fromDegrees(0.0)), 0.15);
+    public static final PurplePathPose GRID_7 = new PurplePathPose(new Pose2d(1.85, 1.65, Rotation2d.fromDegrees(180.0)), new Pose2d(14.70, 1.65, Rotation2d.fromDegrees(0.0)), 0.15);
+    public static final PurplePathPose GRID_8 = new PurplePathPose(new Pose2d(1.85, 1.10, Rotation2d.fromDegrees(180.0)), new Pose2d(14.70, 1.10, Rotation2d.fromDegrees(0.0)), 0.15);
+    public static final PurplePathPose GRID_9 = new PurplePathPose(new Pose2d(1.85, 0.45, Rotation2d.fromDegrees(180.0)), new Pose2d(14.70, 0.45, Rotation2d.fromDegrees(0.0)), 0.15);
   }
 
   public static class HID {

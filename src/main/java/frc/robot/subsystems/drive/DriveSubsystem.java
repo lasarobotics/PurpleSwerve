@@ -25,7 +25,6 @@ import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.ReplanningConfig;
 
 import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
@@ -79,8 +78,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   public static final double DRIVE_TRACK_WIDTH = 0.6;
   public final double DRIVE_MAX_LINEAR_SPEED;
   public final double DRIVE_AUTO_ACCELERATION;
-  public final double DRIVE_ROTATE_VELOCITY = 9 * Math.PI;
-  public final double DRIVE_ROTATE_ACCELERATION = 3 * Math.PI;
+  public final double DRIVE_ROTATE_VELOCITY = 12 * Math.PI;
+  public final double DRIVE_ROTATE_ACCELERATION = 4 * Math.PI;
 
 
   private ThrottleMap m_throttleMap;
@@ -113,7 +112,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private boolean m_isTractionControlEnabled = true;
   private Pose2d m_previousPose;
   private Rotation2d m_currentHeading;
-  private PurplePath m_purplePath;
+  private PurplePathClient m_purplePathClient;
 
   public final Command ANTI_TIP_COMMAND = new FunctionalCommand(
     () -> m_ledStrip.set(Pattern.RED_STROBE),
@@ -159,8 +158,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     this.m_throttleMap = new ThrottleMap(throttleInputCurve, deadband, DRIVE_MAX_LINEAR_SPEED);
     this.m_turnPIDController = new TurnPIDController(turnInputCurve, pidf, turnScalar, deadband, lookAhead);
     this.m_pathFollowerConfig = new HolonomicPathFollowerConfig(
-      new com.pathplanner.lib.util.PIDConstants(5.0, 0.0, 0.0),
-      new com.pathplanner.lib.util.PIDConstants(45.0, 0.0, 0.0),
+      new com.pathplanner.lib.util.PIDConstants(5.0, 0.0, 0.01),
+      new com.pathplanner.lib.util.PIDConstants(45.0, 0.0, 0.01),
       DRIVE_MAX_LINEAR_SPEED,
       m_lFrontModule.getModuleCoordinate().getNorm(),
       new ReplanningConfig(),
@@ -218,8 +217,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     m_previousPose = new Pose2d();
     m_currentHeading = new Rotation2d();
 
-    // Initalise PurplePath
-    m_purplePath = new PurplePath(this::getPose, getPathConstraints());
+    // Initalise PurplePathClient
+    m_purplePathClient = new PurplePathClient(this::getPose, getPathConstraints());
   }
 
   /**
@@ -438,6 +437,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    */
   private void smartDashboard() {
     SmartDashboard.putBoolean("TC", m_isTractionControlEnabled);
+    SmartDashboard.putBoolean("PurplePath", m_purplePathClient.isConnected());
   }
 
 
@@ -591,10 +591,11 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @param index Index of goal pose
    * @return Command that will drive robot to the desired pose
    */
-  public Command goToPose(Pair<Pose2d,Double> pose) {
+  public Command goToPose(PurplePathPose goal) {
+    goal.calculateFinalApproach(getPathConstraints());
     return new SequentialCommandGroup(
       defer(() ->
-        m_purplePath.getTrajectoryCommand(pose.getFirst(), pose.getSecond())
+        m_purplePathClient.getTrajectoryCommand(goal)
         .finallyDo(() -> resetTurnPID())
       ),
       runOnce(() -> stop()),
