@@ -38,10 +38,9 @@ public class VisionCamera implements Runnable, AutoCloseable {
     this.m_camera = new PhotonCamera(name);
     this.m_transform = transform;
     var fieldLayout = AprilTagFields.k2023ChargedUp.loadAprilTagLayoutField();
-    // PV estimates will always be blue, they'll get flipped by robot thread
+    // PV estimates will always be blue
     fieldLayout.setOrigin(OriginPosition.kBlueAllianceWallRightSide);
-    this.m_poseEstimator = new PhotonPoseEstimator(
-        fieldLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, m_camera, m_transform);
+    this.m_poseEstimator = new PhotonPoseEstimator(fieldLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, m_camera, m_transform);
     m_poseEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
 
     this.m_inputs = new VisionCameraInputsAutoLogged();
