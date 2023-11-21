@@ -56,7 +56,6 @@ public class PurplePathClient {
    * Get trajectory command to go from start pose to goal pose
    * @param start Starting pose of robot
    * @param goal Desired pose of robot
-   * @param m_finalApproachDistance Distance of final approach path
    * @return Command that drives robot to desired pose
    */
   private Command getCommand(Pose2d start, PurplePathPose goal) {
@@ -135,7 +134,7 @@ public class PurplePathClient {
 
   /**
    * Get command to execute trajectory
-   * @param index Index of trajectory command to obtain
+   * @param goal Goal pose
    * @return Trajectory command
    */
   public Command getTrajectoryCommand(PurplePathPose goal) {
