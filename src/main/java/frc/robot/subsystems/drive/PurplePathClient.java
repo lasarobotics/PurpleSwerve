@@ -32,6 +32,9 @@ import edu.wpi.first.wpilibj2.command.Commands;
 
 /** PurplePath Client */
 public class PurplePathClient {
+  private final String GOAL_POSE_LOG_ENTRY = "/GoalPose";
+  private final String FINAL_APPROACH_POSE_LOG_ENTRY = "/FinalApproachPose";
+
   private final String URI;
 
   private Supplier<Pose2d> m_poseSupplier;
@@ -49,7 +52,7 @@ public class PurplePathClient {
     else URI = "http://purplebox.local:5000/";
 
     // Initialize connection
-    getCommand(new Pose2d(), new PurplePathPose(new Pose2d(), 0));
+    getCommand(new Pose2d(), new PurplePathPose(new Pose2d(), 0.0));
   }
 
   /**
@@ -121,8 +124,8 @@ public class PurplePathClient {
       )
     );
 
-    Logger.recordOutput("PurplePath/GoalPose", goalPose);
-    Logger.recordOutput("PurplePath/FinalApproachPose", finalApproachPose);
+    Logger.recordOutput(getClass().getSimpleName() + GOAL_POSE_LOG_ENTRY, goalPose);
+    Logger.recordOutput(getClass().getSimpleName() + FINAL_APPROACH_POSE_LOG_ENTRY, finalApproachPose);
 
     // Return path following command
     return isClose ? AutoBuilder.followPathWithEvents(path)

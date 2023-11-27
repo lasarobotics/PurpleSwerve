@@ -17,7 +17,6 @@ import com.pathplanner.lib.path.PathPoint;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 
 public class AutoTrajectory {
   DriveSubsystem m_driveSubsystem;
@@ -85,7 +84,7 @@ public class AutoTrajectory {
    * Get Ramsete command to run
    * @return Ramsete command that will stop when complete
    */
-  public SequentialCommandGroup getCommandAndStop() {
+  public Command getCommandAndStop() {
     return AutoBuilder.followPathWithEvents(m_path)
            .andThen(() -> {
               m_driveSubsystem.resetTurnPID();
@@ -99,7 +98,7 @@ public class AutoTrajectory {
    * @param isFirstPath true if path is the first one in autonomous
    * @return Ramsete command that will stop when complete
    */
-  public SequentialCommandGroup getCommandAndStop(boolean isFirstPath) {
+  public Command getCommandAndStop(boolean isFirstPath) {
     if (isFirstPath) {
       return Commands.runOnce(() -> resetOdometry())
               .andThen(AutoBuilder.followPathWithEvents(m_path))
