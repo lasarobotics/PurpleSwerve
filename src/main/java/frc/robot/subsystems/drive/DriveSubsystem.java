@@ -161,7 +161,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
       new com.pathplanner.lib.util.PIDConstants(5.0, 0.0, -0.1),
       DRIVE_MAX_LINEAR_SPEED,
       m_lFrontModule.getModuleCoordinate().getNorm(),
-      new ReplanningConfig(),
+      new ReplanningConfig(true, true),
       GlobalConstants.ROBOT_LOOP_PERIOD
     );
 
@@ -218,6 +218,9 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
     // Initalise PurplePathClient
     m_purplePathClient = new PurplePathClient(this::getPose, getPathConstraints());
+
+    // Set VisionSubsystem pose supplier for simulation
+    VisionSubsystem.getInstance().setPoseSupplier(this::getPose);
   }
 
   /**
@@ -409,9 +412,6 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     // Update current heading
     m_currentHeading = new Rotation2d(getPose().getX() - m_previousPose.getX(), getPose().getY() - m_previousPose.getY());
 
-    // Skip vision pose estimation if running in simulation
-    if (RobotBase.isSimulation()) return;
-
     // Get estimated poses from VisionSubsystem
     var visionEstimatedRobotPoses = VisionSubsystem.getInstance().getEstimatedGlobalPoses();
 
@@ -448,6 +448,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     m_rFrontModule.periodic();
     m_lRearModule.periodic();
     m_rRearModule.periodic();
+
+    m_purplePathClient.periodic();
 
     if (RobotBase.isSimulation()) return;
     updatePose();
