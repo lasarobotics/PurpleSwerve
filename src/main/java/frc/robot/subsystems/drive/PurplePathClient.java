@@ -65,7 +65,7 @@ public class PurplePathClient {
     Pose2d goalPose = goal.getGoalPose();
     Pose2d finalApproachPose = goal.getFinalApproachPose();
     PathPlannerPath finalApproachPath = goal.getFinalApproachPath();
-    double finalApproachDistance = goal.getM_finalApproachDistance();
+    double finalApproachDistance = goal.getFinalApproachDistance();
 
     if (goalPose == null || finalApproachPose == null || finalApproachPath == null) return Commands.none();
 

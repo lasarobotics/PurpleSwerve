@@ -91,7 +91,7 @@ public class PurplePathPose {
    * Get final approach distance
    * @return Final approach distance
    */
-  public double getM_finalApproachDistance() {
+  public double getFinalApproachDistance() {
     return m_finalApproachDistance;
   }
 
