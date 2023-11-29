@@ -50,9 +50,31 @@ public class PurplePathClient {
     // Set URI
     if (RobotBase.isSimulation()) URI = "http://localhost:5000/";
     else URI = "http://purplebox.local:5000/";
+  }
 
-    // Initialize connection
-    getCommand(new Pose2d(), new PurplePathPose(new Pose2d(), 0.0));
+  private String sendRequest(String jsonRequest) throws IOException {
+     String jsonResponse = "";
+    // Define the server endpoint to send the HTTP request to
+    m_serverConnection = (HttpURLConnection)new URL(URI).openConnection();
+
+    // Indicate that we want to write to the HTTP request body
+    m_serverConnection.setDoOutput(true);
+    m_serverConnection.setRequestMethod("POST");
+    m_serverConnection.setRequestProperty("Content-Type", "application/json");
+
+    // Writing the post data to the HTTP request body
+    BufferedWriter httpRequestBodyWriter = new BufferedWriter(new OutputStreamWriter(m_serverConnection.getOutputStream()));
+    httpRequestBodyWriter.write(jsonRequest);
+    httpRequestBodyWriter.close();
+
+    // Reading from the HTTP response body
+    Scanner httpResponseScanner = new Scanner(m_serverConnection.getInputStream());
+    while (httpResponseScanner.hasNextLine()) jsonResponse += httpResponseScanner.nextLine();
+    m_isConnected = m_serverConnection.getResponseCode() == 200;
+    httpResponseScanner.close();
+
+    // Return response
+    return jsonResponse;
   }
 
   /**
@@ -79,24 +101,7 @@ public class PurplePathClient {
     // Send pathfinding request and get response
     String jsonResponse = "";
     try {
-      // Define the server endpoint to send the HTTP request to
-      m_serverConnection = (HttpURLConnection)new URL(URI).openConnection();
-
-      // Indicate that we want to write to the HTTP request body
-      m_serverConnection.setDoOutput(true);
-      m_serverConnection.setRequestMethod("POST");
-      m_serverConnection.setRequestProperty("Content-Type", "application/json");
-
-      // Writing the post data to the HTTP request body
-      BufferedWriter httpRequestBodyWriter = new BufferedWriter(new OutputStreamWriter(m_serverConnection.getOutputStream()));
-      httpRequestBodyWriter.write(jsonRequest);
-      httpRequestBodyWriter.close();
-
-      // Reading from the HTTP response body
-      Scanner httpResponseScanner = new Scanner(m_serverConnection.getInputStream());
-      while (httpResponseScanner.hasNextLine()) jsonResponse += httpResponseScanner.nextLine();
-      m_isConnected = m_serverConnection.getResponseCode() == 200;
-      httpResponseScanner.close();
+      jsonResponse = sendRequest(jsonRequest);
     } catch (IOException e) {
       System.out.println(e.getMessage());
       m_isConnected = false;
@@ -133,6 +138,19 @@ public class PurplePathClient {
                       AutoBuilder.followPathWithEvents(path),
                       AutoBuilder.followPathWithEvents(finalApproachPath)
                     );
+  }
+
+  /**
+   * Call this method periodically
+   */
+  public void periodic() {
+    if (m_isConnected) return;
+
+    try { sendRequest(JSONObject.writePointList(Arrays.asList(new Translation2d(), new Translation2d()))); }
+    catch (IOException e) {
+      System.out.println(e.getMessage());
+      m_isConnected = false;
+    }
   }
 
   /**
