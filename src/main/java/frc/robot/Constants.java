@@ -20,6 +20,7 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import frc.robot.subsystems.drive.PurplePathPose;
+import frc.robot.subsystems.vision.VisionCamera.Resolution;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide
@@ -75,7 +76,7 @@ public final class Constants {
     public static final PolynomialSplineFunction DRIVE_THROTTLE_INPUT_CURVE = SPLINE_INTERPOLATOR.interpolate(DRIVE_THROTTLE_INPUT_CURVE_X, DRIVE_THROTTLE_INPUT_CURVE_Y);
     public static final PolynomialSplineFunction DRIVE_TURN_INPUT_CURVE = SPLINE_INTERPOLATOR.interpolate(DRIVE_TURN_INPUT_CURVE_X, DRIVE_TURN_INPUT_CURVE_Y);
 
-    public static final MAXSwerveModule.GearRatio GEAR_RATIO = MAXSwerveModule.GearRatio.Low;
+    public static final MAXSwerveModule.GearRatio GEAR_RATIO = MAXSwerveModule.GearRatio.L3;
   }
 
   public static class DriveHardware {
@@ -92,11 +93,29 @@ public final class Constants {
   }
 
   public static class VisionHardware {
-    public static final String CAMERA_0_NAME = "camera0";
-    public static final Transform3d CAMERA_0_LOCATION = new Transform3d(
-      new Translation3d(0.0, 0.0, 0.0),
+    public static final String CAMERA_A_NAME = "cameraA";
+    public static final Transform3d CAMERA_A_LOCATION = new Transform3d(
+      new Translation3d(0.0, 0.0, 0.5),
       new Rotation3d(0.0, 0.0, 0.0)
     );
+    public static final Resolution CAMERA_A_RESOLUTION = Resolution.RES_1280_720;
+    public static final Rotation2d CAMERA_A_FOV = Rotation2d.fromDegrees(79.7);
+
+    public static final String CAMERA_B_NAME = "cameraB";
+    public static final Transform3d CAMERA_B_LOCATION = new Transform3d(
+      new Translation3d(0.0, 0.0, 0.5),
+      new Rotation3d(0.0, 0.0, Math.toRadians(+120.0))
+    );
+    public static final Resolution CAMERA_B_RESOLUTION = Resolution.RES_1280_720;
+    public static final Rotation2d CAMERA_B_FOV = Rotation2d.fromDegrees(79.7);
+
+    public static final String CAMERA_C_NAME = "cameraC";
+    public static final Transform3d CAMERA_C_LOCATION = new Transform3d(
+      new Translation3d(0.0, 0.0, 0.5),
+      new Rotation3d(0.0, 0.0, Math.toRadians(-120.0))
+    );
+    public static final Resolution CAMERA_C_RESOLUTION = Resolution.RES_1280_720;
+    public static final Rotation2d CAMERA_C_FOV = Rotation2d.fromDegrees(79.7);
   }
 
   public static class SmartDashboard {
