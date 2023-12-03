@@ -28,6 +28,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 
 /** PurplePath Client */
@@ -83,7 +84,7 @@ public class PurplePathClient {
    * @param goal Desired pose of robot
    * @return Command that drives robot to desired pose
    */
-  private Command getCommand(Pose2d start, PurplePathPose goal) {
+  private Command getCommand(Pose2d start, PurplePathPose goal, Command parallelCommand) {
     Pose2d goalPose = goal.getGoalPose();
     Pose2d finalApproachPose = goal.getFinalApproachPose();
     PathPlannerPath finalApproachPath = goal.getFinalApproachPath();
@@ -124,7 +125,7 @@ public class PurplePathClient {
       waypoints,
       m_pathConstraints,
       new GoalEndState(
-        isClose ? 0.0 : Math.sqrt(2 * m_pathConstraints.getMaxAccelerationMpsSq() * finalApproachDistance) * 0.66,
+        isClose ? 0.0 : Math.sqrt(2 * m_pathConstraints.getMaxAccelerationMpsSq() * finalApproachDistance) * 0.6,
         finalApproachPose.getRotation()
       )
     );
@@ -133,10 +134,11 @@ public class PurplePathClient {
     Logger.recordOutput(getClass().getSimpleName() + FINAL_APPROACH_POSE_LOG_ENTRY, finalApproachPose);
 
     // Return path following command
-    return isClose ? AutoBuilder.followPathWithEvents(path)
+    CommandScheduler.getInstance().removeComposedCommand(parallelCommand);
+    return isClose ? AutoBuilder.followPathWithEvents(path).alongWith(parallelCommand)
                    : Commands.sequence(
                       AutoBuilder.followPathWithEvents(path),
-                      AutoBuilder.followPathWithEvents(finalApproachPath)
+                      AutoBuilder.followPathWithEvents(finalApproachPath).alongWith(parallelCommand)
                     );
   }
 
@@ -156,10 +158,20 @@ public class PurplePathClient {
   /**
    * Get command to execute trajectory
    * @param goal Goal pose
+   * @param parallelCommand Command to run in parallel on final approach
+   * @return Trajectory command
+   */
+  public Command getTrajectoryCommand(PurplePathPose goal, Command parallelCommand) {
+    return getCommand(m_poseSupplier.get(), goal, parallelCommand);
+  }
+
+  /**
+   * Get command to execute trajectory
+   * @param goal Goal pose
    * @return Trajectory command
    */
   public Command getTrajectoryCommand(PurplePathPose goal) {
-    return getCommand(m_poseSupplier.get(), goal);
+    return getTrajectoryCommand(goal, Commands.none());
   }
 
   /**

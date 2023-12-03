@@ -439,7 +439,6 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     SmartDashboard.putBoolean("PurplePath", m_purplePathClient.isConnected());
   }
 
-
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
@@ -589,19 +588,30 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
   /**
    * Go to goal pose
-   * @param index Index of goal pose
+   * @param goal Desired goal pose
+   * @param parallelCommand Command to run in parallel on final approach
+   * @param endCommand Command to run after goal is reached
    * @return Command that will drive robot to the desired pose
    */
-  public Command goToPose(PurplePathPose goal) {
+  public Command goToPose(PurplePathPose goal, Command parallelCommand, Command endCommand) {
     goal.calculateFinalApproach(getPathConstraints());
     return Commands.sequence(
       defer(() ->
-        m_purplePathClient.getTrajectoryCommand(goal)
+        m_purplePathClient.getTrajectoryCommand(goal, parallelCommand)
         .finallyDo(() -> resetTurnPID())
       ),
       runOnce(() -> stop()),
-      Commands.idle(this)
+      Commands.parallel(Commands.idle(this), endCommand)
     );
+  }
+
+  /**
+   * Go to goal pose
+   * @param goal Desired goal pose
+   * @return Command that will drive robot to the desired pose
+   */
+  public Command goToPose(PurplePathPose goal) {
+    return goToPose(goal, Commands.none(), Commands.none());
   }
 
   /**
@@ -788,7 +798,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @return Current heading of the robot as a Rotation2d.
    */
   public Rotation2d getRotation2d() {
-    return Rotation2d.fromDegrees(-m_navx.getInputs().yawAngle);
+    return m_navx.getInputs().rotation2d;
   }
 
   @Override

@@ -17,7 +17,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
-/** PurplePath Goal */
+/** PurplePath Pose */
 public class PurplePathPose {
   Pose2d m_bluePose, m_redPose;
   Pose2d m_blueFinalApproachPose, m_redFinalApproachPose;
@@ -40,12 +40,12 @@ public class PurplePathPose {
 
     Rotation2d finalApproachDirectionOffset = isReversed ? Rotation2d.fromRadians(0.0) : Rotation2d.fromRadians(Math.PI);
 
-    m_blueFinalApproachPose = new Pose2d(
+    this.m_blueFinalApproachPose = new Pose2d(
       bluePose.getTranslation()
         .plus(new Translation2d(finalApproachDistance, m_bluePose.getRotation().plus(finalApproachDirectionOffset))),
       bluePose.getRotation()
     );
-    m_redFinalApproachPose = new Pose2d(
+    this.m_redFinalApproachPose = new Pose2d(
       redPose.getTranslation()
         .plus(new Translation2d(finalApproachDistance, m_redPose.getRotation().plus(finalApproachDirectionOffset))),
       redPose.getRotation()
