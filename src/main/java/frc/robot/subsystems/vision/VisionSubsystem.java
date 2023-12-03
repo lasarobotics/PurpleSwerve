@@ -19,6 +19,7 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj.Notifier;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -62,9 +63,11 @@ public class VisionSubsystem extends SubsystemBase implements AutoCloseable {
     m_sim.addAprilTags(m_fieldLayout);
 
     // Setup camera pose estimation threads
-    this.m_cameraNotifier = new Notifier(() -> {
-      for (var camera : m_cameras) camera.run();
-    });
+    this.m_cameraNotifier = (RobotBase.isReal()) ? new Notifier(() -> { for (var camera : m_cameras) camera.run(); })
+                                                 : new Notifier(() -> {
+                                                     if (m_poseSupplier != null) m_sim.update(m_poseSupplier.get());
+                                                     for (var camera : m_cameras) camera.run();
+                                                   });
 
     // Set all cameras to primary pipeline
     for (var camera : m_cameras) camera.setPipelineIndex(0);
@@ -123,7 +126,6 @@ public class VisionSubsystem extends SubsystemBase implements AutoCloseable {
   @Override
   public void simulationPeriodic() {
     // This method will be called once per scheduler run in simulation
-    m_sim.update(m_poseSupplier.get());
   }
 
   /**
