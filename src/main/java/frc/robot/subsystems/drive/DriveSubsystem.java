@@ -72,7 +72,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     }
   }
 
-  // Drive specsS
+  // Drive specs
   public static final double DRIVE_WHEELBASE = 0.6;
   public static final double DRIVE_TRACK_WIDTH = 0.6;
   public final double DRIVE_MAX_LINEAR_SPEED;
@@ -103,8 +103,9 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private final Matrix<N3, N1> VISION_STDDEV = VecBuilder.fill(0.5, 0.5, Math.toRadians(40));
   private final TrapezoidProfile.Constraints AIM_PID_CONSTRAINT = new TrapezoidProfile.Constraints(2160.0, 2160.0);
 
-  private final String POSE_LOG_ENTRY = "Pose";
-  private final String SWERVE_STATE_LOG_ENTRY = "Swerve";
+  private final String POSE_LOG_ENTRY = "/Pose";
+  private final String ACTUAL_SWERVE_STATE_LOG_ENTRY = "/ActualSwerveState";
+  private final String DESIRED_SWERVE_STATE_LOG_ENTRY = "/DesiredSwerveState";
 
   private ControlCentricity m_controlCentricity;
   private ChassisSpeeds m_desiredChassisSpeeds;
@@ -294,6 +295,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     m_rFrontModule.set(moduleStates);
     m_lRearModule.set(moduleStates);
     m_rRearModule.set(moduleStates);
+    Logger.recordOutput(getName() + DESIRED_SWERVE_STATE_LOG_ENTRY, moduleStates);
   }
 
   /**
@@ -307,6 +309,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     m_rFrontModule.set(moduleStates, inertialVelocity, rotateRate);
     m_lRearModule.set(moduleStates, inertialVelocity, rotateRate);
     m_rRearModule.set(moduleStates, inertialVelocity, rotateRate);
+    Logger.recordOutput(getName() + DESIRED_SWERVE_STATE_LOG_ENTRY, moduleStates);
   }
 
   /**
@@ -427,8 +430,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * Log DriveSubsystem outputs
    */
   private void logOutputs() {
-    Logger.recordOutput(String.join("/", getName(), POSE_LOG_ENTRY), getPose());
-    Logger.recordOutput(String.join("/", getName(), SWERVE_STATE_LOG_ENTRY), getModuleStates());
+    Logger.recordOutput(getName() + POSE_LOG_ENTRY, getPose());
+    Logger.recordOutput(getName() + ACTUAL_SWERVE_STATE_LOG_ENTRY, getModuleStates());
   }
 
   /**
