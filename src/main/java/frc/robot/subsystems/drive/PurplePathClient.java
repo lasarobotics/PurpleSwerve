@@ -53,6 +53,12 @@ public class PurplePathClient {
     else URI = "http://purplebox.local:5000/";
   }
 
+  /**
+   * Send JSON request to PurplePath server
+   * @param jsonRequest JSON array string of start and goal point
+   * @return PurplePath server response
+   * @throws IOException
+   */
   private String sendRequest(String jsonRequest) throws IOException {
      String jsonResponse = "";
     // Define the server endpoint to send the HTTP request to

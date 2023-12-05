@@ -157,7 +157,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     this.m_throttleMap = new ThrottleMap(throttleInputCurve, deadband, DRIVE_MAX_LINEAR_SPEED);
     this.m_turnPIDController = new TurnPIDController(turnInputCurve, pidf, turnScalar, deadband, lookAhead);
     this.m_pathFollowerConfig = new HolonomicPathFollowerConfig(
-      new com.pathplanner.lib.util.PIDConstants(5.0, 0.0, 0.5),
+      new com.pathplanner.lib.util.PIDConstants(5.0, 0.0, -0.5),
       new com.pathplanner.lib.util.PIDConstants(5.0, 0.0, -0.1),
       DRIVE_MAX_LINEAR_SPEED,
       m_lFrontModule.getModuleCoordinate().getNorm(),
