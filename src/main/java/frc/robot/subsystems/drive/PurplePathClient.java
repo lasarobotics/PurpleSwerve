@@ -42,11 +42,13 @@ public class PurplePathClient {
   private PathConstraints m_pathConstraints;
   private HttpURLConnection m_serverConnection;
   private boolean m_isConnected;
+  private boolean m_connectivityCheckEnabled;
 
   public PurplePathClient(Supplier<Pose2d> poseSupplier, PathConstraints pathConstraints) {
     this.m_poseSupplier = poseSupplier;
     this.m_pathConstraints = pathConstraints;
     this.m_isConnected = false;
+    this.m_connectivityCheckEnabled = true;
 
     // Set URI
     if (RobotBase.isSimulation()) URI = "http://localhost:5000/";
@@ -60,7 +62,8 @@ public class PurplePathClient {
    * @throws IOException
    */
   private String sendRequest(String jsonRequest) throws IOException {
-     String jsonResponse = "";
+    String jsonResponse = "";
+
     // Define the server endpoint to send the HTTP request to
     m_serverConnection = (HttpURLConnection)new URL(URI).openConnection();
 
@@ -152,6 +155,7 @@ public class PurplePathClient {
    * Call this method periodically
    */
   public void periodic() {
+    if (!m_connectivityCheckEnabled) return;
     if (m_isConnected) return;
 
     try { sendRequest(JSONObject.writePointList(Arrays.asList(new Translation2d(), new Translation2d()))); }
@@ -186,5 +190,19 @@ public class PurplePathClient {
    */
   public boolean isConnected() {
     return m_isConnected;
+  }
+
+  /**
+   * Enable connectivity check
+   */
+  public void enableConnectivityCheck() {
+    m_connectivityCheckEnabled = true;
+  }
+
+  /**
+   * Disable connectivity check
+   */
+  public void disableConnectivityCheck() {
+    m_connectivityCheckEnabled = false;
   }
 }
