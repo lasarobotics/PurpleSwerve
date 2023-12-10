@@ -41,8 +41,8 @@ public final class Constants {
 
     public static final Translation2d CENTER = new Translation2d(FIELD_LENGTH / 2, FIELD_WIDTH / 2);
 
-    public static final PurplePathPose SUBSTATION = new PurplePathPose(new Pose2d(15.72, 6.20, Rotation2d.fromDegrees(0.0)), new Pose2d(0.85, 6.20, Rotation2d.fromDegrees(180.0)), 2.0);
-    public static final PurplePathPose GRID_1 = new PurplePathPose(new Pose2d(1.85, 4.89, Rotation2d.fromDegrees(180.0)), new Pose2d(14.70, 4.89, Rotation2d.fromDegrees(0.0)), 0.15);
+    public static final PurplePathPose SUBSTATION = new PurplePathPose(new Pose2d(15.72, 6.15, Rotation2d.fromDegrees(0.0)), new Pose2d(0.85, 6.15, Rotation2d.fromDegrees(180.0)), 2.0);
+    public static final PurplePathPose GRID_1 = new PurplePathPose(new Pose2d(1.85, 4.93, Rotation2d.fromDegrees(180.0)), new Pose2d(14.70, 4.93, Rotation2d.fromDegrees(0.0)), 0.15);
     public static final PurplePathPose GRID_2 = new PurplePathPose(new Pose2d(1.85, 4.45, Rotation2d.fromDegrees(180.0)), new Pose2d(14.70, 4.45, Rotation2d.fromDegrees(0.0)), 0.15);
     public static final PurplePathPose GRID_3 = new PurplePathPose(new Pose2d(1.85, 3.90, Rotation2d.fromDegrees(180.0)), new Pose2d(14.70, 3.90, Rotation2d.fromDegrees(0.0)), 0.15);
     public static final PurplePathPose GRID_4 = new PurplePathPose(new Pose2d(1.85, 3.30, Rotation2d.fromDegrees(180.0)), new Pose2d(14.70, 3.30, Rotation2d.fromDegrees(0.0)), 0.15);
@@ -50,7 +50,7 @@ public final class Constants {
     public static final PurplePathPose GRID_6 = new PurplePathPose(new Pose2d(1.85, 2.20, Rotation2d.fromDegrees(180.0)), new Pose2d(14.70, 2.20, Rotation2d.fromDegrees(0.0)), 0.15);
     public static final PurplePathPose GRID_7 = new PurplePathPose(new Pose2d(1.85, 1.65, Rotation2d.fromDegrees(180.0)), new Pose2d(14.70, 1.65, Rotation2d.fromDegrees(0.0)), 0.15);
     public static final PurplePathPose GRID_8 = new PurplePathPose(new Pose2d(1.85, 1.10, Rotation2d.fromDegrees(180.0)), new Pose2d(14.70, 1.10, Rotation2d.fromDegrees(0.0)), 0.15);
-    public static final PurplePathPose GRID_9 = new PurplePathPose(new Pose2d(1.85, 0.45, Rotation2d.fromDegrees(180.0)), new Pose2d(14.70, 0.45, Rotation2d.fromDegrees(0.0)), 0.15);
+    public static final PurplePathPose GRID_9 = new PurplePathPose(new Pose2d(1.85, 0.52, Rotation2d.fromDegrees(180.0)), new Pose2d(14.70, 0.52, Rotation2d.fromDegrees(0.0)), 0.15);
   }
 
   public static class HID {
