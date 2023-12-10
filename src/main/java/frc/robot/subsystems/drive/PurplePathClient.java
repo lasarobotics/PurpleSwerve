@@ -134,7 +134,7 @@ public class PurplePathClient {
       waypoints,
       m_pathConstraints,
       new GoalEndState(
-        isClose ? 0.0 : Math.sqrt(2 * m_pathConstraints.getMaxAccelerationMpsSq() * finalApproachDistance) * 0.6,
+        isClose ? 0.0 : Math.sqrt(2 * m_pathConstraints.getMaxAccelerationMpsSq() * finalApproachDistance) * 0.5,
         finalApproachPose.getRotation()
       )
     );

@@ -11,6 +11,7 @@ import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.PathPoint;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -19,10 +20,13 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
 /** PurplePath Pose */
 public class PurplePathPose {
-  Pose2d m_bluePose, m_redPose;
-  Pose2d m_blueFinalApproachPose, m_redFinalApproachPose;
-  PathPlannerPath m_blueFinalApproachPath, m_redFinalApproachPath;
-  double m_finalApproachDistance;
+  private final double MIN_FINAL_APPROACH_DISTANCE = 0.15;
+  private final double MAX_FINAL_APPROACH_DISTANCE = 1.00;
+
+  private Pose2d m_bluePose, m_redPose;
+  private Pose2d m_blueFinalApproachPose, m_redFinalApproachPose;
+  private PathPlannerPath m_blueFinalApproachPath, m_redFinalApproachPath;
+  private double m_finalApproachDistance;
 
   /**
    * Create alliance specific goal for PurplePath
@@ -30,24 +34,28 @@ public class PurplePathPose {
    * MUST call {@link PurplePathPose#calculateFinalApproach(PathConstraints)} before using
    * @param bluePose Pose if blue alliance
    * @param redPose Pose if red alliance
-   * @param finalApproachDistance Distance of final approach
+   * @param finalApproachDistance Distance of final approach in meters [0.15, 1.00]
    * @param isReversed True if robot's rear is facing object
    */
   public PurplePathPose(Pose2d bluePose, Pose2d redPose, double finalApproachDistance, boolean isReversed) {
     this.m_bluePose = bluePose;
     this.m_redPose = redPose;
-    this.m_finalApproachDistance = finalApproachDistance;
+    this.m_finalApproachDistance = MathUtil.clamp(
+      finalApproachDistance,
+      MIN_FINAL_APPROACH_DISTANCE,
+      MAX_FINAL_APPROACH_DISTANCE
+    );
 
     Rotation2d finalApproachDirectionOffset = isReversed ? Rotation2d.fromRadians(0.0) : Rotation2d.fromRadians(Math.PI);
 
     this.m_blueFinalApproachPose = new Pose2d(
       bluePose.getTranslation()
-        .plus(new Translation2d(finalApproachDistance, m_bluePose.getRotation().plus(finalApproachDirectionOffset))),
+        .plus(new Translation2d(m_finalApproachDistance, m_bluePose.getRotation().plus(finalApproachDirectionOffset))),
       bluePose.getRotation()
     );
     this.m_redFinalApproachPose = new Pose2d(
       redPose.getTranslation()
-        .plus(new Translation2d(finalApproachDistance, m_redPose.getRotation().plus(finalApproachDirectionOffset))),
+        .plus(new Translation2d(m_finalApproachDistance, m_redPose.getRotation().plus(finalApproachDirectionOffset))),
       redPose.getRotation()
     );
   }
@@ -58,7 +66,7 @@ public class PurplePathPose {
    * MUST call {@link PurplePathPose#calculateFinalApproach(PathConstraints)} before using
    * @param bluePose Pose if blue alliance
    * @param redPose Pose if red alliance
-   * @param finalApproachDistance Distance of final approach
+   * @param finalApproachDistance Distance of final approach in meters [0.15, 1.00]
    */
   public PurplePathPose(Pose2d bluePose, Pose2d redPose, double finalApproachDistance) {
     this(bluePose, redPose, finalApproachDistance, false);
