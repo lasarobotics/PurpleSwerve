@@ -11,7 +11,7 @@ import org.lasarobotics.drive.AdvancedSwerveKinematics.ControlCentricity;
 import org.lasarobotics.drive.MAXSwerveModule;
 import org.lasarobotics.drive.ThrottleMap;
 import org.lasarobotics.drive.TurnPIDController;
-import org.lasarobotics.hardware.NavX2;
+import org.lasarobotics.hardware.kauailabs.NavX2;
 import org.lasarobotics.led.LEDStrip;
 import org.lasarobotics.led.LEDStrip.Pattern;
 import org.lasarobotics.led.LEDSubsystem;
@@ -79,6 +79,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   public final double DRIVE_AUTO_ACCELERATION;
   public final double DRIVE_ROTATE_VELOCITY = 12 * Math.PI;
   public final double DRIVE_ROTATE_ACCELERATION = 4 * Math.PI;
+  public static final double AUTO_LOCK_TIME = 3.0;
 
 
   private ThrottleMap m_throttleMap;
@@ -219,9 +220,12 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
     // Initalise PurplePathClient
     m_purplePathClient = new PurplePathClient(this::getPose, getPathConstraints());
+    m_purplePathClient.disableConnectivityCheck();
 
     // Set VisionSubsystem pose supplier for simulation
     VisionSubsystem.getInstance().setPoseSupplier(this::getPose);
+
+    disableTractionControl();
   }
 
   /**
@@ -240,7 +244,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
       Constants.Drive.GEAR_RATIO,
       Constants.Drive.DRIVE_SLIP_RATIO,
       DRIVE_WHEELBASE,
-      DRIVE_TRACK_WIDTH
+      DRIVE_TRACK_WIDTH,
+      AUTO_LOCK_TIME
     );
 
     MAXSwerveModule rFrontModule = new MAXSwerveModule(
@@ -252,7 +257,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
       Constants.Drive.GEAR_RATIO,
       Constants.Drive.DRIVE_SLIP_RATIO,
       DRIVE_WHEELBASE,
-      DRIVE_TRACK_WIDTH
+      DRIVE_TRACK_WIDTH,
+      AUTO_LOCK_TIME
     );
 
     MAXSwerveModule lRearModule = new MAXSwerveModule(
@@ -264,7 +270,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
       Constants.Drive.GEAR_RATIO,
       Constants.Drive.DRIVE_SLIP_RATIO,
       DRIVE_WHEELBASE,
-      DRIVE_TRACK_WIDTH
+      DRIVE_TRACK_WIDTH,
+      AUTO_LOCK_TIME
     );
 
     MAXSwerveModule rRearModule = new MAXSwerveModule(
@@ -276,7 +283,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
       Constants.Drive.GEAR_RATIO,
       Constants.Drive.DRIVE_SLIP_RATIO,
       DRIVE_WHEELBASE,
-      DRIVE_TRACK_WIDTH
+      DRIVE_TRACK_WIDTH,
+      AUTO_LOCK_TIME
     );
 
     LEDStrip ledStrip = new LEDStrip(LEDStrip.initializeHardware(Constants.DriveHardware.LED_STRIP_ID));

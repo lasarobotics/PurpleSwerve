@@ -23,6 +23,7 @@ import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.PathPoint;
+import com.pathplanner.lib.path.RotationTarget;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -127,7 +128,7 @@ public class PurplePathClient {
     // Convert to PathPoint list
     List<PathPoint> waypoints = new ArrayList<>();
     for (var point : points)
-      waypoints.add(new PathPoint(point, goalPose.getRotation()));
+      waypoints.add(new PathPoint(point, new RotationTarget(0.0, goalPose.getRotation())));
 
     // Generate path
     PathPlannerPath path = PathPlannerPath.fromPathPoints(

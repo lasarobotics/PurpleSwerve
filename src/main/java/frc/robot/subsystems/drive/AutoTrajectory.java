@@ -52,7 +52,7 @@ public class AutoTrajectory {
     m_path = PathPlannerPath.fromPathPoints(
       waypoints,
       pathConstraints,
-      new GoalEndState(0.0, waypoints.get(waypoints.size() - 1).holonomicRotation)
+      new GoalEndState(0.0, waypoints.get(waypoints.size() - 1).rotationTarget.getTarget())
     );
   }
 
@@ -77,7 +77,7 @@ public class AutoTrajectory {
    */
   public Pose2d getInitalPose() {
     if (m_path == null) return new Pose2d();
-    return new Pose2d(m_path.getPoint(0).position, m_path.getPoint(0).holonomicRotation);
+    return new Pose2d(m_path.getPoint(0).position, m_path.getPoint(0).rotationTarget.getTarget());
   }
 
   /**

@@ -10,6 +10,7 @@ import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.PathPoint;
+import com.pathplanner.lib.path.RotationTarget;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -110,8 +111,14 @@ public class PurplePathPose {
   public void calculateFinalApproach(PathConstraints pathConstraints) {
     m_blueFinalApproachPath = PathPlannerPath.fromPathPoints(
       Arrays.asList(
-        new PathPoint(m_blueFinalApproachPose.getTranslation(), m_blueFinalApproachPose.getRotation()),
-        new PathPoint(m_bluePose.getTranslation(), m_bluePose.getRotation())
+        new PathPoint(
+          m_blueFinalApproachPose.getTranslation(),
+          new RotationTarget(0.0, m_blueFinalApproachPose.getRotation())
+        ),
+        new PathPoint(
+          m_bluePose.getTranslation(),
+          new RotationTarget(0.0, m_bluePose.getRotation())
+        )
       ),
       pathConstraints,
       new GoalEndState(0.0, m_blueFinalApproachPose.getRotation())
@@ -119,8 +126,14 @@ public class PurplePathPose {
 
     m_redFinalApproachPath = PathPlannerPath.fromPathPoints(
       Arrays.asList(
-        new PathPoint(m_redFinalApproachPose.getTranslation(), m_redFinalApproachPose.getRotation()),
-        new PathPoint(m_redPose.getTranslation(), m_redPose.getRotation())
+        new PathPoint(
+          m_redFinalApproachPose.getTranslation(),
+          new RotationTarget(0.0, m_redFinalApproachPose.getRotation())
+        ),
+        new PathPoint(
+          m_redPose.getTranslation(),
+          new RotationTarget(0.0, m_redPose.getRotation())
+        )
       ),
       pathConstraints,
       new GoalEndState(0.0, m_redFinalApproachPose.getRotation())

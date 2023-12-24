@@ -8,8 +8,8 @@ import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 import org.lasarobotics.drive.AdvancedSwerveKinematics.ControlCentricity;
 import org.lasarobotics.drive.MAXSwerveModule;
-import org.lasarobotics.hardware.NavX2;
-import org.lasarobotics.hardware.SparkMax;
+import org.lasarobotics.hardware.kauailabs.NavX2;
+import org.lasarobotics.hardware.revrobotics.SparkMax;
 import org.lasarobotics.led.LEDStrip;
 import org.lasarobotics.utils.PIDConstants;
 

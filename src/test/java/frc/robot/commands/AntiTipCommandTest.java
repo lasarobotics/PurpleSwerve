@@ -19,10 +19,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.lasarobotics.drive.MAXSwerveModule;
 import org.lasarobotics.drive.MAXSwerveModule.ModuleLocation;
-import org.lasarobotics.hardware.NavX2;
-import org.lasarobotics.hardware.NavX2InputsAutoLogged;
-import org.lasarobotics.hardware.SparkMax;
-import org.lasarobotics.hardware.SparkMaxInputsAutoLogged;
+import org.lasarobotics.hardware.kauailabs.NavX2;
+import org.lasarobotics.hardware.kauailabs.NavX2InputsAutoLogged;
+import org.lasarobotics.hardware.revrobotics.SparkMax;
+import org.lasarobotics.hardware.revrobotics.SparkMaxInputsAutoLogged;
 import org.lasarobotics.led.LEDStrip;
 import org.mockito.AdditionalMatchers;
 import org.mockito.ArgumentMatchers;
@@ -86,7 +86,8 @@ public class AntiTipCommandTest {
         Constants.Drive.GEAR_RATIO,
         Constants.Drive.DRIVE_SLIP_RATIO,
         DriveSubsystem.DRIVE_WHEELBASE,
-        DriveSubsystem.DRIVE_TRACK_WIDTH
+        DriveSubsystem.DRIVE_TRACK_WIDTH,
+        DriveSubsystem.AUTO_LOCK_TIME
       ),
       new MAXSwerveModule(
         new MAXSwerveModule.Hardware(m_rFrontDriveMotor, m_rFrontRotateMotor),
@@ -94,7 +95,8 @@ public class AntiTipCommandTest {
         Constants.Drive.GEAR_RATIO,
         Constants.Drive.DRIVE_SLIP_RATIO,
         DriveSubsystem.DRIVE_WHEELBASE,
-        DriveSubsystem.DRIVE_TRACK_WIDTH
+        DriveSubsystem.DRIVE_TRACK_WIDTH,
+        DriveSubsystem.AUTO_LOCK_TIME
       ),
       new MAXSwerveModule(
         new MAXSwerveModule.Hardware(m_lRearDriveMotor, m_lRearRotateMotor),
@@ -102,7 +104,8 @@ public class AntiTipCommandTest {
         Constants.Drive.GEAR_RATIO,
         Constants.Drive.DRIVE_SLIP_RATIO,
         DriveSubsystem.DRIVE_WHEELBASE,
-        DriveSubsystem.DRIVE_TRACK_WIDTH
+        DriveSubsystem.DRIVE_TRACK_WIDTH,
+        DriveSubsystem.AUTO_LOCK_TIME
       ),
       new MAXSwerveModule(
         new MAXSwerveModule.Hardware(m_rRearDriveMotor, m_rRearRotateMotor),
@@ -110,7 +113,8 @@ public class AntiTipCommandTest {
         Constants.Drive.GEAR_RATIO,
         Constants.Drive.DRIVE_SLIP_RATIO,
         DriveSubsystem.DRIVE_WHEELBASE,
-        DriveSubsystem.DRIVE_TRACK_WIDTH
+        DriveSubsystem.DRIVE_TRACK_WIDTH,
+        DriveSubsystem.AUTO_LOCK_TIME
       ),
       m_ledStrip
     );

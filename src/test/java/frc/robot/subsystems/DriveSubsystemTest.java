@@ -18,10 +18,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.lasarobotics.drive.MAXSwerveModule;
 import org.lasarobotics.drive.MAXSwerveModule.ModuleLocation;
-import org.lasarobotics.hardware.NavX2;
-import org.lasarobotics.hardware.NavX2InputsAutoLogged;
-import org.lasarobotics.hardware.SparkMax;
-import org.lasarobotics.hardware.SparkMaxInputsAutoLogged;
+import org.lasarobotics.hardware.kauailabs.NavX2;
+import org.lasarobotics.hardware.kauailabs.NavX2InputsAutoLogged;
+import org.lasarobotics.hardware.revrobotics.SparkMax;
+import org.lasarobotics.hardware.revrobotics.SparkMaxInputsAutoLogged;
 import org.lasarobotics.led.LEDStrip;
 import org.mockito.AdditionalMatchers;
 import org.mockito.ArgumentMatchers;
@@ -83,7 +83,8 @@ public class DriveSubsystemTest {
         Constants.Drive.GEAR_RATIO,
         Constants.Drive.DRIVE_SLIP_RATIO,
         DriveSubsystem.DRIVE_WHEELBASE,
-        DriveSubsystem.DRIVE_TRACK_WIDTH
+        DriveSubsystem.DRIVE_TRACK_WIDTH,
+        DriveSubsystem.AUTO_LOCK_TIME
       ),
       new MAXSwerveModule(
         new MAXSwerveModule.Hardware(m_rFrontDriveMotor, m_rFrontRotateMotor),
@@ -91,7 +92,8 @@ public class DriveSubsystemTest {
         Constants.Drive.GEAR_RATIO,
         Constants.Drive.DRIVE_SLIP_RATIO,
         DriveSubsystem.DRIVE_WHEELBASE,
-        DriveSubsystem.DRIVE_TRACK_WIDTH
+        DriveSubsystem.DRIVE_TRACK_WIDTH,
+        DriveSubsystem.AUTO_LOCK_TIME
       ),
       new MAXSwerveModule(
         new MAXSwerveModule.Hardware(m_lRearDriveMotor, m_lRearRotateMotor),
@@ -99,7 +101,8 @@ public class DriveSubsystemTest {
         Constants.Drive.GEAR_RATIO,
         Constants.Drive.DRIVE_SLIP_RATIO,
         DriveSubsystem.DRIVE_WHEELBASE,
-        DriveSubsystem.DRIVE_TRACK_WIDTH
+        DriveSubsystem.DRIVE_TRACK_WIDTH,
+        DriveSubsystem.AUTO_LOCK_TIME
       ),
       new MAXSwerveModule(
         new MAXSwerveModule.Hardware(m_rRearDriveMotor, m_rRearRotateMotor),
@@ -107,7 +110,8 @@ public class DriveSubsystemTest {
         Constants.Drive.GEAR_RATIO,
         Constants.Drive.DRIVE_SLIP_RATIO,
         DriveSubsystem.DRIVE_WHEELBASE,
-        DriveSubsystem.DRIVE_TRACK_WIDTH
+        DriveSubsystem.DRIVE_TRACK_WIDTH,
+        DriveSubsystem.AUTO_LOCK_TIME
       ),
       m_ledStrip
     );
@@ -357,13 +361,13 @@ public class DriveSubsystemTest {
     m_driveSubsystem.teleopPID(+1.0, 0.0, 0.0);
 
     // Verify that motors are being driven with expected values
-    verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.eq(+0.10, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.eq(+0.28, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
     verify(m_lFrontRotateMotor, times(1)).set(AdditionalMatchers.eq(-Math.PI / 2, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
-    verify(m_rFrontDriveMotor, times(1)).set(AdditionalMatchers.eq(+0.10, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_rFrontDriveMotor, times(1)).set(AdditionalMatchers.eq(+0.28, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
     verify(m_rFrontRotateMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
-    verify(m_lRearDriveMotor, times(1)).set(AdditionalMatchers.eq(-0.10, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_lRearDriveMotor, times(1)).set(AdditionalMatchers.eq(-0.28, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
     verify(m_lRearRotateMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
-    verify(m_rRearDriveMotor, times(1)).set(AdditionalMatchers.eq(+0.10, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
+    verify(m_rRearDriveMotor, times(1)).set(AdditionalMatchers.eq(+0.28, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
     verify(m_rRearRotateMotor, times(1)).set(AdditionalMatchers.eq(+Math.PI / 2, DELTA), ArgumentMatchers.eq(ControlType.kPosition));
   }
 
