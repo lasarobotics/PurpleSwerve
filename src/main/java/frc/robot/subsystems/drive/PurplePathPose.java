@@ -4,13 +4,11 @@
 
 package frc.robot.subsystems.drive;
 
-import java.util.Arrays;
+import java.util.List;
 
 import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
-import com.pathplanner.lib.path.PathPoint;
-import com.pathplanner.lib.path.RotationTarget;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -109,32 +107,16 @@ public class PurplePathPose {
    * @param pathConstraints Path constraints to apply to final approach paths
    */
   public void calculateFinalApproach(PathConstraints pathConstraints) {
-    m_blueFinalApproachPath = PathPlannerPath.fromPathPoints(
-      Arrays.asList(
-        new PathPoint(
-          m_blueFinalApproachPose.getTranslation(),
-          new RotationTarget(0.0, m_blueFinalApproachPose.getRotation())
-        ),
-        new PathPoint(
-          m_bluePose.getTranslation(),
-          new RotationTarget(0.0, m_bluePose.getRotation())
-        )
-      ),
+    List<Translation2d> blueFinalApproachBezier = PathPlannerPath.bezierFromPoses(m_blueFinalApproachPose, m_bluePose);
+    m_blueFinalApproachPath = new PathPlannerPath(
+      blueFinalApproachBezier,
       pathConstraints,
       new GoalEndState(0.0, m_blueFinalApproachPose.getRotation())
     );
 
-    m_redFinalApproachPath = PathPlannerPath.fromPathPoints(
-      Arrays.asList(
-        new PathPoint(
-          m_redFinalApproachPose.getTranslation(),
-          new RotationTarget(0.0, m_redFinalApproachPose.getRotation())
-        ),
-        new PathPoint(
-          m_redPose.getTranslation(),
-          new RotationTarget(0.0, m_redPose.getRotation())
-        )
-      ),
+    List<Translation2d> redFinalApproachBezier = PathPlannerPath.bezierFromPoses(m_redFinalApproachPose, m_redPose);
+    m_redFinalApproachPath = new PathPlannerPath(
+      redFinalApproachBezier,
       pathConstraints,
       new GoalEndState(0.0, m_redFinalApproachPose.getRotation())
     );

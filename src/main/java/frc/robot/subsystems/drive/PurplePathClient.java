@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
-import java.util.function.Supplier;
 
 import org.lasarobotics.utils.JSONObject;
 import org.littletonrobotics.junction.Logger;
@@ -25,6 +24,7 @@ import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.PathPoint;
 import com.pathplanner.lib.path.RotationTarget;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -36,18 +36,19 @@ import edu.wpi.first.wpilibj2.command.Commands;
 public class PurplePathClient {
   private final String GOAL_POSE_LOG_ENTRY = "/GoalPose";
   private final String FINAL_APPROACH_POSE_LOG_ENTRY = "/FinalApproachPose";
+  private final double PATH_DISTANCE_SPEED_FUDGE_FACTOR = 0.3;
 
   private final String URI;
 
-  private Supplier<Pose2d> m_poseSupplier;
+  private DriveSubsystem m_driveSubsystem;
   private PathConstraints m_pathConstraints;
   private HttpURLConnection m_serverConnection;
   private boolean m_isConnected;
   private boolean m_connectivityCheckEnabled;
 
-  public PurplePathClient(Supplier<Pose2d> poseSupplier, PathConstraints pathConstraints) {
-    this.m_poseSupplier = poseSupplier;
-    this.m_pathConstraints = pathConstraints;
+  public PurplePathClient(DriveSubsystem driveSubsystem) {
+    this.m_driveSubsystem = driveSubsystem;
+    this.m_pathConstraints = m_driveSubsystem.getPathConstraints();
     this.m_isConnected = false;
     this.m_connectivityCheckEnabled = true;
 
@@ -126,16 +127,23 @@ public class PurplePathClient {
     if (points == null || points.size() < 2) return Commands.none();
 
     // Convert to PathPoint list
+    double distance = 0.0;
     List<PathPoint> waypoints = new ArrayList<>();
-    for (var point : points)
-      waypoints.add(new PathPoint(point, new RotationTarget(0.0, goalPose.getRotation())));
+    for (int i = 0; i < points.size(); i++) {
+      waypoints.add(new PathPoint(points.get(i), new RotationTarget(0.0, goalPose.getRotation())));
+      distance += points.get(i).getDistance(points.get(MathUtil.clamp(i - 1, 0, points.size())));
+    }
 
     // Generate path
     PathPlannerPath path = PathPlannerPath.fromPathPoints(
       waypoints,
       m_pathConstraints,
       new GoalEndState(
-        isClose ? 0.0 : Math.sqrt(2 * m_pathConstraints.getMaxAccelerationMpsSq() * finalApproachDistance) * 0.5,
+        isClose ? 0.0
+                : Math.min(
+                    Math.sqrt(2 * m_pathConstraints.getMaxAccelerationMpsSq() * finalApproachDistance),
+                    Math.sqrt(2 * m_pathConstraints.getMaxAccelerationMpsSq() * distance) * PATH_DISTANCE_SPEED_FUDGE_FACTOR
+                ),
         finalApproachPose.getRotation()
       )
     );
@@ -173,7 +181,7 @@ public class PurplePathClient {
    * @return Trajectory command
    */
   public Command getTrajectoryCommand(PurplePathPose goal, Command parallelCommand) {
-    return getCommand(m_poseSupplier.get(), goal, parallelCommand);
+    return getCommand(m_driveSubsystem.getPose(), goal, parallelCommand);
   }
 
   /**

@@ -219,7 +219,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     m_currentHeading = new Rotation2d();
 
     // Initalise PurplePathClient
-    m_purplePathClient = new PurplePathClient(this::getPose, getPathConstraints());
+    m_purplePathClient = new PurplePathClient(this);
     m_purplePathClient.disableConnectivityCheck();
 
     // Set VisionSubsystem pose supplier for simulation
