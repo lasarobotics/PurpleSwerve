@@ -10,7 +10,7 @@ import org.lasarobotics.drive.AdvancedSwerveKinematics;
 import org.lasarobotics.drive.AdvancedSwerveKinematics.ControlCentricity;
 import org.lasarobotics.drive.MAXSwerveModule;
 import org.lasarobotics.drive.ThrottleMap;
-import org.lasarobotics.drive.TurnPIDController;
+import org.lasarobotics.drive.RotatePIDController;
 import org.lasarobotics.hardware.kauailabs.NavX2;
 import org.lasarobotics.led.LEDStrip;
 import org.lasarobotics.led.LEDStrip.Pattern;
@@ -83,7 +83,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
 
   private ThrottleMap m_throttleMap;
-  private TurnPIDController m_turnPIDController;
+  private RotatePIDController m_rotatePIDController;
   private ProfiledPIDController m_autoAimPIDController;
   private SwerveDriveKinematics m_kinematics;
   private SwerveDrivePoseEstimator m_poseEstimator;
@@ -157,7 +157,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     this.m_ledStrip = drivetrainHardware.ledStrip;
     this.m_controlCentricity = controlCentricity;
     this.m_throttleMap = new ThrottleMap(throttleInputCurve, deadband, DRIVE_MAX_LINEAR_SPEED);
-    this.m_turnPIDController = new TurnPIDController(turnInputCurve, pidf, turnScalar, deadband, lookAhead);
+    this.m_rotatePIDController = new RotatePIDController(turnInputCurve, pidf, turnScalar, deadband, lookAhead);
     this.m_pathFollowerConfig = new HolonomicPathFollowerConfig(
       new com.pathplanner.lib.util.PIDConstants(5.0, 0.0, -0.5),
       new com.pathplanner.lib.util.PIDConstants(5.0, 0.0, -0.1),
@@ -172,8 +172,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     m_navx.reset();
 
     // Setup turn PID
-    m_turnPIDController.setTolerance(TOLERANCE);
-    m_turnPIDController.setSetpoint(getAngle());
+    m_rotatePIDController.setTolerance(TOLERANCE);
+    m_rotatePIDController.setSetpoint(getAngle());
 
     // Define drivetrain kinematics
     m_kinematics = new SwerveDriveKinematics(m_lFrontModule.getModuleCoordinate(),
@@ -501,7 +501,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     double moveDirection = Math.atan2(yRequest, xRequest);
 
     double velocityOutput = m_throttleMap.throttleLookup(moveRequest);
-    double rotateOutput = m_turnPIDController.calculate(getAngle(), getRotateRate(), rotateRequest);
+    double rotateOutput = m_rotatePIDController.calculate(getAngle(), getRotateRate(), rotateRequest);
 
     m_autoAimPIDController.calculate(getPose().getRotation().getDegrees(), getPose().getRotation().getDegrees());
 
@@ -533,7 +533,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     setSwerveModules(moduleStates);
 
     // Update turn PID
-    m_turnPIDController.calculate(getAngle(), getRotateRate(), 0.0);
+    m_rotatePIDController.calculate(getAngle(), getRotateRate(), 0.0);
   }
 
   /**
@@ -629,8 +629,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * Reset DriveSubsystem turn PID
    */
   public void resetTurnPID() {
-    m_turnPIDController.setSetpoint(getAngle());
-    m_turnPIDController.reset();
+    m_rotatePIDController.setSetpoint(getAngle());
+    m_rotatePIDController.reset();
   }
 
   /**
