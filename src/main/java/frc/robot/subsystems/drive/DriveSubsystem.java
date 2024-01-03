@@ -9,8 +9,8 @@ import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
 import org.lasarobotics.drive.AdvancedSwerveKinematics;
 import org.lasarobotics.drive.AdvancedSwerveKinematics.ControlCentricity;
 import org.lasarobotics.drive.MAXSwerveModule;
-import org.lasarobotics.drive.ThrottleMap;
 import org.lasarobotics.drive.RotatePIDController;
+import org.lasarobotics.drive.ThrottleMap;
 import org.lasarobotics.hardware.kauailabs.NavX2;
 import org.lasarobotics.led.LEDStrip;
 import org.lasarobotics.led.LEDStrip.Pattern;
@@ -22,6 +22,7 @@ import org.littletonrobotics.junction.Logger;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
+import com.pathplanner.lib.util.PathPlannerLogging;
 import com.pathplanner.lib.util.ReplanningConfig;
 
 import edu.wpi.first.math.Matrix;
@@ -37,8 +38,11 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.trajectory.TrajectoryConfig;
+import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -114,6 +118,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   private Pose2d m_previousPose;
   private Rotation2d m_currentHeading;
   private PurplePathClient m_purplePathClient;
+  private Field2d m_field;
 
   public final Command ANTI_TIP_COMMAND = new FunctionalCommand(
     () -> m_ledStrip.set(Pattern.RED_STROBE),
@@ -221,6 +226,21 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     // Initalise PurplePathClient
     m_purplePathClient = new PurplePathClient(this);
     m_purplePathClient.disableConnectivityCheck();
+
+    // Initialise field
+    m_field = new Field2d();
+    SmartDashboard.putData(m_field);
+
+    // Setup path logging callback
+    PathPlannerLogging.setLogActivePathCallback((poses) -> {
+      if (poses.size() < 1) return;
+      var trajectory = TrajectoryGenerator.generateTrajectory(
+        poses,
+        new TrajectoryConfig(DRIVE_MAX_LINEAR_SPEED, DRIVE_AUTO_ACCELERATION)
+      );
+
+      m_field.getObject("currentPath").setTrajectory(trajectory);
+    });
 
     // Set VisionSubsystem pose supplier for simulation
     VisionSubsystem.getInstance().setPoseSupplier(this::getPose);
@@ -446,6 +466,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * SmartDashboard indicators
    */
   private void smartDashboard() {
+    m_field.setRobotPose(getPose());
     SmartDashboard.putBoolean("TC", m_isTractionControlEnabled);
     SmartDashboard.putBoolean("PurplePath", m_purplePathClient.isConnected());
   }
