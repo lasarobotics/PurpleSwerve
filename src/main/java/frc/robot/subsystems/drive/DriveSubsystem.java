@@ -4,6 +4,9 @@
 
 package frc.robot.subsystems.drive;
 
+import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
+
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
 import org.lasarobotics.drive.AdvancedSwerveKinematics;
@@ -12,6 +15,7 @@ import org.lasarobotics.drive.MAXSwerveModule;
 import org.lasarobotics.drive.RotatePIDController;
 import org.lasarobotics.drive.ThrottleMap;
 import org.lasarobotics.hardware.kauailabs.NavX2;
+import org.lasarobotics.hardware.revrobotics.Spark.MotorKind;
 import org.lasarobotics.led.LEDStrip;
 import org.lasarobotics.led.LEDStrip.Pattern;
 import org.lasarobotics.led.LEDSubsystem;
@@ -125,7 +129,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     () -> antiTip(),
     (interrupted) -> {
       m_ledStrip.set(Pattern.GREEN_SOLID);
-      resetTurnPID();
+      resetRotatePID();
       lock();
       stop();
       m_ledStrip.set(Pattern.TEAM_COLOR_SOLID);
@@ -164,8 +168,6 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     this.m_throttleMap = new ThrottleMap(throttleInputCurve, deadband, DRIVE_MAX_LINEAR_SPEED);
     this.m_rotatePIDController = new RotatePIDController(turnInputCurve, pidf, turnScalar, deadband, lookAhead);
     this.m_pathFollowerConfig = new HolonomicPathFollowerConfig(
-      new com.pathplanner.lib.util.PIDConstants(5.0, 0.0, -0.5),
-      new com.pathplanner.lib.util.PIDConstants(5.0, 0.0, -0.1),
       DRIVE_MAX_LINEAR_SPEED,
       m_lFrontModule.getModuleCoordinate().getNorm(),
       new ReplanningConfig(),
@@ -258,7 +260,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     MAXSwerveModule lFrontModule = new MAXSwerveModule(
       MAXSwerveModule.initializeHardware(
         Constants.DriveHardware.LEFT_FRONT_DRIVE_MOTOR_ID,
-        Constants.DriveHardware.LEFT_FRONT_ROTATE_MOTOR_ID
+        Constants.DriveHardware.LEFT_FRONT_ROTATE_MOTOR_ID,
+        MotorKind.NEO
       ),
       MAXSwerveModule.ModuleLocation.LeftFront,
       Constants.Drive.GEAR_RATIO,
@@ -271,7 +274,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     MAXSwerveModule rFrontModule = new MAXSwerveModule(
       MAXSwerveModule.initializeHardware(
         Constants.DriveHardware.RIGHT_FRONT_DRIVE_MOTOR_ID,
-        Constants.DriveHardware.RIGHT_FRONT_ROTATE_MOTOR_ID
+        Constants.DriveHardware.RIGHT_FRONT_ROTATE_MOTOR_ID,
+        MotorKind.NEO
       ),
       MAXSwerveModule.ModuleLocation.RightFront,
       Constants.Drive.GEAR_RATIO,
@@ -284,7 +288,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     MAXSwerveModule lRearModule = new MAXSwerveModule(
       MAXSwerveModule.initializeHardware(
         Constants.DriveHardware.LEFT_REAR_DRIVE_MOTOR_ID,
-        Constants.DriveHardware.LEFT_REAR_ROTATE_MOTOR_ID
+        Constants.DriveHardware.LEFT_REAR_ROTATE_MOTOR_ID,
+        MotorKind.NEO
       ),
       MAXSwerveModule.ModuleLocation.LeftRear,
       Constants.Drive.GEAR_RATIO,
@@ -297,7 +302,8 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     MAXSwerveModule rRearModule = new MAXSwerveModule(
       MAXSwerveModule.initializeHardware(
         Constants.DriveHardware.RIGHT_REAR_DRIVE_MOTOR_ID,
-        Constants.DriveHardware.RIGHT_REAR_ROTATE_MOTOR_ID
+        Constants.DriveHardware.RIGHT_REAR_ROTATE_MOTOR_ID,
+        MotorKind.NEO
       ),
       MAXSwerveModule.ModuleLocation.RightRear,
       Constants.Drive.GEAR_RATIO,
@@ -471,6 +477,130 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     SmartDashboard.putBoolean("PurplePath", m_purplePathClient.isConnected());
   }
 
+  /**
+   * Start calling this repeatedly when robot is in danger of tipping over
+   */
+  private void antiTip() {
+    // Calculate direction of tip
+    double direction = Math.atan2(getRoll(), getPitch());
+
+    // Drive to counter tipping motion
+    drive(DRIVE_MAX_LINEAR_SPEED / 4 * Math.cos(direction), DRIVE_MAX_LINEAR_SPEED / 4 * Math.sin(direction), 0.0);
+  }
+
+  /**
+   * Aim robot at a desired point on the field
+   * @param xRequest Desired X axis (forward) speed [-1.0, +1.0]
+   * @param yRequest Desired Y axis (sideways) speed [-1.0, +1.0]
+   * @param point Target point
+   */
+  private double aimAtPoint(double xRequest, double yRequest, Translation2d point) {
+    // Calculate desired robot velocity
+    double moveRequest = Math.hypot(xRequest, yRequest);
+    double moveDirection = Math.atan2(yRequest, xRequest);
+    double velocityOutput = m_throttleMap.throttleLookup(moveRequest);
+
+    // Get current pose
+    Pose2d currentPose = getPose();
+    // Angle to target point
+    Rotation2d targetAngle = new Rotation2d(point.getX() - currentPose.getX(), point.getY() - currentPose.getY());
+    // Movement vector of robot
+    Vector2D robotVector = new Vector2D(velocityOutput * m_currentHeading.getCos(), velocityOutput * m_currentHeading.getSin());
+    // Aim point
+    Translation2d aimPoint = point.minus(new Translation2d(robotVector.getX(), robotVector.getY()));
+    // Vector from robot to target
+    Vector2D targetVector = new Vector2D(currentPose.getTranslation().getDistance(point) * targetAngle.getCos(), currentPose.getTranslation().getDistance(point) * targetAngle.getSin());
+    // Parallel component of robot's motion to target vector
+    Vector2D parallelRobotVector = targetVector.scalarMultiply(robotVector.dotProduct(targetVector) / targetVector.getNormSq());
+    // Perpendicular component of robot's motion to target vector
+    Vector2D perpendicularRobotVector = robotVector.subtract(parallelRobotVector);
+    // Adjust aim point using calculated vector
+    Translation2d adjustedPoint = point.minus(new Translation2d(perpendicularRobotVector.getX(), perpendicularRobotVector.getY()));
+    // Calculate new angle using adjusted point
+    Rotation2d adjustedAngle = new Rotation2d(adjustedPoint.getX() - currentPose.getX(), adjustedPoint.getY() - currentPose.getY());
+    // Calculate necessary rotate rate
+    double rotateOutput = -m_autoAimPIDController.calculate(currentPose.getRotation().getDegrees(), adjustedAngle.getDegrees());
+
+    // Log aim point
+    Logger.recordOutput(getName() + "/AimPoint", new Pose2d(aimPoint, new Rotation2d()));
+
+    // Drive robot accordingly
+    drive(velocityOutput * Math.cos(moveDirection), velocityOutput * Math.sin(moveDirection), rotateOutput, getInertialVelocity(), getRotateRate());
+
+    return currentPose.getTranslation().getDistance(aimPoint);
+  }
+
+  /**
+   * Call this repeatedly to drive using PID during teleoperation
+   * @param xRequest Desired X axis (forward) speed [-1.0, +1.0]
+   * @param yRequest Desired Y axis (sideways) speed [-1.0, +1.0]
+   * @param rotateRequest Desired rotate speed [-1.0, +1.0]
+   */
+  private void teleopPID(double xRequest, double yRequest, double rotateRequest) {
+    double moveRequest = Math.hypot(xRequest, yRequest);
+    double moveDirection = Math.atan2(yRequest, xRequest);
+
+    double velocityOutput = m_throttleMap.throttleLookup(moveRequest);
+    double rotateOutput = m_rotatePIDController.calculate(getAngle(), getRotateRate(), rotateRequest);
+
+    m_autoAimPIDController.calculate(getPose().getRotation().getDegrees(), getPose().getRotation().getDegrees());
+
+    drive(velocityOutput * Math.cos(moveDirection), velocityOutput * Math.sin(moveDirection), rotateOutput, getInertialVelocity(), getRotateRate());
+  }
+
+  /**
+   * Lock swerve modules
+   */
+  private void lock() {
+    m_lFrontModule.lock();
+    m_rFrontModule.lock();
+    m_lRearModule.lock();
+    m_rRearModule.lock();
+  }
+
+  /**
+   * Stop robot
+   */
+  private void stop() {
+    m_lFrontModule.stop();
+    m_rFrontModule.stop();
+    m_lRearModule.stop();
+    m_rRearModule.stop();
+  }
+
+  /**
+   * Toggle traction control
+   */
+  private void toggleTractionControl() {
+    m_isTractionControlEnabled = !m_isTractionControlEnabled;
+    m_lFrontModule.toggleTractionControl();
+    m_rFrontModule.toggleTractionControl();
+    m_lRearModule.toggleTractionControl();
+    m_rRearModule.toggleTractionControl();
+  }
+
+  /**
+   * Enable traction control
+   */
+  private void enableTractionControl() {
+    m_isTractionControlEnabled = true;
+    m_lFrontModule.enableTractionControl();
+    m_rFrontModule.enableTractionControl();
+    m_lRearModule.enableTractionControl();
+    m_rRearModule.enableTractionControl();
+  }
+
+  /**
+   * Disable traction control
+   */
+  private void disableTractionControl() {
+    m_isTractionControlEnabled = false;
+    m_lFrontModule.disableTractionControl();
+    m_rFrontModule.disableTractionControl();
+    m_lRearModule.disableTractionControl();
+    m_rRearModule.disableTractionControl();
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
@@ -508,25 +638,15 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * Configure AutoBuilder for PathPlannerLib
    */
   public void configureAutoBuilder() {
-    AutoBuilder.configureHolonomic(this::getPose, this::resetPose, this::getChassisSpeeds, this::autoDrive, m_pathFollowerConfig, this);
-  }
-
-  /**
-   * Call this repeatedly to drive using PID during teleoperation
-   * @param xRequest Desired X axis (forward) speed [-1.0, +1.0]
-   * @param yRequest Desired Y axis (sideways) speed [-1.0, +1.0]
-   * @param rotateRequest Desired rotate speed [-1.0, +1.0]
-   */
-  public void teleopPID(double xRequest, double yRequest, double rotateRequest) {
-    double moveRequest = Math.hypot(xRequest, yRequest);
-    double moveDirection = Math.atan2(yRequest, xRequest);
-
-    double velocityOutput = m_throttleMap.throttleLookup(moveRequest);
-    double rotateOutput = m_rotatePIDController.calculate(getAngle(), getRotateRate(), rotateRequest);
-
-    m_autoAimPIDController.calculate(getPose().getRotation().getDegrees(), getPose().getRotation().getDegrees());
-
-    drive(velocityOutput * Math.cos(moveDirection), velocityOutput * Math.sin(moveDirection), rotateOutput, getInertialVelocity(), getRotateRate());
+    AutoBuilder.configureHolonomic(
+      this::getPose,
+      this::resetPose,
+      this::getChassisSpeeds,
+      this::autoDrive,
+      m_pathFollowerConfig,
+      () -> false,
+      this
+    );
   }
 
   /**
@@ -558,64 +678,97 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   }
 
   /**
-   * Start calling this repeatedly when robot is in danger of tipping over
+   * Aim robot at desired point on the field, while strafing
+   * @param xRequestSupplier X axis speed supplier
+   * @param yRequestSupplier Y axis speed supplier
+   * @param pointSupplier Desired point supplier
+   * @return Command that will aim at point while strafing
    */
-  public void antiTip() {
-    // Calculate direction of tip
-    double direction = Math.atan2(getRoll(), getPitch());
-
-    // Drive to counter tipping motion
-    drive(DRIVE_MAX_LINEAR_SPEED / 4 * Math.cos(direction), DRIVE_MAX_LINEAR_SPEED / 4 * Math.sin(direction), 0.0);
+  public Command aimAtPointCommand(DoubleSupplier xRequestSupplier, DoubleSupplier yRequestSupplier, Supplier<Translation2d> pointSupplier) {
+    return run(() ->
+      aimAtPoint(
+        xRequestSupplier.getAsDouble(),
+        yRequestSupplier.getAsDouble(),
+        pointSupplier.get()
+      )
+    ).finallyDo(() -> resetRotatePID());
   }
 
   /**
-   * Aim robot at a desired point on the field
-   * @param xRequest Desired X axis (forward) speed [-1.0, +1.0]
-   * @param yRequest Desired Y axis (sideways) speed [-1.0, +1.0]
-   * @param point Target point
+   * Aim robot at desired point on the field, while strafing
+   * @param xRequestSupplier X axis speed supplier
+   * @param yRequestSupplier Y axis speed supplier
+   * @param point Desired point
+   * @return Command that will aim at point while strafing
    */
-  public double aimAtPoint(double xRequest, double yRequest, Translation2d point) {
-    // Calculate desired robot velocity
-    double moveRequest = Math.hypot(xRequest, yRequest);
-    double moveDirection = Math.atan2(yRequest, xRequest);
-    double velocityOutput = m_throttleMap.throttleLookup(moveRequest);
-
-    // Get current pose
-    Pose2d currentPose = getPose();
-    // Angle to target point
-    Rotation2d targetAngle = new Rotation2d(point.getX() - currentPose.getX(), point.getY() - currentPose.getY());
-    // Movement vector of robot
-    Vector2D robotVector = new Vector2D(velocityOutput * m_currentHeading.getCos(), velocityOutput * m_currentHeading.getSin());
-    // Aim point
-    Translation2d aimPoint = point.minus(new Translation2d(robotVector.getX(), robotVector.getY()));
-    // Vector from robot to target
-    Vector2D targetVector = new Vector2D(currentPose.getTranslation().getDistance(point) * targetAngle.getCos(), currentPose.getTranslation().getDistance(point) * targetAngle.getSin());
-    // Parallel component of robot's motion to target vector
-    Vector2D parallelRobotVector = targetVector.scalarMultiply(robotVector.dotProduct(targetVector) / targetVector.getNormSq());
-    // Perpendicular component of robot's motion to target vector
-    Vector2D perpendicularRobotVector = robotVector.subtract(parallelRobotVector);
-    // Adjust aim point using calculated vector
-    Translation2d adjustedPoint = point.minus(new Translation2d(perpendicularRobotVector.getX(), perpendicularRobotVector.getY()));
-    // Calculate new angle using adjusted point
-    Rotation2d adjustedAngle = new Rotation2d(adjustedPoint.getX() - currentPose.getX(), adjustedPoint.getY() - currentPose.getY());
-    // Calculate necessary rotate rate
-    double rotateOutput = -m_autoAimPIDController.calculate(currentPose.getRotation().getDegrees(), adjustedAngle.getDegrees());
-
-    // Log aim point
-    Logger.recordOutput(getName() + "/AimPoint", new Pose2d(aimPoint, new Rotation2d()));
-
-    // Drive robot accordingly
-    drive(velocityOutput * Math.cos(moveDirection), velocityOutput * Math.sin(moveDirection), rotateOutput, getInertialVelocity(), getRotateRate());
-
-    return currentPose.getTranslation().getDistance(aimPoint);
+  public Command aimAtPointCommand(DoubleSupplier xRequestSupplier, DoubleSupplier yRequestSupplier, Translation2d point) {
+    return aimAtPointCommand(xRequestSupplier, yRequestSupplier, () -> point);
   }
 
   /**
-   * Aim robot at a desired point on the field (without any strafing)
-   * @param point Target point
+   * Aim robot at desired point on the field
+   * @param point Desired point
+   * @return Command that will aim robot at point while strafing
    */
-  public void aimAtPoint(Translation2d point) {
-    aimAtPoint(0.0, 0.0, point);
+  public Command aimAtPointCommand(Translation2d point) {
+    return aimAtPointCommand(
+      () -> 0.0,
+      () -> 0.0,
+      point
+    );
+  }
+
+  /**
+   * Drive the robot
+   * @param xRequestSupplier X axis speed supplier
+   * @param yRequestSupplier Y axis speed supplier
+   * @param rotateRequestSupplier Rotate speed supplier
+   * @return Command that will drive robot
+   */
+  public Command driveCommand(DoubleSupplier xRequestSupplier, DoubleSupplier yRequestSupplier, DoubleSupplier rotateRequestSupplier) {
+    return run(() ->
+      teleopPID(xRequestSupplier.getAsDouble(), yRequestSupplier.getAsDouble(), rotateRequestSupplier.getAsDouble())
+    );
+  }
+
+  /**
+   * Lock swerve modules
+   * @return Command to lock swerve modules
+   */
+  public Command lockCommand() {
+    return runOnce(() -> lock());
+  }
+
+  /**
+   * Stop robot
+   * @return Command to stop robot
+   */
+  public Command stopCommand() {
+    return runOnce(() -> stop());
+  }
+
+  /**
+   * Toggle traction control
+   * @return Command to toggle traction control
+   */
+  public Command toggleTractionControlCommand() {
+    return runOnce(() -> toggleTractionControl());
+  }
+
+  /**
+   * Enable traction control
+   * @return Command to enable traction control
+   */
+  public Command enableTractionControlCommand() {
+    return runOnce(() -> enableTractionControl());
+  }
+
+  /**
+   * Disable traction control
+   * @return Command to disable traction control
+   */
+  public Command disableTractionControlCommand() {
+    return runOnce(() -> disableTractionControl());
   }
 
   /**
@@ -625,12 +778,12 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @param endCommand Command to run after goal is reached
    * @return Command that will drive robot to the desired pose
    */
-  public Command goToPose(PurplePathPose goal, Command parallelCommand, Command endCommand) {
+  public Command goToPoseCommand(PurplePathPose goal, Command parallelCommand, Command endCommand) {
     goal.calculateFinalApproach(getPathConstraints());
     return Commands.sequence(
       defer(() ->
         m_purplePathClient.getTrajectoryCommand(goal, parallelCommand)
-        .finallyDo(() -> resetTurnPID())
+        .finallyDo(() -> resetRotatePID())
       ),
       runOnce(() -> stop()),
       Commands.parallel(Commands.idle(this), endCommand)
@@ -642,69 +795,16 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @param goal Desired goal pose
    * @return Command that will drive robot to the desired pose
    */
-  public Command goToPose(PurplePathPose goal) {
-    return goToPose(goal, Commands.none(), Commands.none());
+  public Command goToPoseCommand(PurplePathPose goal) {
+    return goToPoseCommand(goal, Commands.none(), Commands.none());
   }
 
   /**
    * Reset DriveSubsystem turn PID
    */
-  public void resetTurnPID() {
+  public void resetRotatePID() {
     m_rotatePIDController.setSetpoint(getAngle());
     m_rotatePIDController.reset();
-  }
-
-  /**
-   * Lock swerve modules
-   */
-  public void lock() {
-    m_lFrontModule.lock();
-    m_rFrontModule.lock();
-    m_lRearModule.lock();
-    m_rRearModule.lock();
-  }
-
-  /**
-   * Stop robot
-   */
-  public void stop() {
-    m_lFrontModule.stop();
-    m_rFrontModule.stop();
-    m_lRearModule.stop();
-    m_rRearModule.stop();
-  }
-
-  /**
-   * Toggle traction control
-   */
-  public void toggleTractionControl() {
-    m_isTractionControlEnabled = !m_isTractionControlEnabled;
-    m_lFrontModule.toggleTractionControl();
-    m_rFrontModule.toggleTractionControl();
-    m_lRearModule.toggleTractionControl();
-    m_rRearModule.toggleTractionControl();
-  }
-
-  /**
-   * Enable traction control
-   */
-  public void enableTractionControl() {
-    m_isTractionControlEnabled = true;
-    m_lFrontModule.enableTractionControl();
-    m_rFrontModule.enableTractionControl();
-    m_lRearModule.enableTractionControl();
-    m_rRearModule.enableTractionControl();
-  }
-
-  /**
-   * Disable traction control
-   */
-  public void disableTractionControl() {
-    m_isTractionControlEnabled = false;
-    m_lFrontModule.disableTractionControl();
-    m_rFrontModule.disableTractionControl();
-    m_lRearModule.disableTractionControl();
-    m_rRearModule.disableTractionControl();
   }
 
   /**

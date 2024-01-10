@@ -20,13 +20,14 @@ import org.lasarobotics.drive.MAXSwerveModule;
 import org.lasarobotics.drive.MAXSwerveModule.ModuleLocation;
 import org.lasarobotics.hardware.kauailabs.NavX2;
 import org.lasarobotics.hardware.kauailabs.NavX2InputsAutoLogged;
-import org.lasarobotics.hardware.revrobotics.SparkMax;
-import org.lasarobotics.hardware.revrobotics.SparkMaxInputsAutoLogged;
+import org.lasarobotics.hardware.revrobotics.Spark;
+import org.lasarobotics.hardware.revrobotics.Spark.MotorKind;
+import org.lasarobotics.hardware.revrobotics.SparkInputsAutoLogged;
 import org.lasarobotics.led.LEDStrip;
 import org.mockito.AdditionalMatchers;
 import org.mockito.ArgumentMatchers;
 
-import com.revrobotics.CANSparkMax.ControlType;
+import com.revrobotics.CANSparkBase.ControlType;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -41,38 +42,43 @@ public class DriveSubsystemTest {
   private DriveSubsystem.Hardware m_drivetrainHardware;
 
   private NavX2 m_navx;
-  private SparkMax m_lFrontDriveMotor, m_lFrontRotateMotor;
-  private SparkMax m_rFrontDriveMotor, m_rFrontRotateMotor;
-  private SparkMax m_lRearDriveMotor, m_lRearRotateMotor;
-  private SparkMax m_rRearDriveMotor, m_rRearRotateMotor;
+  private Spark m_lFrontDriveMotor, m_lFrontRotateMotor;
+  private Spark m_rFrontDriveMotor, m_rFrontRotateMotor;
+  private Spark m_lRearDriveMotor, m_lRearRotateMotor;
+  private Spark m_rRearDriveMotor, m_rRearRotateMotor;
   private LEDStrip m_ledStrip;
 
   @BeforeEach
   public void setup() {
     // Create mock hardware devices
     m_navx = mock(NavX2.class);
-    m_lFrontDriveMotor = mock(SparkMax.class);
-    m_lFrontRotateMotor = mock(SparkMax.class);
-    m_rFrontDriveMotor = mock(SparkMax.class);
-    m_rFrontRotateMotor = mock(SparkMax.class);
-    m_lRearDriveMotor = mock(SparkMax.class);
-    m_lRearRotateMotor = mock(SparkMax.class);
-    m_rRearDriveMotor = mock(SparkMax.class);
-    m_rRearRotateMotor = mock(SparkMax.class);
+    m_lFrontDriveMotor = mock(Spark.class);
+    m_lFrontRotateMotor = mock(Spark.class);
+    m_rFrontDriveMotor = mock(Spark.class);
+    m_rFrontRotateMotor = mock(Spark.class);
+    m_lRearDriveMotor = mock(Spark.class);
+    m_lRearRotateMotor = mock(Spark.class);
+    m_rRearDriveMotor = mock(Spark.class);
+    m_rRearRotateMotor = mock(Spark.class);
     m_ledStrip = mock(LEDStrip.class);
 
     NavX2InputsAutoLogged navxInputs = new NavX2InputsAutoLogged();
     when(m_navx.getInputs()).thenReturn(navxInputs);
 
-    SparkMaxInputsAutoLogged sparkMaxInputs = new SparkMaxInputsAutoLogged();
-    when(m_lFrontDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
-    when(m_lFrontRotateMotor.getInputs()).thenReturn(sparkMaxInputs);
-    when(m_rFrontDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
-    when(m_rFrontRotateMotor.getInputs()).thenReturn(sparkMaxInputs);
-    when(m_lRearDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
-    when(m_lRearRotateMotor.getInputs()).thenReturn(sparkMaxInputs);
-    when(m_rRearDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
-    when(m_rRearRotateMotor.getInputs()).thenReturn(sparkMaxInputs);
+    SparkInputsAutoLogged sparkInputs = new SparkInputsAutoLogged();
+    when(m_lFrontDriveMotor.getInputs()).thenReturn(sparkInputs);
+    when(m_lFrontRotateMotor.getInputs()).thenReturn(sparkInputs);
+    when(m_rFrontDriveMotor.getInputs()).thenReturn(sparkInputs);
+    when(m_rFrontRotateMotor.getInputs()).thenReturn(sparkInputs);
+    when(m_lRearDriveMotor.getInputs()).thenReturn(sparkInputs);
+    when(m_lRearRotateMotor.getInputs()).thenReturn(sparkInputs);
+    when(m_rRearDriveMotor.getInputs()).thenReturn(sparkInputs);
+    when(m_rRearRotateMotor.getInputs()).thenReturn(sparkInputs);
+
+    when(m_lFrontDriveMotor.getKind()).thenReturn(MotorKind.NEO);
+    when(m_rFrontDriveMotor.getKind()).thenReturn(MotorKind.NEO);
+    when(m_lRearDriveMotor.getKind()).thenReturn(MotorKind.NEO);
+    when(m_rRearDriveMotor.getKind()).thenReturn(MotorKind.NEO);
 
     // Create hardware object using mock devices
     m_drivetrainHardware = new DriveSubsystem.Hardware(
@@ -130,7 +136,7 @@ public class DriveSubsystemTest {
     );
 
     // Disable traction control for unit tests
-    m_driveSubsystem.disableTractionControl();
+    m_driveSubsystem.disableTractionControlCommand().initialize();
   }
 
   @AfterEach
@@ -150,7 +156,7 @@ public class DriveSubsystemTest {
     when(m_navx.getInputs()).thenReturn(inputs);
 
     // Try to drive forward
-    m_driveSubsystem.teleopPID(+1.0, 0.0, 0.0);
+    m_driveSubsystem.driveCommand(() -> +1.0, () -> 0.0, () -> 0.0).execute();
 
     // Verify that motors are being driven with expected values
     verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.eq(+m_driveSubsystem.DRIVE_MAX_LINEAR_SPEED, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
@@ -174,7 +180,7 @@ public class DriveSubsystemTest {
     when(m_navx.getInputs()).thenReturn(inputs);
 
     // Try to drive in reverse
-    m_driveSubsystem.teleopPID(-1.0, 0.0, 0.0);
+    m_driveSubsystem.driveCommand(() -> -1.0, () -> 0.0, () -> 0.0).execute();
 
     // Verify that motors are being driven with expected values
     verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.eq(+m_driveSubsystem.DRIVE_MAX_LINEAR_SPEED, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
@@ -198,7 +204,7 @@ public class DriveSubsystemTest {
     when(m_navx.getInputs()).thenReturn(inputs);
 
     // Try to strafe left
-    m_driveSubsystem.teleopPID(0.0, +1.0, 0.0);
+    m_driveSubsystem.driveCommand(() -> 0.0, () -> +1.0, () -> 0.0).execute();
 
     // Verify motors are being driven with expected values
     verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.eq(+m_driveSubsystem.DRIVE_MAX_LINEAR_SPEED, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
@@ -222,7 +228,7 @@ public class DriveSubsystemTest {
     when(m_navx.getInputs()).thenReturn(inputs);
 
     // Try to strafe right
-    m_driveSubsystem.teleopPID(0.0, -1.0, 0.0);
+    m_driveSubsystem.driveCommand(() -> 0.0, () -> -1.0, () -> 0.0).execute();
 
     // Verify that motors are being driven with expected values
     verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.eq(-m_driveSubsystem.DRIVE_MAX_LINEAR_SPEED, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
@@ -246,7 +252,7 @@ public class DriveSubsystemTest {
     when(m_navx.getInputs()).thenReturn(inputs);
 
     // Try to rotate left
-    m_driveSubsystem.teleopPID(0.0, 0.0, +1.0);
+    m_driveSubsystem.driveCommand(() -> 0.0, () -> 0.0, () -> +1.0).execute();
 
     // Verify that motors are being driven with expected values
     verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.gt(0.0), ArgumentMatchers.eq(ControlType.kVelocity));
@@ -270,7 +276,7 @@ public class DriveSubsystemTest {
     when(m_navx.getInputs()).thenReturn(inputs);
 
     // Try to rotate right
-    m_driveSubsystem.teleopPID(0.0, 0.0, -1.0);
+    m_driveSubsystem.driveCommand(() -> 0.0, () -> 0.0, () -> -1.0).execute();;
 
     // Verify that motors are being driven with expected values
     verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.lt(0.0), ArgumentMatchers.eq(ControlType.kVelocity));
@@ -288,7 +294,7 @@ public class DriveSubsystemTest {
   @DisplayName("Test if robot can stop")
   public void stop() {
     // Try to stop
-    m_driveSubsystem.teleopPID(0.0, 0.0, 0.0);
+    m_driveSubsystem.driveCommand(() -> 0.0, () -> 0.0, () -> 0.0).execute();
 
     // Verify that motors are being driven with expected values
     verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
@@ -306,7 +312,7 @@ public class DriveSubsystemTest {
   @DisplayName("Test if robot can lock swerve modules")
   public void lock() {
     // Try to lock swerve modules
-    m_driveSubsystem.lock();
+    m_driveSubsystem.lockCommand().initialize();;
 
     // Verify that motors are being driven with expected values
     verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.eq(0.0, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
@@ -330,7 +336,7 @@ public class DriveSubsystemTest {
     when(m_navx.getInputs()).thenReturn(inputs);
 
     // Try to stay still
-    m_driveSubsystem.teleopPID(0.0, 0.0, 0.0);
+    m_driveSubsystem.driveCommand(() -> 0.0, () -> 0.0, () -> 0.0).execute();
 
     // Verify that motors are being driven with expected values
     verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.lt(0.0), ArgumentMatchers.eq(ControlType.kVelocity));
@@ -348,17 +354,17 @@ public class DriveSubsystemTest {
   @DisplayName("Test if robot can limit wheel slip")
   public void tractionControl() {
     // Hardcode sensor values
-    SparkMaxInputsAutoLogged sparkMaxInputs = new SparkMaxInputsAutoLogged();
-    sparkMaxInputs.encoderVelocity = +1.0;
+    SparkInputsAutoLogged sparkInputs = new SparkInputsAutoLogged();
+    sparkInputs.encoderVelocity = +1.0;
 
-    when(m_lFrontDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
-    when(m_rFrontDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
-    when(m_lRearDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
-    when(m_rRearDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
+    when(m_lFrontDriveMotor.getInputs()).thenReturn(sparkInputs);
+    when(m_rFrontDriveMotor.getInputs()).thenReturn(sparkInputs);
+    when(m_lRearDriveMotor.getInputs()).thenReturn(sparkInputs);
+    when(m_rRearDriveMotor.getInputs()).thenReturn(sparkInputs);
 
     // Try to drive forward with traction control
-    m_driveSubsystem.enableTractionControl();
-    m_driveSubsystem.teleopPID(+1.0, 0.0, 0.0);
+    m_driveSubsystem.enableTractionControlCommand().initialize();
+    m_driveSubsystem.driveCommand(() -> +1.0, () -> 0.0, () -> 0.0).execute();
 
     // Verify that motors are being driven with expected values
     verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.eq(+0.28, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
@@ -376,17 +382,17 @@ public class DriveSubsystemTest {
   @DisplayName("Test if robot can disable traction control")
   public void disableTractionControl() {
     // Hardcode sensor values
-    SparkMaxInputsAutoLogged sparkMaxInputs = new SparkMaxInputsAutoLogged();
-    sparkMaxInputs.encoderVelocity = +1.0;
+    SparkInputsAutoLogged sparkInputs = new SparkInputsAutoLogged();
+    sparkInputs.encoderVelocity = +1.0;
 
-    when(m_lFrontDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
-    when(m_rFrontDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
-    when(m_lRearDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
-    when(m_rRearDriveMotor.getInputs()).thenReturn(sparkMaxInputs);
+    when(m_lFrontDriveMotor.getInputs()).thenReturn(sparkInputs);
+    when(m_rFrontDriveMotor.getInputs()).thenReturn(sparkInputs);
+    when(m_lRearDriveMotor.getInputs()).thenReturn(sparkInputs);
+    when(m_rRearDriveMotor.getInputs()).thenReturn(sparkInputs);
 
     // Try to drive forward without traction control
-    m_driveSubsystem.disableTractionControl();
-    m_driveSubsystem.teleopPID(+1.0, 0.0, 0.0);
+    m_driveSubsystem.disableTractionControlCommand().initialize();
+    m_driveSubsystem.driveCommand(() -> +1.0, () -> 0.0, () -> 0.0).execute();
 
     // Verify that motors are being driven with expected values
     verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.eq(+m_driveSubsystem.DRIVE_MAX_LINEAR_SPEED, DELTA), ArgumentMatchers.eq(ControlType.kVelocity));
@@ -405,7 +411,7 @@ public class DriveSubsystemTest {
   public void aimLeftTowardsPoint() {
     // Rotate left towards point
     m_driveSubsystem.resetPose(new Pose2d(Constants.Field.FIELD_LENGTH / 2, Constants.Field.FIELD_WIDTH / 2, Rotation2d.fromDegrees(0.0)));
-    m_driveSubsystem.aimAtPoint(new Translation2d(0.0, Constants.Field.FIELD_WIDTH));
+    m_driveSubsystem.aimAtPointCommand(new Translation2d(0.0, Constants.Field.FIELD_WIDTH)).execute();
 
     // Verify that motors are being driven with expected values
     verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.lt(0.0), ArgumentMatchers.eq(ControlType.kVelocity));
@@ -424,7 +430,7 @@ public class DriveSubsystemTest {
   public void aimRightTowardsPoint() {
     // Rotate right towards point
     m_driveSubsystem.resetPose(new Pose2d(Constants.Field.FIELD_LENGTH / 2, Constants.Field.FIELD_WIDTH / 2, Rotation2d.fromDegrees(0.0)));
-    m_driveSubsystem.aimAtPoint(new Translation2d(0.0, 0.0));
+    m_driveSubsystem.aimAtPointCommand(new Translation2d(0.0, 0.0)).execute();
 
     // Verify that motors are being driven with expected values
     verify(m_lFrontDriveMotor, times(1)).set(AdditionalMatchers.gt(0.0), ArgumentMatchers.eq(ControlType.kVelocity));
