@@ -6,6 +6,7 @@ package frc.robot;
 
 import com.revrobotics.REVPhysicsSim;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -14,14 +15,13 @@ import frc.robot.subsystems.drive.DriveSubsystem;
 public class RobotContainer {
   private static final DriveSubsystem DRIVE_SUBSYSTEM = new DriveSubsystem(
     DriveSubsystem.initializeHardware(),
-    Constants.Drive.DRIVE_TURN_PID,
+    Constants.Drive.DRIVE_ROTATE_PID,
     Constants.Drive.DRIVE_CONTROL_CENTRICITY,
+    Constants.Drive.DRIVE_THROTTLE_INPUT_CURVE,
+    Constants.Drive.DRIVE_TURN_INPUT_CURVE,
     Constants.Drive.DRIVE_TURN_SCALAR,
     Constants.HID.CONTROLLER_DEADBAND,
-    Constants.Drive.DRIVE_LOOKAHEAD,
-    Constants.Drive.DRIVE_SLIP_RATIO,
-    Constants.Drive.DRIVE_THROTTLE_INPUT_CURVE,
-    Constants.Drive.DRIVE_TURN_INPUT_CURVE
+    Constants.Drive.DRIVE_LOOKAHEAD
   );
 
   private static final CommandXboxController PRIMARY_CONTROLLER = new CommandXboxController(Constants.HID.PRIMARY_CONTROLLER_PORT);
@@ -44,19 +44,20 @@ public class RobotContainer {
   }
 
   private void configureBindings() {
+    // Start button - toggle traction control
     PRIMARY_CONTROLLER.start().onTrue(DRIVE_SUBSYSTEM.toggleTractionControlCommand());
-    PRIMARY_CONTROLLER.leftBumper().whileTrue(
-      DRIVE_SUBSYSTEM.aimAtPointCommand(
-        () -> PRIMARY_CONTROLLER.getLeftY(),
-        () -> PRIMARY_CONTROLLER.getLeftX(),
-        Constants.Field.CENTER
+  
+    // A button - go to amp
+    PRIMARY_CONTROLLER.a().whileTrue(
+      DRIVE_SUBSYSTEM.goToPoseCommand(
+        Constants.Field.AMP
       )
     );
 
-    PRIMARY_CONTROLLER.rightBumper().whileTrue(DRIVE_SUBSYSTEM.goToPoseCommand(Constants.Field.SUBSTATION));
-    PRIMARY_CONTROLLER.a().whileTrue(DRIVE_SUBSYSTEM.goToPoseCommand(Constants.Field.GRID_5));
-    PRIMARY_CONTROLLER.b().whileTrue(DRIVE_SUBSYSTEM.goToPoseCommand(Constants.Field.GRID_8));
-    PRIMARY_CONTROLLER.x().whileTrue(DRIVE_SUBSYSTEM.goToPoseCommand(Constants.Field.GRID_2));
+    // B button - go to source
+    PRIMARY_CONTROLLER.b().whileTrue(DRIVE_SUBSYSTEM.goToPoseCommand(Constants.Field.SOURCE));
+
+    PRIMARY_CONTROLLER.povLeft().onTrue(DRIVE_SUBSYSTEM.resetPoseCommand(() -> new Pose2d()));
   }
 
   /**

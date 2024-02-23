@@ -84,6 +84,15 @@ public class AntiTipCommandTest {
     when(m_lRearDriveMotor.getKind()).thenReturn(MotorKind.NEO);
     when(m_rRearDriveMotor.getKind()).thenReturn(MotorKind.NEO);
 
+    when(m_lFrontDriveMotor.getID()).thenReturn(Constants.DriveHardware.LEFT_FRONT_DRIVE_MOTOR_ID);
+    when(m_lFrontRotateMotor.getID()).thenReturn(Constants.DriveHardware.LEFT_FRONT_ROTATE_MOTOR_ID);
+    when(m_rFrontDriveMotor.getID()).thenReturn(Constants.DriveHardware.RIGHT_FRONT_DRIVE_MOTOR_ID);
+    when(m_rFrontRotateMotor.getID()).thenReturn(Constants.DriveHardware.RIGHT_FRONT_ROTATE_MOTOR_ID);
+    when(m_lRearDriveMotor.getID()).thenReturn(Constants.DriveHardware.LEFT_REAR_DRIVE_MOTOR_ID);
+    when(m_lRearRotateMotor.getID()).thenReturn(Constants.DriveHardware.LEFT_REAR_ROTATE_MOTOR_ID);
+    when(m_rRearDriveMotor.getID()).thenReturn(Constants.DriveHardware.RIGHT_REAR_DRIVE_MOTOR_ID);
+    when(m_rRearRotateMotor.getID()).thenReturn(Constants.DriveHardware.RIGHT_REAR_ROTATE_MOTOR_ID);
+
     // Create hardware object using mock devices
     m_drivetrainHardware = new DriveSubsystem.Hardware(
       m_navx,
@@ -94,6 +103,8 @@ public class AntiTipCommandTest {
         DriveSubsystem.DRIVE_WHEELBASE,
         DriveSubsystem.DRIVE_TRACK_WIDTH,
         DriveSubsystem.AUTO_LOCK_TIME,
+        DriveSubsystem.MAX_SLIPPING_TIME,
+        DriveSubsystem.DRIVE_CURRENT_LIMIT,
         Constants.Drive.DRIVE_SLIP_RATIO
       ),
       new MAXSwerveModule(
@@ -103,6 +114,8 @@ public class AntiTipCommandTest {
         DriveSubsystem.DRIVE_WHEELBASE,
         DriveSubsystem.DRIVE_TRACK_WIDTH,
         DriveSubsystem.AUTO_LOCK_TIME,
+        DriveSubsystem.MAX_SLIPPING_TIME,
+        DriveSubsystem.DRIVE_CURRENT_LIMIT,
         Constants.Drive.DRIVE_SLIP_RATIO
       ),
       new MAXSwerveModule(
@@ -112,6 +125,8 @@ public class AntiTipCommandTest {
         DriveSubsystem.DRIVE_WHEELBASE,
         DriveSubsystem.DRIVE_TRACK_WIDTH,
         DriveSubsystem.AUTO_LOCK_TIME,
+        DriveSubsystem.MAX_SLIPPING_TIME,
+        DriveSubsystem.DRIVE_CURRENT_LIMIT,
         Constants.Drive.DRIVE_SLIP_RATIO
       ),
       new MAXSwerveModule(
@@ -121,6 +136,8 @@ public class AntiTipCommandTest {
         DriveSubsystem.DRIVE_WHEELBASE,
         DriveSubsystem.DRIVE_TRACK_WIDTH,
         DriveSubsystem.AUTO_LOCK_TIME,
+        DriveSubsystem.MAX_SLIPPING_TIME,
+        DriveSubsystem.DRIVE_CURRENT_LIMIT,
         Constants.Drive.DRIVE_SLIP_RATIO
       ),
       m_ledStrip
@@ -129,14 +146,13 @@ public class AntiTipCommandTest {
     // Create DriveSubsystem object
     m_driveSubsystem = new DriveSubsystem(
       m_drivetrainHardware,
-      Constants.Drive.DRIVE_TURN_PID,
+      Constants.Drive.DRIVE_ROTATE_PID,
       Constants.Drive.DRIVE_CONTROL_CENTRICITY,
+      Constants.Drive.DRIVE_THROTTLE_INPUT_CURVE,
+      Constants.Drive.DRIVE_TURN_INPUT_CURVE,
       Constants.Drive.DRIVE_TURN_SCALAR,
       Constants.HID.CONTROLLER_DEADBAND,
-      Constants.Drive.DRIVE_LOOKAHEAD,
-      Constants.Drive.DRIVE_SLIP_RATIO,
-      Constants.Drive.DRIVE_THROTTLE_INPUT_CURVE,
-      Constants.Drive.DRIVE_TURN_INPUT_CURVE
+      Constants.Drive.DRIVE_LOOKAHEAD
     );
 
     // Create AntiTipCommand object
@@ -154,7 +170,7 @@ public class AntiTipCommandTest {
   @Order(1)
   @DisplayName("Test if robot can execute anti-tip")
   public void execute() {
-    // // Hardcode sensor values
+    // Hardcode sensor values
     NavX2InputsAutoLogged inputs = new NavX2InputsAutoLogged();
     inputs.rollAngle = Units.Degrees.of(+35.0);
 
