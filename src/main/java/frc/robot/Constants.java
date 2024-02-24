@@ -10,6 +10,7 @@ import org.lasarobotics.drive.AdvancedSwerveKinematics.ControlCentricity;
 import org.lasarobotics.drive.MAXSwerveModule;
 import org.lasarobotics.hardware.kauailabs.NavX2;
 import org.lasarobotics.hardware.revrobotics.Spark;
+import org.lasarobotics.hardware.revrobotics.SparkPIDConfig;
 import org.lasarobotics.led.LEDStrip;
 import org.lasarobotics.utils.PIDConstants;
 
@@ -20,6 +21,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.Units;
 import frc.robot.subsystems.drive.PurplePathPose;
 import frc.robot.subsystems.vision.AprilTagCamera.Resolution;
@@ -121,6 +123,19 @@ public final class Constants {
     );
     public static final Resolution CAMERA_OBJECT_RESOLUTION = Resolution.RES_1280_720;
     public static final Rotation2d CAMERA_OBJECT_FOV = Rotation2d.fromDegrees(79.7);
+  }
+
+  public static class WiggleStick {
+    public static final SparkPIDConfig WIGGLE_STICK_CONFIG = new SparkPIDConfig(
+      new PIDConstants(0.2, 0, 0, 0),
+      false,
+      false,
+      1.0,
+      0.0,
+      15.0,
+      true
+    );
+    public static final TrapezoidProfile.Constraints CONSTRAINTS = new TrapezoidProfile.Constraints(10, 20);
   }
 
   public static class SmartDashboard {
