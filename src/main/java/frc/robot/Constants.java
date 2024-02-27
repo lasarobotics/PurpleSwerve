@@ -68,7 +68,7 @@ public final class Constants {
 
   public static class Drive {
     public static final PIDConstants DRIVE_ROTATE_PID = new PIDConstants(7.0, 0.0, 0.1, 0.0, 0.0);
-    public static final double DRIVE_SLIP_RATIO = 0.11;
+    public static final double DRIVE_SLIP_RATIO = 0.12;
     public static final double DRIVE_TURN_SCALAR = 60.0;
     public static final double DRIVE_LOOKAHEAD = 6;
 

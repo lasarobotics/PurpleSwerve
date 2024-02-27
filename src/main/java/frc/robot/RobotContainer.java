@@ -7,10 +7,13 @@ package frc.robot;
 import com.revrobotics.REVPhysicsSim;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.WaggleSubsystem;
+import frc.robot.subsystems.drive.AutoTrajectory;
 import frc.robot.subsystems.drive.DriveSubsystem;
 
 public class RobotContainer {
@@ -29,6 +32,8 @@ public class RobotContainer {
 
   private static final CommandXboxController PRIMARY_CONTROLLER = new CommandXboxController(Constants.HID.PRIMARY_CONTROLLER_PORT);
 
+  private static SendableChooser<Command> m_automodeChooser = new SendableChooser<>();
+
   public RobotContainer() {
     // Set drive command
     DRIVE_SUBSYSTEM.setDefaultCommand(
@@ -41,6 +46,9 @@ public class RobotContainer {
 
     // Setup AutoBuilder
     DRIVE_SUBSYSTEM.configureAutoBuilder();
+
+    autoModeChooser();
+    SmartDashboard.putData(Constants.SmartDashboard.SMARTDASHBOARD_AUTO_MODE, m_automodeChooser);
 
     // Bind buttons and triggers
     configureBindings();
@@ -74,11 +82,21 @@ public class RobotContainer {
     REVPhysicsSim.getInstance().run();
   }
 
+    /**
+   * Add auto modes to chooser
+   */
+  private void autoModeChooser() {
+    m_automodeChooser.setDefaultOption("Do nothing", Commands.none());
+    m_automodeChooser.addOption("Leave", new AutoTrajectory(DRIVE_SUBSYSTEM, "Leave").getCommand());
+    m_automodeChooser.addOption("Preload + 3 Ring", new AutoTrajectory(DRIVE_SUBSYSTEM, "Preload + 3 Ring").getCommand());
+    m_automodeChooser.addOption("Preload + 1", new AutoTrajectory(DRIVE_SUBSYSTEM, "Preload + 1").getCommand());
+  }
+
   /**
    * Get currently selected autonomous command
    * @return Autonomous command
    */
   public Command getAutonomousCommand() {
-    return Commands.print("No autonomous command configured");
+    return m_automodeChooser.getSelected();
   }
 }
