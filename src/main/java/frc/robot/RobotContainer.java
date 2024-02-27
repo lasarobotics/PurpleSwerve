@@ -70,9 +70,9 @@ public class RobotContainer {
 
     PRIMARY_CONTROLLER.povLeft().onTrue(DRIVE_SUBSYSTEM.resetPoseCommand(() -> new Pose2d()));
 
-    // POV left/right - wiggle stick
-    PRIMARY_CONTROLLER.povLeft().onTrue(WIGGLE_STICK.setPositionCommand(0.0));
-    PRIMARY_CONTROLLER.povRight().onTrue(WIGGLE_STICK.setPositionCommand(15.0));
+    // Left/right bumper - wiggle stick
+    PRIMARY_CONTROLLER.leftBumper().onTrue(WIGGLE_STICK.setPositionCommand(0.0));
+    PRIMARY_CONTROLLER.rightBumper().onTrue(WIGGLE_STICK.setPositionCommand(15.0));
   }
 
   /**
