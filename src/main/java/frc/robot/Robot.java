@@ -6,6 +6,7 @@ package frc.robot;
 
 import org.lasarobotics.battery.BatteryTracker;
 import org.lasarobotics.utils.GlobalConstants;
+import org.lasarobotics.hardware.PurpleManager;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -74,9 +75,10 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void robotPeriodic() {
+    PurpleManager.update();
     CommandScheduler.getInstance().run();
   }
-
+// burrito wuz here
   @Override
   public void disabledInit() {}
 
@@ -121,6 +123,7 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void testInit() {
+
     CommandScheduler.getInstance().cancelAll();
   }
 
