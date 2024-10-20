@@ -1,4 +1,4 @@
 # Purple Swerve
 
 This repo contains code for a swerve drivetrain using 4 REV MAXSwerve modules.
-experimental ocde for 1745
+experimental code for 1745
