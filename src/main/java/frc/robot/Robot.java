@@ -43,9 +43,9 @@ public class Robot extends LoggedRobot {
     Pathfinding.setPathfinder(new LocalADStarAK());
 
     if (isReal()) {
-      // If robot is real, log to USB drive and publish data to NetworkTables
-      Logger.addDataReceiver(new WPILOGWriter("/media/sda1/"));
-      Logger.addDataReceiver(new NT4Publisher());
+       //If robot is real, log to USB drive and publish data to NetworkTables
+      //Logger.addDataReceiver(new WPILOGWriter("/media/sda1/"));
+      //Logger.addDataReceiver(new NT4Publisher());
       new PowerDistribution();
       // Battery Tracking
       if (batteryTracker.isBatteryReused())
