@@ -23,7 +23,7 @@ public class WaggleSubsystem extends SubsystemBase {
 
   /** Creates a new wiggleStick. */
   public WaggleSubsystem(SparkPIDConfig config, Constraints constraint) {
-    m_motor = new Spark(new Spark.ID("wiggleStick", 20), MotorKind.NEO);
+    m_motor = new Spark(new Spark.ID("wiggleStick", 100), MotorKind.NEO);
     m_config = config;
     m_constraint = constraint;
 

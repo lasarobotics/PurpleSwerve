@@ -1,3 +1,5 @@
+import edu.wpi.first.gradlerio.GradleRIOPlugin
+
 plugins {
   id "java"
   id "edu.wpi.first.GradleRIO" version "2024.3.2"
@@ -123,7 +125,7 @@ wpi.sim.addDriverstation()
 // knows where to look for our Robot Class.
 jar {
   from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
-  manifest edu.wpi.first.gradlerio.GradleRIOPlugin.javaManifest(ROBOT_MAIN_CLASS)
+  manifest GradleRIOPlugin.javaManifest(ROBOT_MAIN_CLASS)
   duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
@@ -133,6 +135,6 @@ wpi.java.configureExecutableTasks(jar)
 wpi.java.configureTestTasks(test)
 
 // Configure string concat to always inline compile
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
   options.compilerArgs.add '-XDstringConcat=inline'
 }
