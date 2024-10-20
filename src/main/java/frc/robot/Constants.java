@@ -125,18 +125,6 @@ public final class Constants {
     public static final Rotation2d CAMERA_OBJECT_FOV = Rotation2d.fromDegrees(79.7);
   }
 
-  public static class WiggleStick {
-    public static final SparkPIDConfig WIGGLE_STICK_CONFIG = new SparkPIDConfig(
-      new PIDConstants(0.2, 0, 0, 0, 0),
-      false,
-      false,
-      1.0,
-      0.0,
-      15.0,
-      true
-    );
-    public static final TrapezoidProfile.Constraints CONSTRAINTS = new TrapezoidProfile.Constraints(10, 20);
-  }
 
   public static class SmartDashboard {
     public static final String SMARTDASHBOARD_DEFAULT_TAB = "SmartDashboard";
