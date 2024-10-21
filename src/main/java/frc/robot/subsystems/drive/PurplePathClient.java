@@ -35,29 +35,24 @@ import edu.wpi.first.wpilibj2.command.Commands;
 
 /** PurplePath Client */
 public class PurplePathClient {
-  private final String GOAL_POSE_LOG_ENTRY = "/GoalPose";
-  private final String FINAL_APPROACH_POSE_LOG_ENTRY = "/FinalApproachPose";
-  private final double FINAL_APPROACH_SPEED_FUDGE_FACTOR = 0.6;
 
-  private final String URI;
+    private final String URI;
 
-  private DriveSubsystem m_driveSubsystem;
-  private HttpURLConnection m_serverConnection;
-  private boolean m_isConnected;
-  private boolean m_connectivityCheckEnabled;
-  private Notifier m_periodicNotifier;
+  private final DriveSubsystem driveSubsystem;
+    private boolean m_isConnected;
+  private boolean connectivityCheckEnabled;
 
-  public PurplePathClient(DriveSubsystem driveSubsystem) {
-    this.m_driveSubsystem = driveSubsystem;
+    public PurplePathClient(DriveSubsystem driveSubsystem) {
+    this.driveSubsystem = driveSubsystem;
     this.m_isConnected = false;
-    this.m_connectivityCheckEnabled = true;
+    this.connectivityCheckEnabled = true;
 
     // Set URI
     if (RobotBase.isSimulation()) URI = "http://localhost:5000/";
     else URI = "http://purplebox.local:5000/";
 
     // Initialize connectivity check thread
-    this.m_periodicNotifier = new Notifier(() -> periodic());
+        Notifier m_periodicNotifier = new Notifier(this::periodic);
 
     // Start connectivity check thread
     m_periodicNotifier.setName(getClass().getSimpleName());
@@ -68,13 +63,12 @@ public class PurplePathClient {
    * Send JSON request to PurplePath server
    * @param jsonRequest JSON array string of start and goal point
    * @return PurplePath server response
-   * @throws IOException
    */
   private String sendRequest(String jsonRequest) throws IOException {
     String jsonResponse = "";
 
     // Define the server endpoint to send the HTTP request to
-    m_serverConnection = (HttpURLConnection)new URL(URI).openConnection();
+      HttpURLConnection m_serverConnection = (HttpURLConnection) new URL(URI).openConnection();
 
     // Indicate that we want to write to the HTTP request body
     m_serverConnection.setDoOutput(true);
@@ -104,12 +98,12 @@ public class PurplePathClient {
   private Command getPathPlannerCommand(PathPlannerPath path) {
     return new FollowPathHolonomic(
       path,
-      m_driveSubsystem::getPose,
-      m_driveSubsystem::getChassisSpeeds,
-      m_driveSubsystem::autoDrive,
-      m_driveSubsystem.getPathFollowerConfig(),
+      driveSubsystem::getPose,
+      driveSubsystem::getChassisSpeeds,
+      driveSubsystem::autoDrive,
+      driveSubsystem.getPathFollowerConfig(),
       () -> false,
-      m_driveSubsystem
+            driveSubsystem
     );
   }
 
@@ -161,21 +155,24 @@ public class PurplePathClient {
     }
 
     // Generate path
-    PathPlannerPath path = PathPlannerPath.fromPathPoints(
+      double FINAL_APPROACH_SPEED_FUDGE_FACTOR = 0.6;
+      PathPlannerPath path = PathPlannerPath.fromPathPoints(
       waypoints,
-      m_driveSubsystem.getPathConstraints(),
+      driveSubsystem.getPathConstraints(),
       new GoalEndState(
         isClose ? 0.0
                 : Math.min(
-                    Math.sqrt(2 * m_driveSubsystem.getPathConstraints().getMaxAccelerationMpsSq() * finalApproachDistance) * FINAL_APPROACH_SPEED_FUDGE_FACTOR,
-                    Math.sqrt(2 * m_driveSubsystem.getPathConstraints().getMaxAccelerationMpsSq() * distance)
+                    Math.sqrt(2 * driveSubsystem.getPathConstraints().getMaxAccelerationMpsSq() * finalApproachDistance) * FINAL_APPROACH_SPEED_FUDGE_FACTOR,
+                    Math.sqrt(2 * driveSubsystem.getPathConstraints().getMaxAccelerationMpsSq() * distance)
                 ),
         finalApproachPose.getRotation()
       )
     );
 
-    Logger.recordOutput(getClass().getSimpleName() + GOAL_POSE_LOG_ENTRY, goalPose);
-    Logger.recordOutput(getClass().getSimpleName() + FINAL_APPROACH_POSE_LOG_ENTRY, finalApproachPose);
+      String GOAL_POSE_LOG_ENTRY = "/GoalPose";
+      Logger.recordOutput(getClass().getSimpleName() + GOAL_POSE_LOG_ENTRY, goalPose);
+      String FINAL_APPROACH_POSE_LOG_ENTRY = "/FinalApproachPose";
+      Logger.recordOutput(getClass().getSimpleName() + FINAL_APPROACH_POSE_LOG_ENTRY, finalApproachPose);
 
     // Return path following command
     return isClose ? getPathPlannerCommand(path).alongWith(parallelCommand)
@@ -189,7 +186,7 @@ public class PurplePathClient {
    * Call this method periodically
    */
   private void periodic() {
-    if (!m_connectivityCheckEnabled) return;
+    if (!connectivityCheckEnabled) return;
     if (m_isConnected) return;
 
     try {
@@ -206,7 +203,7 @@ public class PurplePathClient {
    * @return Trajectory command
    */
   public Command getTrajectoryCommand(PurplePathPose goal, Command parallelCommand) {
-    return getCommand(m_driveSubsystem.getPose(), goal, parallelCommand);
+    return getCommand(driveSubsystem.getPose(), goal, parallelCommand);
   }
 
   /**
@@ -230,13 +227,13 @@ public class PurplePathClient {
    * Enable connectivity check
    */
   public void enableConnectivityCheck() {
-    m_connectivityCheckEnabled = true;
+    connectivityCheckEnabled = true;
   }
 
   /**
    * Disable connectivity check
    */
   public void disableConnectivityCheck() {
-    m_connectivityCheckEnabled = false;
+    connectivityCheckEnabled = false;
   }
 }

@@ -18,9 +18,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 
 public class AutoTrajectory {
-  DriveSubsystem m_driveSubsystem;
+  DriveSubsystem driveSubsystem;
   Command m_swerveCommand;
-  Pair<String,List<PathPlannerPath>> m_auto;
+  Pair<String,List<PathPlannerPath>> auto;
 
   /**
    * Create new path trajectory using PathPlanner path
@@ -28,10 +28,10 @@ public class AutoTrajectory {
    * @param autoName PathPlanner auto name
    */
   public AutoTrajectory(DriveSubsystem driveSubsystem, String autoName) {
-    this.m_driveSubsystem = driveSubsystem;
+    this.driveSubsystem = driveSubsystem;
 
     // Get path
-    m_auto = new Pair<String, List<PathPlannerPath>>(autoName, PathPlannerAuto.getPathGroupFromAutoFile(autoName));
+    auto = new Pair<String, List<PathPlannerPath>>(autoName, PathPlannerAuto.getPathGroupFromAutoFile(autoName));
   }
 
   /**
@@ -41,10 +41,10 @@ public class AutoTrajectory {
    * @param pathConstraints Path following constraints
    */
   public AutoTrajectory(DriveSubsystem driveSubsystem, List<Pose2d> waypoints, PathConstraints pathConstraints) {
-    this.m_driveSubsystem = driveSubsystem;
+    this.driveSubsystem = driveSubsystem;
 
     // Generate path from waypoints
-    m_auto = new Pair<String, List<PathPlannerPath>>("", List.of(new PathPlannerPath(
+    auto = new Pair<String, List<PathPlannerPath>>("", List.of(new PathPlannerPath(
       PathPlannerPath.bezierFromPoses(waypoints),
       pathConstraints,
       new GoalEndState(0.0, waypoints.get(waypoints.size() - 1).getRotation())
@@ -53,7 +53,7 @@ public class AutoTrajectory {
 
   /** Return initial pose */
   public Pose2d getInitialPose() {
-    return m_auto.getSecond().get(0).getPreviewStartingHolonomicPose();
+    return auto.getSecond().get(0).getPreviewStartingHolonomicPose();
   }
 
   /**
@@ -61,15 +61,15 @@ public class AutoTrajectory {
    * @return Auto command group that will stop when complete
    */
   public Command getCommand() {
-    Command autoCommand = m_auto.getSecond().size() == 1
-      ? AutoBuilder.followPath(m_auto.getSecond().get(0))
-      : new PathPlannerAuto(m_auto.getFirst());
+    Command autoCommand = auto.getSecond().size() == 1
+      ? AutoBuilder.followPath(auto.getSecond().get(0))
+      : new PathPlannerAuto(auto.getFirst());
 
     return Commands.sequence(
-      m_driveSubsystem.resetPoseCommand(() -> getInitialPose()),
+      driveSubsystem.resetPoseCommand(this::getInitialPose),
       autoCommand,
-      m_driveSubsystem.stopCommand(),
-      m_driveSubsystem.lockCommand()
+      driveSubsystem.stopCommand(),
+      driveSubsystem.lockCommand()
     );
   }
 }

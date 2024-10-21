@@ -22,13 +22,13 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
 /** PurplePath Pose */
 public class PurplePathPose {
-  private final double MIN_FINAL_APPROACH_DISTANCE = 0.15;
-  private final double MAX_FINAL_APPROACH_DISTANCE = 1.00;
 
-  private Pose2d m_bluePose, m_redPose;
-  private Pose2d m_blueFinalApproachPose, m_redFinalApproachPose;
-  private PathPlannerPath m_blueFinalApproachPath, m_redFinalApproachPath;
-  private double m_finalApproachDistance;
+    private final Pose2d bluePose;
+    private final Pose2d redPose;
+  private final Pose2d blueFinalApproachPose;
+    private final Pose2d redFinalApproachPose;
+  private PathPlannerPath blueFinalApproachPath, redFinalApproachPath;
+  private final double finalApproachDistance;
 
   /**
    * Create alliance specific goal for PurplePath
@@ -40,24 +40,26 @@ public class PurplePathPose {
    * @param isReversed True if robot's rear is facing object
    */
   public PurplePathPose(Pose2d bluePose, Pose2d redPose, Measure<Distance> finalApproachDistance, boolean isReversed) {
-    this.m_bluePose = bluePose;
-    this.m_redPose = redPose;
-    this.m_finalApproachDistance = MathUtil.clamp(
+    this.bluePose = bluePose;
+    this.redPose = redPose;
+      double MIN_FINAL_APPROACH_DISTANCE = 0.15;
+      double MAX_FINAL_APPROACH_DISTANCE = 1.00;
+      this.finalApproachDistance = MathUtil.clamp(
       finalApproachDistance.in(Units.Meters),
-      MIN_FINAL_APPROACH_DISTANCE,
-      MAX_FINAL_APPROACH_DISTANCE
+              MIN_FINAL_APPROACH_DISTANCE,
+              MAX_FINAL_APPROACH_DISTANCE
     );
 
     Rotation2d finalApproachDirectionOffset = isReversed ? Rotation2d.fromRadians(0.0) : Rotation2d.fromRadians(Math.PI);
 
-    this.m_blueFinalApproachPose = new Pose2d(
+    this.blueFinalApproachPose = new Pose2d(
       bluePose.getTranslation()
-        .plus(new Translation2d(m_finalApproachDistance, m_bluePose.getRotation().plus(finalApproachDirectionOffset))),
+        .plus(new Translation2d(this.finalApproachDistance, this.bluePose.getRotation().plus(finalApproachDirectionOffset))),
       bluePose.getRotation()
     );
-    this.m_redFinalApproachPose = new Pose2d(
+    this.redFinalApproachPose = new Pose2d(
       redPose.getTranslation()
-        .plus(new Translation2d(m_finalApproachDistance, m_redPose.getRotation().plus(finalApproachDirectionOffset))),
+        .plus(new Translation2d(this.finalApproachDistance, this.redPose.getRotation().plus(finalApproachDirectionOffset))),
       redPose.getRotation()
     );
   }
@@ -102,7 +104,7 @@ public class PurplePathPose {
    * @return Final approach distance
    */
   public double getFinalApproachDistance() {
-    return m_finalApproachDistance;
+    return finalApproachDistance;
   }
 
   /**
@@ -110,18 +112,18 @@ public class PurplePathPose {
    * @param pathConstraints Path constraints to apply to final approach paths
    */
   public void calculateFinalApproach(PathConstraints pathConstraints) {
-    List<Translation2d> blueFinalApproachBezier = PathPlannerPath.bezierFromPoses(m_blueFinalApproachPose, m_bluePose);
-    m_blueFinalApproachPath = new PathPlannerPath(
+    List<Translation2d> blueFinalApproachBezier = PathPlannerPath.bezierFromPoses(blueFinalApproachPose, bluePose);
+    blueFinalApproachPath = new PathPlannerPath(
       blueFinalApproachBezier,
       pathConstraints,
-      new GoalEndState(0.0, m_blueFinalApproachPose.getRotation())
+      new GoalEndState(0.0, blueFinalApproachPose.getRotation())
     );
 
-    List<Translation2d> redFinalApproachBezier = PathPlannerPath.bezierFromPoses(m_redFinalApproachPose, m_redPose);
-    m_redFinalApproachPath = new PathPlannerPath(
+    List<Translation2d> redFinalApproachBezier = PathPlannerPath.bezierFromPoses(redFinalApproachPose, redPose);
+    redFinalApproachPath = new PathPlannerPath(
       redFinalApproachBezier,
       pathConstraints,
-      new GoalEndState(0.0, m_redFinalApproachPose.getRotation())
+      new GoalEndState(0.0, redFinalApproachPose.getRotation())
     );
   }
 
@@ -132,13 +134,10 @@ public class PurplePathPose {
   public Pose2d getGoalPose() {
     if (DriverStation.getAlliance().isEmpty()) return null;
     Alliance currentAlliance = DriverStation.getAlliance().get();
-    switch (currentAlliance) {
-      case Red:
-        return m_redPose;
-      case Blue:
-      default:
-        return m_bluePose;
-    }
+      return switch (currentAlliance) {
+          case Red -> redPose;
+          default -> bluePose;
+      };
   }
 
   /**
@@ -148,13 +147,10 @@ public class PurplePathPose {
   public Pose2d getFinalApproachPose() {
     if (DriverStation.getAlliance().isEmpty()) return null;
     Alliance currentAlliance = DriverStation.getAlliance().get();
-    switch (currentAlliance) {
-      case Red:
-        return m_redFinalApproachPose;
-      case Blue:
-      default:
-        return m_blueFinalApproachPose;
-    }
+      return switch (currentAlliance) {
+          case Red -> redFinalApproachPose;
+          default -> blueFinalApproachPose;
+      };
   }
 
   /**
@@ -164,12 +160,9 @@ public class PurplePathPose {
   public PathPlannerPath getFinalApproachPath() {
     if (DriverStation.getAlliance().isEmpty()) return null;
     Alliance currentAlliance = DriverStation.getAlliance().get();
-    switch (currentAlliance) {
-      case Red:
-        return m_redFinalApproachPath;
-      case Blue:
-      default:
-        return m_blueFinalApproachPath;
-    }
+      return switch (currentAlliance) {
+          case Red -> redFinalApproachPath;
+          default -> blueFinalApproachPath;
+      };
   }
 }

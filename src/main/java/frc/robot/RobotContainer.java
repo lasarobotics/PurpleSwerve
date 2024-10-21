@@ -31,15 +31,15 @@ public class RobotContainer {
 
   private static final CommandXboxController PRIMARY_CONTROLLER = new CommandXboxController(Constants.HID.PRIMARY_CONTROLLER_PORT);
 
-  private static SendableChooser<Command> m_automodeChooser = new SendableChooser<>();
+  private static final SendableChooser<Command> automodeChooser = new SendableChooser<>();
 
   public RobotContainer() {
     // Set drive command
     DRIVE_SUBSYSTEM.setDefaultCommand(
       DRIVE_SUBSYSTEM.driveCommand(
-        () -> PRIMARY_CONTROLLER.getLeftY(),
-        () -> PRIMARY_CONTROLLER.getLeftX(),
-        () -> PRIMARY_CONTROLLER.getRightX()
+              PRIMARY_CONTROLLER::getLeftY,
+              PRIMARY_CONTROLLER::getLeftX,
+              PRIMARY_CONTROLLER::getRightX
       )
     );
 
@@ -47,7 +47,7 @@ public class RobotContainer {
     DRIVE_SUBSYSTEM.configureAutoBuilder();
 
     autoModeChooser();
-    SmartDashboard.putData(Constants.SmartDashboard.SMARTDASHBOARD_AUTO_MODE, m_automodeChooser);
+    SmartDashboard.putData(Constants.SmartDashboard.SMARTDASHBOARD_AUTO_MODE, automodeChooser);
 
     // Bind buttons and triggers
     configureBindings();
@@ -67,7 +67,7 @@ public class RobotContainer {
     // B button - go to source
     PRIMARY_CONTROLLER.b().whileTrue(DRIVE_SUBSYSTEM.goToPoseCommand(Constants.Field.SOURCE));
 
-    PRIMARY_CONTROLLER.povLeft().onTrue(DRIVE_SUBSYSTEM.resetPoseCommand(() -> new Pose2d()));
+    PRIMARY_CONTROLLER.povLeft().onTrue(DRIVE_SUBSYSTEM.resetPoseCommand(Pose2d::new));
 
    
 
@@ -84,10 +84,10 @@ public class RobotContainer {
    * Add auto modes to chooser
    */
   private void autoModeChooser() {
-    m_automodeChooser.setDefaultOption("Do nothing", Commands.none());
-    m_automodeChooser.addOption("Leave", new AutoTrajectory(DRIVE_SUBSYSTEM, "Leave").getCommand());
-    m_automodeChooser.addOption("Preload + 3 Ring", new AutoTrajectory(DRIVE_SUBSYSTEM, "Preload + 3 Ring").getCommand());
-    m_automodeChooser.addOption("Preload + 1", new AutoTrajectory(DRIVE_SUBSYSTEM, "Preload + 1").getCommand());
+    automodeChooser.setDefaultOption("Do nothing", Commands.none());
+    automodeChooser.addOption("Leave", new AutoTrajectory(DRIVE_SUBSYSTEM, "Leave").getCommand());
+    automodeChooser.addOption("Preload + 3 Ring", new AutoTrajectory(DRIVE_SUBSYSTEM, "Preload + 3 Ring").getCommand());
+    automodeChooser.addOption("Preload + 1", new AutoTrajectory(DRIVE_SUBSYSTEM, "Preload + 1").getCommand());
   }
 
   /**
@@ -95,6 +95,6 @@ public class RobotContainer {
    * @return Autonomous command
    */
   public Command getAutonomousCommand() {
-    return m_automodeChooser.getSelected();
+    return automodeChooser.getSelected();
   }
 }

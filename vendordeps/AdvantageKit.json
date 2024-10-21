@@ -28,7 +28,7 @@
             "groupId": "org.littletonrobotics.akit.conduit",
             "artifactId": "conduit-wpilibio",
             "version": "3.1.0",
-            "skipInvalidPlatforms": false,
+            "skipInvalidPlatforms": true,
             "isJar": false,
             "validPlatforms": [
                 "linuxathena",
