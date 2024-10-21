@@ -34,10 +34,8 @@ public class Robot extends LoggedRobot {
   @SuppressWarnings("resource")
   public void robotInit() {
     // AdvantageKit Logging
-    BatteryTracker batteryTracker = new BatteryTracker(BatteryTracker.initializeHardware());
     Logger.recordMetadata("ProjectName", "PurpleSwerve");
     Logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA);
-    Logger.recordMetadata("BatteryName", batteryTracker.scanBattery());
 
     // Set pathfinding algorithm to be AdvantageKit compatible
     Pathfinding.setPathfinder(new LocalADStarAK());
@@ -48,9 +46,6 @@ public class Robot extends LoggedRobot {
       //Logger.addDataReceiver(new NT4Publisher());
       new PowerDistribution();
       // Battery Tracking
-      if (batteryTracker.isBatteryReused())
-        DriverStation.reportError(batteryTracker.scanBattery() + " is being reused!", false);
-      else batteryTracker.writeCurrentBattery();
     } else {
       // Else just publish to NetworkTables for simulation or replay log file if var is set
       String replay = System.getenv(GlobalConstants.REPLAY_ENVIRONMENT_VAR);
