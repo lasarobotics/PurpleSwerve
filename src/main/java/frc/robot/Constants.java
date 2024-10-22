@@ -54,7 +54,7 @@ public final class Constants {
       new Pose2d(Units.Meters.of(15.48), Units.Meters.of(0.84), Rotation2d.fromDegrees(+120.00)),
       new Pose2d(Units.Meters.of(1.07), Units.Meters.of(0.82), Rotation2d.fromDegrees(+60.0)),
       Units.Meters.of(0.5),
-      true
+      true 
     );
   }
 

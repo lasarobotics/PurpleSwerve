@@ -157,7 +157,7 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
   public final Command ANTI_TIP_COMMAND = new FunctionalCommand(
     () -> LEDSubsystem.getInstance().startOverride(Pattern.RED_STROBE),
-    () -> antiTip(),
+          this::antiTip,
     (interrupted) -> {
       resetRotatePID();
       stop();
