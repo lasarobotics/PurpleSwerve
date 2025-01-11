@@ -1,6 +1,6 @@
 plugins {
   id "java"
-  id "edu.wpi.first.GradleRIO" version "2024.3.2"
+  id "edu.wpi.first.GradleRIO" version "2025.1.1"
   id "com.peterabeles.gversion" version "1.10"
 }
 
@@ -60,6 +60,8 @@ deploy {
         frcStaticFileDeploy(getArtifactTypeClass('FileTreeArtifact')) {
             files = project.fileTree('src/main/deploy')
             directory = '/home/lvuser/deploy'
+            deleteOldFiles = true // Change to true to delete files on roboRIO that no
+                                  // longer exist in deploy directory of this project
         }
       }
     }
@@ -80,6 +82,7 @@ def AdvantageKitJSON = new groovy.json.JsonSlurper().parseText(new File(projectD
 // Defining my dependencies. In this case, WPILib (+ friends), and vendor libraries.
 // Also defines JUnit 5.
 dependencies {
+  annotationProcessor wpi.java.deps.wpilibAnnotations()
   implementation wpi.java.deps.wpilib()
   implementation wpi.java.vendor.java()
 
@@ -97,16 +100,19 @@ dependencies {
   nativeRelease wpi.java.vendor.jniRelease(wpi.platforms.desktop)
   simulationRelease wpi.sim.enableRelease()
 
-  implementation 'com.github.lasarobotics:PurpleLib:0d521b4b7c'
+  //implementation fileTree(dir: 'libs', include: '*.jar')
+  implementation 'com.github.lasarobotics:PurpleLib:2025.0.1'
 
   implementation 'org.apache.commons:commons-math3:3.+'
+  implementation 'org.tinylog:tinylog-api:2.7.0'
+  implementation 'org.tinylog:tinylog-impl:2.7.0'
 
-  testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
+  testImplementation 'org.junit.jupiter:junit-jupiter:5.+'
   testImplementation 'org.mockito:mockito-core:3.+'
 
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.+'
 
-  annotationProcessor "org.littletonrobotics.akit.junction:junction-autolog:$AdvantageKitJSON.version"
+  annotationProcessor "org.littletonrobotics.akit:akit-autolog:$AdvantageKitJSON.version"
 }
 
 test {
@@ -123,8 +129,15 @@ wpi.sim.addDriverstation()
 // knows where to look for our Robot Class.
 jar {
   from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+  from sourceSets.main.allSource
   manifest edu.wpi.first.gradlerio.GradleRIOPlugin.javaManifest(ROBOT_MAIN_CLASS)
   duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+// Configure replay watch task
+task(replayWatch, type: JavaExec) {
+  mainClass = "org.littletonrobotics.junction.ReplayWatch"
+  classpath = sourceSets.main.runtimeClasspath
 }
 
 // Configure jar and deploy tasks
