@@ -6,6 +6,8 @@ package frc.robot.subsystems.drive;
 
 import java.util.List;
 
+import org.lasarobotics.drive.swerve.SwerveDrive;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.GoalEndState;
@@ -18,7 +20,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 
 public class AutoTrajectory {
-  DriveSubsystem m_driveSubsystem;
+  SwerveDrive m_driveSubsystem;
   Command m_swerveCommand;
   Pair<String,List<PathPlannerPath>> m_auto;
 
@@ -27,7 +29,7 @@ public class AutoTrajectory {
    * @param driveSubsystem DriveSubsystem to drive the robot
    * @param autoName PathPlanner auto name
    */
-  public AutoTrajectory(DriveSubsystem driveSubsystem, String autoName) {
+  public AutoTrajectory(SwerveDrive driveSubsystem, String autoName) {
     this.m_driveSubsystem = driveSubsystem;
 
     // Get path
@@ -40,7 +42,7 @@ public class AutoTrajectory {
    * @param waypoints List of x, y coordinate pairs in trajectory
    * @param pathConstraints Path following constraints
    */
-  public AutoTrajectory(DriveSubsystem driveSubsystem, List<Pose2d> waypoints, PathConstraints pathConstraints) {
+  public AutoTrajectory(SwerveDrive driveSubsystem, List<Pose2d> waypoints, PathConstraints pathConstraints) {
     this.m_driveSubsystem = driveSubsystem;
 
     // Generate path from waypoints
