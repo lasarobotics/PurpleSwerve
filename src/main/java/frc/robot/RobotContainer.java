@@ -4,8 +4,6 @@
 
 package frc.robot;
 
-import com.revrobotics.REVPhysicsSim;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -69,7 +67,7 @@ public class RobotContainer {
   private void configureBindings() {
     // Start button - toggle traction control
     PRIMARY_CONTROLLER.start().onTrue(CTREDRIVE_SUBSYSTEM.toggleTractionControlCommand());
-  
+
     // A button - go to amp
     PRIMARY_CONTROLLER.a().whileTrue(
       CTREDRIVE_SUBSYSTEM.goToPoseCommand(
@@ -85,13 +83,6 @@ public class RobotContainer {
     // Left/right bumper - wiggle stick
     PRIMARY_CONTROLLER.leftBumper().onTrue(WIGGLE_STICK.setPositionCommand(0.0));
     PRIMARY_CONTROLLER.rightBumper().onTrue(WIGGLE_STICK.setPositionCommand(15.0));
-  }
-
-  /**
-   * Run simlation related methods
-   */
-  public void simulationPeriodic() {
-    REVPhysicsSim.getInstance().run();
   }
 
     /**

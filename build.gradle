@@ -23,10 +23,6 @@ repositories {
   maven { url = "https://jitpack.io" }
 }
 
-configurations.all {
-  exclude group: "edu.wpi.first.wpilibj"
-}
-
 project.compileJava.dependsOn(createVersionFile)
 gversion {
   srcDir       = "src/main/java/"
