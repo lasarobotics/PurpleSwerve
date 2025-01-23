@@ -41,14 +41,14 @@ public class PurplePathClient {
 
   private final String URI;
 
-  private DriveSubsystem m_driveSubsystem;
+  private CTREDriveSubsystem m_CTREdriveSubsystem;
   private HttpURLConnection m_serverConnection;
   private boolean m_isConnected;
   private boolean m_connectivityCheckEnabled;
   private Notifier m_periodicNotifier;
 
-  public PurplePathClient(DriveSubsystem driveSubsystem) {
-    this.m_driveSubsystem = driveSubsystem;
+  public PurplePathClient(CTREDriveSubsystem driveSubsystem) {
+    this.m_CTREdriveSubsystem = driveSubsystem;
     this.m_isConnected = false;
     this.m_connectivityCheckEnabled = true;
 
@@ -104,12 +104,12 @@ public class PurplePathClient {
   private Command getPathPlannerCommand(PathPlannerPath path) {
     return new FollowPathHolonomic(
       path,
-      m_driveSubsystem::getPose,
-      m_driveSubsystem::getChassisSpeeds,
-      m_driveSubsystem::autoDrive,
-      m_driveSubsystem.getPathFollowerConfig(),
+      m_CTREdriveSubsystem::getPose,
+      m_CTREdriveSubsystem::getChassisSpeeds,
+      m_CTREdriveSubsystem::autoDrive,
+      m_CTREdriveSubsystem.getPathFollowerConfig(),
       () -> false,
-      m_driveSubsystem
+      m_CTREdriveSubsystem
     );
   }
 
@@ -163,12 +163,12 @@ public class PurplePathClient {
     // Generate path
     PathPlannerPath path = PathPlannerPath.fromPathPoints(
       waypoints,
-      m_driveSubsystem.getPathConstraints(),
+      m_CTREdriveSubsystem.getPathConstraints(),
       new GoalEndState(
         isClose ? 0.0
                 : Math.min(
-                    Math.sqrt(2 * m_driveSubsystem.getPathConstraints().getMaxAccelerationMpsSq() * finalApproachDistance) * FINAL_APPROACH_SPEED_FUDGE_FACTOR,
-                    Math.sqrt(2 * m_driveSubsystem.getPathConstraints().getMaxAccelerationMpsSq() * distance)
+                    Math.sqrt(2 * m_CTREdriveSubsystem.getPathConstraints().getMaxAccelerationMpsSq() * finalApproachDistance) * FINAL_APPROACH_SPEED_FUDGE_FACTOR,
+                    Math.sqrt(2 * m_CTREdriveSubsystem.getPathConstraints().getMaxAccelerationMpsSq() * distance)
                 ),
         finalApproachPose.getRotation()
       )
@@ -206,7 +206,7 @@ public class PurplePathClient {
    * @return Trajectory command
    */
   public Command getTrajectoryCommand(PurplePathPose goal, Command parallelCommand) {
-    return getCommand(m_driveSubsystem.getPose(), goal, parallelCommand);
+    return getCommand(m_CTREdriveSubsystem.getPose(), goal, parallelCommand);
   }
 
   /**

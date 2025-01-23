@@ -14,13 +14,25 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.WaggleSubsystem;
 import frc.robot.subsystems.drive.AutoTrajectory;
-import frc.robot.subsystems.drive.DriveSubsystem;
+import frc.robot.subsystems.drive.CTREDriveSubsystem;
+import frc.robot.subsystems.drive.REVDriveSubsystem;
 
 public class RobotContainer {
-  private static final DriveSubsystem DRIVE_SUBSYSTEM = new DriveSubsystem(
-    DriveSubsystem.initializeHardware(),
+  private static final CTREDriveSubsystem CTREDRIVE_SUBSYSTEM = new CTREDriveSubsystem(
+    CTREDriveSubsystem.initializeHardware(),
     Constants.Drive.DRIVE_ROTATE_PID,
-    Constants.Drive.DRIVE_CONTROL_CENTRICITY,
+    Constants.Drive.DRIVE_AUTO_AIM_PID, Constants.Drive.DRIVE_CONTROL_CENTRICITY,
+    Constants.Drive.DRIVE_THROTTLE_INPUT_CURVE,
+    Constants.Drive.DRIVE_TURN_INPUT_CURVE,
+    Constants.Drive.DRIVE_TURN_SCALAR,
+    Constants.HID.CONTROLLER_DEADBAND,
+    Constants.Drive.DRIVE_LOOKAHEAD
+  );
+
+  private static final REVDriveSubsystem REVDRIVE_SUBSYSTEM = new REVDriveSubsystem(
+    REVDriveSubsystem.initializeHardware(),
+    Constants.Drive.DRIVE_ROTATE_PID,
+    Constants.Drive.DRIVE_AUTO_AIM_PID, Constants.Drive.DRIVE_CONTROL_CENTRICITY,
     Constants.Drive.DRIVE_THROTTLE_INPUT_CURVE,
     Constants.Drive.DRIVE_TURN_INPUT_CURVE,
     Constants.Drive.DRIVE_TURN_SCALAR,
@@ -36,8 +48,8 @@ public class RobotContainer {
 
   public RobotContainer() {
     // Set drive command
-    DRIVE_SUBSYSTEM.setDefaultCommand(
-      DRIVE_SUBSYSTEM.driveCommand(
+    CTREDRIVE_SUBSYSTEM.setDefaultCommand(
+      CTREDRIVE_SUBSYSTEM.driveCommand(
         () -> PRIMARY_CONTROLLER.getLeftY(),
         () -> PRIMARY_CONTROLLER.getLeftX(),
         () -> PRIMARY_CONTROLLER.getRightX()
@@ -45,7 +57,7 @@ public class RobotContainer {
     );
 
     // Setup AutoBuilder
-    DRIVE_SUBSYSTEM.configureAutoBuilder();
+    CTREDRIVE_SUBSYSTEM.configureAutoBuilder();
 
     autoModeChooser();
     SmartDashboard.putData(Constants.SmartDashboard.SMARTDASHBOARD_AUTO_MODE, m_automodeChooser);
@@ -56,19 +68,19 @@ public class RobotContainer {
 
   private void configureBindings() {
     // Start button - toggle traction control
-    PRIMARY_CONTROLLER.start().onTrue(DRIVE_SUBSYSTEM.toggleTractionControlCommand());
+    PRIMARY_CONTROLLER.start().onTrue(CTREDRIVE_SUBSYSTEM.toggleTractionControlCommand());
   
     // A button - go to amp
     PRIMARY_CONTROLLER.a().whileTrue(
-      DRIVE_SUBSYSTEM.goToPoseCommand(
+      CTREDRIVE_SUBSYSTEM.goToPoseCommand(
         Constants.Field.AMP
       )
     );
 
     // B button - go to source
-    PRIMARY_CONTROLLER.b().whileTrue(DRIVE_SUBSYSTEM.goToPoseCommand(Constants.Field.SOURCE));
+    PRIMARY_CONTROLLER.b().whileTrue(CTREDRIVE_SUBSYSTEM.goToPoseCommand(Constants.Field.SOURCE));
 
-    PRIMARY_CONTROLLER.povLeft().onTrue(DRIVE_SUBSYSTEM.resetPoseCommand(() -> new Pose2d()));
+    PRIMARY_CONTROLLER.povLeft().onTrue(CTREDRIVE_SUBSYSTEM.resetPoseCommand(() -> new Pose2d()));
 
     // Left/right bumper - wiggle stick
     PRIMARY_CONTROLLER.leftBumper().onTrue(WIGGLE_STICK.setPositionCommand(0.0));
@@ -87,9 +99,9 @@ public class RobotContainer {
    */
   private void autoModeChooser() {
     m_automodeChooser.setDefaultOption("Do nothing", Commands.none());
-    m_automodeChooser.addOption("Leave", new AutoTrajectory(DRIVE_SUBSYSTEM, "Leave").getCommand());
-    m_automodeChooser.addOption("Preload + 3 Ring", new AutoTrajectory(DRIVE_SUBSYSTEM, "Preload + 3 Ring").getCommand());
-    m_automodeChooser.addOption("Preload + 1", new AutoTrajectory(DRIVE_SUBSYSTEM, "Preload + 1").getCommand());
+    m_automodeChooser.addOption("Leave", new AutoTrajectory(CTREDRIVE_SUBSYSTEM, "Leave").getCommand());
+    m_automodeChooser.addOption("Preload + 3 Ring", new AutoTrajectory(CTREDRIVE_SUBSYSTEM, "Preload + 3 Ring").getCommand());
+    m_automodeChooser.addOption("Preload + 1", new AutoTrajectory(CTREDRIVE_SUBSYSTEM, "Preload + 1").getCommand());
   }
 
   /**
