@@ -7,6 +7,7 @@ package frc.robot.subsystems.drive;
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 import org.lasarobotics.drive.swerve.AdvancedSwerveKinematics.ControlCentricity;
 import org.lasarobotics.drive.swerve.SwerveDrive;
+import org.lasarobotics.drive.swerve.SwerveModule;
 import org.lasarobotics.drive.swerve.child.SwerveX2Module;
 import org.lasarobotics.drive.swerve.parent.CTRESwerveModule;
 import org.lasarobotics.hardware.kauailabs.NavX2;
@@ -64,8 +65,8 @@ public class CTREDriveSubsystem extends SwerveDrive {
         Constants.CTREDriveHardware.LEFT_FRONT_ROTATE_MOTOR_ID,
         Constants.CTREDriveHardware.LEFT_FRONT_ROTATE_ENCODER_ID
       ),
-      org.lasarobotics.drive.swerve.SwerveModule.Location.LeftFront,
-      org.lasarobotics.drive.swerve.SwerveModule.MountOrientation.INVERTED,
+      SwerveModule.Location.LeftFront,
+      SwerveModule.MountOrientation.INVERTED,
       Constants.Drive.CTRE_GEAR_RATIO,
       Constants.Drive.DRIVE_WHEEL,
       Constants.Drive.DRIVE_PID,
@@ -86,8 +87,8 @@ public class CTREDriveSubsystem extends SwerveDrive {
         Constants.CTREDriveHardware.RIGHT_FRONT_ROTATE_MOTOR_ID,
         Constants.CTREDriveHardware.RIGHT_FRONT_ROTATE_ENCODER_ID
       ),
-      org.lasarobotics.drive.swerve.SwerveModule.Location.LeftFront,
-      org.lasarobotics.drive.swerve.SwerveModule.MountOrientation.INVERTED,
+      SwerveModule.Location.RightFront,
+      SwerveModule.MountOrientation.INVERTED,
       Constants.Drive.CTRE_GEAR_RATIO,
       Constants.Drive.DRIVE_WHEEL,
       Constants.Drive.DRIVE_PID,
@@ -108,8 +109,8 @@ public class CTREDriveSubsystem extends SwerveDrive {
         Constants.CTREDriveHardware.LEFT_REAR_ROTATE_MOTOR_ID,
         Constants.CTREDriveHardware.LEFT_REAR_ROTATE_ENCODER_ID
       ),
-      org.lasarobotics.drive.swerve.SwerveModule.Location.LeftFront,
-      org.lasarobotics.drive.swerve.SwerveModule.MountOrientation.INVERTED,
+      SwerveModule.Location.LeftRear,
+      SwerveModule.MountOrientation.INVERTED,
       Constants.Drive.CTRE_GEAR_RATIO,
       Constants.Drive.DRIVE_WHEEL,
       Constants.Drive.DRIVE_PID,
@@ -130,8 +131,8 @@ public class CTREDriveSubsystem extends SwerveDrive {
         Constants.CTREDriveHardware.RIGHT_REAR_ROTATE_MOTOR_ID,
         Constants.CTREDriveHardware.RIGHT_REAR_ROTATE_ENCODER_ID
       ),
-      org.lasarobotics.drive.swerve.SwerveModule.Location.LeftFront,
-      org.lasarobotics.drive.swerve.SwerveModule.MountOrientation.INVERTED,
+      SwerveModule.Location.RightRear,
+      SwerveModule.MountOrientation.INVERTED,
       Constants.Drive.CTRE_GEAR_RATIO,
       Constants.Drive.DRIVE_WHEEL,
       Constants.Drive.DRIVE_PID,
@@ -167,7 +168,8 @@ public class CTREDriveSubsystem extends SwerveDrive {
     return drivetrainHardware;
   }
 
-  /**Configures the AutoBuilder so that PathPlanner can use its built-in commands when running autos.
+  /**
+   * Configures the AutoBuilder so that PathPlanner can use its built-in commands when running autos.
    * Uses the PathPlanner AutoBuilder method. 
   */
 

@@ -15,14 +15,22 @@ import org.lasarobotics.hardware.revrobotics.Spark;
 import org.lasarobotics.utils.PIDConstants;
 import org.lasarobotics.vision.AprilTagCamera;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Constants;
 
 public class REVDriveSubsystem extends SwerveDrive {
+
+  Hardware m_drivetrainHardware;
 
   /**
    * Create an instance of DriveSubsystem
@@ -43,6 +51,7 @@ public class REVDriveSubsystem extends SwerveDrive {
                         PolynomialSplineFunction throttleInputCurve, PolynomialSplineFunction rotateInputCurve,
                         Angle rotateScalar, Dimensionless deadband, Time lookAhead) {
     super(drivetrainHardware, rotatePIDF, aimPIDF, controlCentricity, throttleInputCurve, rotateInputCurve, rotateScalar, deadband, lookAhead);
+    m_drivetrainHardware = drivetrainHardware;
   }
 
   /**
@@ -81,7 +90,7 @@ public class REVDriveSubsystem extends SwerveDrive {
         Spark.MotorKind.NEO_VORTEX,
         Spark.MotorKind.NEO_550
       ),
-      SwerveModule.Location.LeftFront,
+      SwerveModule.Location.RightFront,
       Constants.Drive.REV_GEAR_RATIO,
       Constants.Drive.DRIVE_WHEEL,
       Constants.Drive.DRIVE_PID,
@@ -103,7 +112,7 @@ public class REVDriveSubsystem extends SwerveDrive {
         Spark.MotorKind.NEO_VORTEX,
         Spark.MotorKind.NEO_550
       ),
-      org.lasarobotics.drive.swerve.SwerveModule.Location.LeftFront,
+      SwerveModule.Location.LeftRear,
       Constants.Drive.REV_GEAR_RATIO,
       Constants.Drive.DRIVE_WHEEL,
       Constants.Drive.DRIVE_PID,
@@ -125,7 +134,7 @@ public class REVDriveSubsystem extends SwerveDrive {
         Spark.MotorKind.NEO_VORTEX,
         Spark.MotorKind.NEO_550
       ),
-      org.lasarobotics.drive.swerve.SwerveModule.Location.LeftFront,
+      SwerveModule.Location.RightRear,
       Constants.Drive.REV_GEAR_RATIO,
       Constants.Drive.DRIVE_WHEEL,
       Constants.Drive.DRIVE_PID,
@@ -159,5 +168,41 @@ public class REVDriveSubsystem extends SwerveDrive {
     Hardware drivetrainHardware = new Hardware(navx, lFrontModule, rFrontModule, lRearModule, rRearModule, frontCamera, rearCamera);
 
     return drivetrainHardware;
+  }
+
+  /**
+   * Configures the AutoBuilder so that PathPlanner can use its built-in commands when running autos.
+   * Uses the PathPlanner AutoBuilder method. 
+   */
+  public void configureAutoBuilder() {
+    AutoBuilder.configure(
+            () -> getPose(), // Robot pose supplier
+            (pose) -> resetPose(pose), // Method to reset odometry (will be called if your auto has a starting pose)
+            () -> getChassisSpeeds(), // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+            (speeds, feedforwards) -> autoDrive(speeds), // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
+            new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
+                    new com.pathplanner.lib.config.PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
+                    new com.pathplanner.lib.config.PIDConstants(5.0, 0.0, 0.0) // Rotation PID constants
+            ),
+            new RobotConfig(Constants.Drive.MASS, // The robot configuration
+                            Units.KilogramSquareMeters.of(1),
+                            Constants.Drive.MODULE_CONFIG,
+                            m_drivetrainHardware.lFrontModule().getModuleCoordinate(),
+                            m_drivetrainHardware.rFrontModule().getModuleCoordinate(),
+                            m_drivetrainHardware.lRearModule().getModuleCoordinate(),
+                            m_drivetrainHardware.rRearModule().getModuleCoordinate()),
+            () -> {
+              // Boolean supplier that controls when the path will be mirrored for the red alliance
+              // This will flip the path being followed to the red side of the field.
+              // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+
+              var alliance = DriverStation.getAlliance();
+              if (alliance.isPresent()) {
+                return alliance.get() == DriverStation.Alliance.Red;
+              }
+              return false;
+            },
+            this // Reference to this subsystem to set requirements
+    );
   }
 }
