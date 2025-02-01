@@ -17,6 +17,9 @@ import org.lasarobotics.utils.FFConstants;
 import org.lasarobotics.utils.PIDConstants;
 import org.lasarobotics.vision.AprilTagCamera.Resolution;
 
+import com.pathplanner.lib.config.ModuleConfig;
+import com.revrobotics.spark.config.SparkFlexConfig;
+
 import edu.wpi.first.apriltag.AprilTag;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
@@ -24,6 +27,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Current;
@@ -38,6 +43,8 @@ public final class Constants {
     public static final AprilTagFieldLayout FIELD_LAYOUT = AprilTagFieldLayout.loadField(AprilTagFields.k2024Crescendo);
     public static final AprilTag BLUE_SPEAKER = getTag(7).get();
     public static final AprilTag RED_SPEAKER = getTag(4).get();
+    public static final AprilTag BLUE_AMP = getTag(6).get();
+
 
     /**
      * Get AprilTag from field
@@ -53,6 +60,19 @@ public final class Constants {
     public static final int PRIMARY_CONTROLLER_PORT = 0;
     public static final int SECONDARY_CONTROLLER_PORT = 1;
     public static final Dimensionless CONTROLLER_DEADBAND = Units.Percent.of(10);
+  }
+
+  
+  public static class WiggleStick {
+    
+    public static final SparkFlexConfig WIGGLE_STICK_CONFIG = new SparkFlexConfig();
+
+    public static final TrapezoidProfile.Constraints CONSTRAINTS = new TrapezoidProfile.Constraints(10, 20);
+  }
+
+  public static class SmartDashboard {
+    public static final String SMARTDASHBOARD_DEFAULT_TAB = "SmartDashboard";
+    public static final String SMARTDASHBOARD_AUTO_MODE = "Auto Mode";
   }
 
   public static class Drive {
@@ -86,6 +106,8 @@ public final class Constants {
 
     public static final SwerveX2Module.GearRatio CTRE_GEAR_RATIO = SwerveX2Module.GearRatio.X4_3;
     public static final MAXSwerveModule.GearRatio REV_GEAR_RATIO = MAXSwerveModule.GearRatio.L3;
+
+    public static final ModuleConfig MODULE_CONFIG = new ModuleConfig(DRIVE_WHEEL.diameter.div(2), Units.MetersPerSecond.of(5.172), 1.3, DCMotor.getKrakenX60Foc(1), DRIVE_CURRENT_LIMIT, 1);
   }
 
   public static class CTREDriveHardware {

@@ -11,12 +11,11 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.WaggleSubsystem;
-import frc.robot.subsystems.drive.AutoTrajectory;
 import frc.robot.subsystems.drive.CTREDriveSubsystem;
 import frc.robot.subsystems.drive.REVDriveSubsystem;
 
 public class RobotContainer {
-  private static final CTREDriveSubsystem CTREDRIVE_SUBSYSTEM = new CTREDriveSubsystem(
+  private static final CTREDriveSubsystem CTRE_DRIVE_SUBSYSTEM = new CTREDriveSubsystem(
     CTREDriveSubsystem.initializeHardware(),
     Constants.Drive.DRIVE_ROTATE_PID,
     Constants.Drive.DRIVE_AUTO_AIM_PID, Constants.Drive.DRIVE_CONTROL_CENTRICITY,
@@ -27,7 +26,7 @@ public class RobotContainer {
     Constants.Drive.DRIVE_LOOKAHEAD
   );
 
-  private static final REVDriveSubsystem REVDRIVE_SUBSYSTEM = new REVDriveSubsystem(
+  private static final REVDriveSubsystem REV_DRIVE_SUBSYSTEM = new REVDriveSubsystem(
     REVDriveSubsystem.initializeHardware(),
     Constants.Drive.DRIVE_ROTATE_PID,
     Constants.Drive.DRIVE_AUTO_AIM_PID, Constants.Drive.DRIVE_CONTROL_CENTRICITY,
@@ -46,8 +45,8 @@ public class RobotContainer {
 
   public RobotContainer() {
     // Set drive command
-    CTREDRIVE_SUBSYSTEM.setDefaultCommand(
-      CTREDRIVE_SUBSYSTEM.driveCommand(
+    CTRE_DRIVE_SUBSYSTEM.setDefaultCommand(
+      CTRE_DRIVE_SUBSYSTEM.driveCommand(
         () -> PRIMARY_CONTROLLER.getLeftY(),
         () -> PRIMARY_CONTROLLER.getLeftX(),
         () -> PRIMARY_CONTROLLER.getRightX()
@@ -55,7 +54,7 @@ public class RobotContainer {
     );
 
     // Setup AutoBuilder
-    CTREDRIVE_SUBSYSTEM.configureAutoBuilder();
+    CTRE_DRIVE_SUBSYSTEM.configureAutoBuilder();
 
     autoModeChooser();
     SmartDashboard.putData(Constants.SmartDashboard.SMARTDASHBOARD_AUTO_MODE, m_automodeChooser);
@@ -66,19 +65,9 @@ public class RobotContainer {
 
   private void configureBindings() {
     // Start button - toggle traction control
-    PRIMARY_CONTROLLER.start().onTrue(CTREDRIVE_SUBSYSTEM.toggleTractionControlCommand());
+    PRIMARY_CONTROLLER.start().onTrue(CTRE_DRIVE_SUBSYSTEM.toggleTractionControlCommand());
 
-    // A button - go to amp
-    PRIMARY_CONTROLLER.a().whileTrue(
-      CTREDRIVE_SUBSYSTEM.goToPoseCommand(
-        Constants.Field.AMP
-      )
-    );
-
-    // B button - go to source
-    PRIMARY_CONTROLLER.b().whileTrue(CTREDRIVE_SUBSYSTEM.goToPoseCommand(Constants.Field.SOURCE));
-
-    PRIMARY_CONTROLLER.povLeft().onTrue(CTREDRIVE_SUBSYSTEM.resetPoseCommand(() -> new Pose2d()));
+    PRIMARY_CONTROLLER.povLeft().onTrue(CTRE_DRIVE_SUBSYSTEM.resetPoseCommand(() -> new Pose2d()));
 
     // Left/right bumper - wiggle stick
     PRIMARY_CONTROLLER.leftBumper().onTrue(WIGGLE_STICK.setPositionCommand(0.0));
@@ -90,9 +79,6 @@ public class RobotContainer {
    */
   private void autoModeChooser() {
     m_automodeChooser.setDefaultOption("Do nothing", Commands.none());
-    m_automodeChooser.addOption("Leave", new AutoTrajectory(CTREDRIVE_SUBSYSTEM, "Leave").getCommand());
-    m_automodeChooser.addOption("Preload + 3 Ring", new AutoTrajectory(CTREDRIVE_SUBSYSTEM, "Preload + 3 Ring").getCommand());
-    m_automodeChooser.addOption("Preload + 1", new AutoTrajectory(CTREDRIVE_SUBSYSTEM, "Preload + 1").getCommand());
   }
 
   /**

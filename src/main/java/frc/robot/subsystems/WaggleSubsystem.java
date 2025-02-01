@@ -5,11 +5,13 @@
 package frc.robot.subsystems;
 
 import org.lasarobotics.hardware.revrobotics.Spark;
-import org.lasarobotics.hardware.revrobotics.Spark.FeedbackSensor;
 import org.lasarobotics.hardware.revrobotics.Spark.MotorKind;
-import org.lasarobotics.hardware.revrobotics.SparkPIDConfig;
 
-import com.revrobotics.CANSparkBase.IdleMode;
+import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.spark.config.SparkBaseConfig;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.config.SparkFlexConfig;
+import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -18,33 +20,38 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class WaggleSubsystem extends SubsystemBase {
   Spark m_motor;
-  SparkPIDConfig m_config;
+  SparkBaseConfig m_config;
   Constraints m_constraint;
 
   /** Creates a new wiggleStick. */
-  public WaggleSubsystem(SparkPIDConfig config, Constraints constraint) {
+  public WaggleSubsystem(SparkBaseConfig config, Constraints constraint) {
     m_motor = new Spark(new Spark.ID("wiggleStick", 20), MotorKind.NEO);
     m_config = config;
     m_constraint = constraint;
-
+    m_config = (m_motor.getKind().equals(MotorKind.NEO_VORTEX)) ? new SparkFlexConfig() : new SparkMaxConfig();
     double conversionFactor = 1.0;
-    m_motor.initializeSparkPID(config, FeedbackSensor.NEO_ENCODER);
-    m_motor.setPositionConversionFactor(FeedbackSensor.NEO_ENCODER, conversionFactor);
-    m_motor.setVelocityConversionFactor(FeedbackSensor.NEO_ENCODER, conversionFactor);
+    m_config.encoder.positionConversionFactor(conversionFactor);
+    m_config.encoder.velocityConversionFactor(conversionFactor / 60);
+    m_config.closedLoop.pidf(0.2, 0.0, 0.0, 0);
+    m_config.closedLoop.maxMotion.maxAcceleration(20);
+    m_config.closedLoop.maxMotion.maxVelocity(10);
 
-    m_motor.enablePIDWrapping(0.0, 15.0);
+    m_config.closedLoop.positionWrappingEnabled(true);
     m_motor.setIdleMode(IdleMode.kCoast);
     m_motor.resetEncoder();
   }
 
-  public void setPosition(double position) {
-    m_motor.smoothMotion(position, m_constraint);
+  /** Moves to the given position */
+  private void setPosition(double position) {
+    m_motor.set(position, ControlType.kMAXMotionPositionControl);
   }
 
+  /** Gets the position using the encoders */
   public double getPosition() {
     return m_motor.getInputs().encoderPosition;
   }
 
+  /** Command to set the position of the robot */
   public Command setPositionCommand(double position) {
     return runOnce(() -> setPosition(position));
 

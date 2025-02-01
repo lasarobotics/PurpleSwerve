@@ -4,13 +4,17 @@
 
 package frc.robot.subsystems.drive;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
+import org.json.simple.parser.ParseException;
 import org.lasarobotics.drive.swerve.SwerveDrive;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.GoalEndState;
+import com.pathplanner.lib.path.IdealStartingState;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 
@@ -28,8 +32,10 @@ public class AutoTrajectory {
    * Create new path trajectory using PathPlanner path
    * @param driveSubsystem DriveSubsystem to drive the robot
    * @param autoName PathPlanner auto name
+   * @throws IOException if attempting to load a file that does not exist or cannot be read
+   * @throws ParseException If JSON within file cannot be parsed
    */
-  public AutoTrajectory(SwerveDrive driveSubsystem, String autoName) {
+  public AutoTrajectory(SwerveDrive driveSubsystem, String autoName) throws IOException, ParseException {
     this.m_driveSubsystem = driveSubsystem;
 
     // Get path
@@ -44,18 +50,19 @@ public class AutoTrajectory {
    */
   public AutoTrajectory(SwerveDrive driveSubsystem, List<Pose2d> waypoints, PathConstraints pathConstraints) {
     this.m_driveSubsystem = driveSubsystem;
+    IdealStartingState startingState = new IdealStartingState(0, null);
 
     // Generate path from waypoints
     m_auto = new Pair<String, List<PathPlannerPath>>("", List.of(new PathPlannerPath(
-      PathPlannerPath.bezierFromPoses(waypoints),
+      PathPlannerPath.waypointsFromPoses(waypoints),
       pathConstraints,
-      new GoalEndState(0.0, waypoints.get(waypoints.size() - 1).getRotation())
+      startingState, new GoalEndState(0.0, waypoints.get(waypoints.size() - 1).getRotation())
     )));
   }
 
   /** Return initial pose */
-  public Pose2d getInitialPose() {
-    return m_auto.getSecond().get(0).getPreviewStartingHolonomicPose();
+  public Optional<Pose2d> getInitialPose() {
+    return m_auto.getSecond().get(0).getStartingHolonomicPose();
   }
 
   /**
@@ -68,7 +75,7 @@ public class AutoTrajectory {
       : new PathPlannerAuto(m_auto.getFirst());
 
     return Commands.sequence(
-      m_driveSubsystem.resetPoseCommand(() -> getInitialPose()),
+      m_driveSubsystem.resetPoseCommand(() -> getInitialPose().orElseThrow(null)),
       autoCommand,
       m_driveSubsystem.stopCommand(),
       m_driveSubsystem.lockCommand()
