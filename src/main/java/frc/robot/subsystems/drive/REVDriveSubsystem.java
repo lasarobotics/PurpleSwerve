@@ -19,8 +19,6 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Dimensionless;
@@ -154,7 +152,7 @@ public class REVDriveSubsystem extends SwerveDrive {
       Constants.VisionHardware.CAMERA_A_LOCATION,
       Constants.VisionHardware.CAMERA_A_RESOLUTION,
       Constants.VisionHardware.CAMERA_A_FOV,
-      AprilTagFieldLayout.loadField(AprilTagFields.k2024Crescendo)
+      Constants.Field.FIELD_LAYOUT
     );
 
     AprilTagCamera rearCamera = new AprilTagCamera(
@@ -162,7 +160,7 @@ public class REVDriveSubsystem extends SwerveDrive {
       Constants.VisionHardware.CAMERA_B_LOCATION,
       Constants.VisionHardware.CAMERA_B_RESOLUTION,
       Constants.VisionHardware.CAMERA_B_FOV,
-      AprilTagFieldLayout.loadField(AprilTagFields.k2024Crescendo)
+      Constants.Field.FIELD_LAYOUT
     );
 
     Hardware drivetrainHardware = new Hardware(navx, lFrontModule, rFrontModule, lRearModule, rRearModule, frontCamera, rearCamera);
