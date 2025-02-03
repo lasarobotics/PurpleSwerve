@@ -179,3 +179,13 @@ src/main/java/frc/robot/BuildConstants.java
 
 # Battery Tracker
 previous_battery.txt
+
+# Odometer
+*-odometer.txt
+
+# CTRE sim
+ctre_sim/
+
+# Local libs
+libs
+libs/
