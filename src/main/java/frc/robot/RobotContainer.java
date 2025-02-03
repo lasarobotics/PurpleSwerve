@@ -12,24 +12,23 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.Constants.Drive.Vendor;
 import frc.robot.subsystems.WaggleSubsystem;
 import frc.robot.subsystems.drive.CTREDriveSubsystem;
 import frc.robot.subsystems.drive.REVDriveSubsystem;
 
 public class RobotContainer {
-  public static final SwerveDrive DRIVE_SUBSYSTEM = (Constants.Drive.DRIVE_VENDOR.equals(Vendor.CTRE))
-  ? new CTREDriveSubsystem(
-    CTREDriveSubsystem.initializeHardware(),
-    Constants.Drive.DRIVE_ROTATE_PID,
-    Constants.Drive.DRIVE_AUTO_AIM_PID, Constants.Drive.DRIVE_CONTROL_CENTRICITY,
-    Constants.Drive.DRIVE_THROTTLE_INPUT_CURVE,
-    Constants.Drive.DRIVE_TURN_INPUT_CURVE,
-    Constants.Drive.DRIVE_TURN_SCALAR,
-    Constants.HID.CONTROLLER_DEADBAND,
-    Constants.Drive.DRIVE_LOOKAHEAD
-  ) 
-  : new REVDriveSubsystem(
+  public static final SwerveDrive DRIVE_SUBSYSTEM =
+  // new CTREDriveSubsystem(
+  //   CTREDriveSubsystem.initializeHardware(),
+  //   Constants.Drive.DRIVE_ROTATE_PID,
+  //   Constants.Drive.DRIVE_AUTO_AIM_PID, Constants.Drive.DRIVE_CONTROL_CENTRICITY,
+  //   Constants.Drive.DRIVE_THROTTLE_INPUT_CURVE,
+  //   Constants.Drive.DRIVE_TURN_INPUT_CURVE,
+  //   Constants.Drive.DRIVE_TURN_SCALAR,
+  //   Constants.HID.CONTROLLER_DEADBAND,
+  //   Constants.Drive.DRIVE_LOOKAHEAD
+  // );
+  new REVDriveSubsystem(
     REVDriveSubsystem.initializeHardware(),
     Constants.Drive.DRIVE_ROTATE_PID,
     Constants.Drive.DRIVE_AUTO_AIM_PID, Constants.Drive.DRIVE_CONTROL_CENTRICITY,
@@ -57,9 +56,9 @@ public class RobotContainer {
     );
 
     // Setup AutoBuilder
-    // if (Constants.Drive.DRIVE_VENDOR.equals(Vendor.CTRE))
-    //   ((CTREDriveSubsystem)DRIVE_SUBSYSTEM).configureAutoBuilder();
-    // else ((REVDriveSubsystem)DRIVE_SUBSYSTEM).configureAutoBuilder();
+    if (DRIVE_SUBSYSTEM instanceof CTREDriveSubsystem)
+      ((CTREDriveSubsystem)DRIVE_SUBSYSTEM).configureAutoBuilder();
+    else ((REVDriveSubsystem)DRIVE_SUBSYSTEM).configureAutoBuilder();
 
     autoModeChooser();
     SmartDashboard.putData(Constants.SmartDashboard.SMARTDASHBOARD_AUTO_MODE, m_automodeChooser);

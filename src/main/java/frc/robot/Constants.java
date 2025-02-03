@@ -62,9 +62,9 @@ public final class Constants {
     public static final Dimensionless CONTROLLER_DEADBAND = Units.Percent.of(10);
   }
 
-  
+
   public static class WiggleStick {
-    
+
     public static final SparkFlexConfig WIGGLE_STICK_CONFIG = new SparkFlexConfig();
 
     public static final TrapezoidProfile.Constraints CONSTRAINTS = new TrapezoidProfile.Constraints(10, 20);
@@ -76,11 +76,6 @@ public final class Constants {
   }
 
   public static class Drive {
-    public static enum Vendor {
-      REV,
-      CTRE;
-    }
-    public static final Vendor DRIVE_VENDOR = Vendor.REV;
     public static final DriveWheel DRIVE_WHEEL = DriveWheel.create(Units.Inches.of(4.0), Units.Value.of(1.3), Units.Value.of(1.2));
     public static final PIDConstants DRIVE_PID = PIDConstants.of(0.3, 0.0, 0.001, 0.0, 0.0);
     public static final FFConstants DRIVE_FF = FFConstants.of(0.2, 0.0, 0.0, 0.0);
