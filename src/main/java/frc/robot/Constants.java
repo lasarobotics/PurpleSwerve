@@ -40,11 +40,7 @@ import edu.wpi.first.units.measure.Time;
 public final class Constants {
 
   public static class Field {
-    public static final AprilTagFieldLayout FIELD_LAYOUT = AprilTagFieldLayout.loadField(AprilTagFields.k2024Crescendo);
-    public static final AprilTag BLUE_SPEAKER = getTag(7).get();
-    public static final AprilTag RED_SPEAKER = getTag(4).get();
-    public static final AprilTag BLUE_AMP = getTag(6).get();
-
+    public static final AprilTagFieldLayout FIELD_LAYOUT = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
 
     /**
      * Get AprilTag from field
