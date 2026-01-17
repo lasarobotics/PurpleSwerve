@@ -149,6 +149,7 @@ public class REVDriveSubsystem extends SwerveDrive {
 
     AprilTagCamera frontCamera = new AprilTagCamera(
       Constants.VisionHardware.CAMERA_A_NAME,
+      navx,
       Constants.VisionHardware.CAMERA_A_LOCATION,
       Constants.VisionHardware.CAMERA_A_RESOLUTION,
       Constants.VisionHardware.CAMERA_A_FOV,
@@ -157,6 +158,7 @@ public class REVDriveSubsystem extends SwerveDrive {
 
     AprilTagCamera rearCamera = new AprilTagCamera(
       Constants.VisionHardware.CAMERA_B_NAME,
+      navx,
       Constants.VisionHardware.CAMERA_B_LOCATION,
       Constants.VisionHardware.CAMERA_B_RESOLUTION,
       Constants.VisionHardware.CAMERA_B_FOV,

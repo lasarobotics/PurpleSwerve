@@ -32,9 +32,9 @@ public class WaggleSubsystem extends SubsystemBase {
     double conversionFactor = 1.0;
     m_config.encoder.positionConversionFactor(conversionFactor);
     m_config.encoder.velocityConversionFactor(conversionFactor / 60);
-    m_config.closedLoop.pidf(0.2, 0.0, 0.0, 0);
+    m_config.closedLoop.pid(0.2, 0.0, 0.0);
     m_config.closedLoop.maxMotion.maxAcceleration(20);
-    m_config.closedLoop.maxMotion.maxVelocity(10);
+    m_config.closedLoop.maxMotion.cruiseVelocity(10);
 
     m_config.closedLoop.positionWrappingEnabled(true);
     m_motor.setIdleMode(IdleMode.kCoast);
