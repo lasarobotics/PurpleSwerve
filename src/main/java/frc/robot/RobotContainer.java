@@ -4,14 +4,19 @@
 
 package frc.robot;
 
+import java.util.Optional;
+
 import org.lasarobotics.drive.swerve.SwerveDrive;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.WaggleSubsystem;
 import frc.robot.subsystems.drive.CTREDriveSubsystem;
 import frc.robot.subsystems.drive.REVDriveSubsystem;
@@ -41,9 +46,13 @@ public class RobotContainer {
 
   private static final WaggleSubsystem WIGGLE_STICK = new WaggleSubsystem(Constants.WiggleStick.WIGGLE_STICK_CONFIG, Constants.WiggleStick.CONSTRAINTS);
 
+  private static final ShooterSubsystem SHOOTER_SUBSYSTEM = new ShooterSubsystem(() -> DRIVE_SUBSYSTEM.getApparentTargetDistance());
+
   private static final CommandXboxController PRIMARY_CONTROLLER = new CommandXboxController(Constants.HID.PRIMARY_CONTROLLER_PORT);
 
   private static SendableChooser<Command> m_automodeChooser = new SendableChooser<>();
+
+  private static final Translation2d BLUE_GOAL = new Translation2d(4.625, 4.025);
 
   public RobotContainer() {
     // Set drive command
@@ -71,11 +80,20 @@ public class RobotContainer {
     // Start button - toggle traction control
     PRIMARY_CONTROLLER.start().onTrue(DRIVE_SUBSYSTEM.toggleTractionControlCommand());
 
+    // POV left - reset pose
     PRIMARY_CONTROLLER.povLeft().onTrue(DRIVE_SUBSYSTEM.resetPoseCommand(() -> new Pose2d()));
 
-    // Left/right bumper - wiggle stick
-    PRIMARY_CONTROLLER.leftBumper().onTrue(WIGGLE_STICK.setPositionCommand(0.0));
-    PRIMARY_CONTROLLER.rightBumper().onTrue(WIGGLE_STICK.setPositionCommand(15.0));
+    // Right bumper - aim at blue hub
+    PRIMARY_CONTROLLER.rightBumper().whileTrue(DRIVE_SUBSYSTEM.aimAtPointCommand(
+      () -> PRIMARY_CONTROLLER.getLeftY(),
+      () -> PRIMARY_CONTROLLER.getLeftX(),
+      () -> PRIMARY_CONTROLLER.getRightX(),
+      () -> Optional.of(BLUE_GOAL),
+      () -> Optional.of(Units.Degrees.of(-60)),
+      () -> Optional.of(Constants.Field.HUB_HEIGHT.minus(Constants.Shooter.SHOOTER_HEIGHT)),
+      false,
+      true
+    ));
   }
 
     /**

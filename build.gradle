@@ -1,6 +1,6 @@
 plugins {
   id "java"
-  id "edu.wpi.first.GradleRIO" version "2026.1.1"
+  id "edu.wpi.first.GradleRIO" version "2026.2.1"
   id "com.peterabeles.gversion" version "1.10"
 }
 
@@ -89,7 +89,7 @@ dependencies {
   simulationRelease wpi.sim.enableRelease()
 
   //implementation fileTree(dir: 'libs', include: '*.jar')
-  implementation 'com.github.lasarobotics:PurpleLib:2026.0.2'
+  implementation 'com.github.lasarobotics:PurpleLib:2026.0.5'
 
   implementation 'org.apache.commons:commons-math3:3.+'
   implementation 'org.tinylog:tinylog-api:2.7.0'

@@ -40,7 +40,8 @@ import edu.wpi.first.units.measure.Time;
 public final class Constants {
 
   public static class Field {
-    public static final AprilTagFieldLayout FIELD_LAYOUT = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
+    public static final AprilTagFieldLayout FIELD_LAYOUT = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
+    public static final Distance HUB_HEIGHT = Units.Inches.of(72.0);
 
     /**
      * Get AprilTag from field
@@ -158,5 +159,9 @@ public final class Constants {
     );
     public static final Resolution CAMERA_OBJECT_RESOLUTION = Resolution.RES_1280_720;
     public static final Rotation2d CAMERA_OBJECT_FOV = Rotation2d.fromDegrees(79.7);
+  }
+
+  public static class Shooter {
+    public static final Distance SHOOTER_HEIGHT = Units.Inches.of(24.0);
   }
 }
